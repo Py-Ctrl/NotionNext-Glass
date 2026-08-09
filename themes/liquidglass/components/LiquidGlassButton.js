@@ -45,8 +45,7 @@ const LiquidGlassButton = ({
     el.style.cssText = `display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden`
     wrapper.appendChild(el)
 
-    // 设置壁纸和模式（按文档：先 append 再 setAttribute）
-    el.setAttribute('wallpaper', 'gradient')
+    // 设置模式（按文档：先 append 再 setAttribute）
     if (dark) el.setAttribute('dark', '')
     el.setAttribute('mode', 'buttons')
 
