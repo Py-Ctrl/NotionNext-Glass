@@ -44,6 +44,7 @@ const LiquidGlassButton = ({
     // 按文档：先创建元素并设置 mode，再 append
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'buttons')
+    el.setAttribute('wallpaper', 'gradient')
     if (dark) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     frame.appendChild(el)
