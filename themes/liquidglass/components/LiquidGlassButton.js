@@ -5,7 +5,7 @@ const MAX_WEBGL_CONTEXTS = 6
 
 const LiquidGlassButton = ({
   label = '',
-  btnStyle = 'surface',
+  btnStyle = 'transparent',
   onTap,
   width = '100%',
   height = '48px',
@@ -38,16 +38,15 @@ const LiquidGlassButton = ({
     if (!useWebGL || !containerRef.current) return
 
     webglContextCount++
-    const wrapper = containerRef.current
-    wrapper.innerHTML = ''
+    const frame = containerRef.current
+    frame.innerHTML = ''
 
+    // 按文档：先创建元素并设置 mode，再 append
     const el = document.createElement('liquid-glass')
-    el.style.cssText = `display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden`
-    wrapper.appendChild(el)
-
-    // 设置模式（按文档：先 append 再 setAttribute）
-    if (dark) el.setAttribute('dark', '')
     el.setAttribute('mode', 'buttons')
+    if (dark) el.setAttribute('dark', '')
+    el.style.cssText = 'width:100%;height:100%'
+    frame.appendChild(el)
 
     // 带重试的 setButtons 调用
     let retries = 5
@@ -62,7 +61,6 @@ const LiquidGlassButton = ({
         retries--
         retryTimer = setTimeout(trySetButtons, 100)
       } else {
-        // 所有重试失败，切换到 CSS 回退
         failed = true
         setRenderFailed(true)
       }
@@ -80,7 +78,7 @@ const LiquidGlassButton = ({
       clearTimeout(retryTimer)
       document.removeEventListener('lg-buttontap', handleTap)
       webglContextCount = Math.max(0, webglContextCount - 1)
-      if (wrapper.contains(el)) wrapper.removeChild(el)
+      if (frame.contains(el)) frame.removeChild(el)
     }
   }, [useWebGL, label, btnStyle, dark])
 
@@ -101,8 +99,14 @@ const LiquidGlassButton = ({
       ) : (
         <div
           ref={containerRef}
-          className='liquid-glass-btn-wrapper'
-          style={{ width: '100%', height: '100%', borderRadius: 'inherit', overflow: 'hidden' }}
+          className='liquid-glass-btn-frame'
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: 'inherit',
+            overflow: 'hidden',
+            background: 'rgba(99, 102, 241, 0.1)'
+          }}
         />
       )}
     </div>

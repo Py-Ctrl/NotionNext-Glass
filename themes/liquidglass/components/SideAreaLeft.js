@@ -51,7 +51,7 @@ const SideAreaLeft = (props) => {
             >
               <LiquidGlassButton
                 label={item.label}
-                btnStyle={item.active ? 'blue' : 'surface'}
+                btnStyle={item.active ? 'blue' : 'transparent'}
                 onTap={() => router.push(item.href)}
                 width='100%'
                 height='52px'
