@@ -1,6 +1,7 @@
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
+import LiquidGlassButton from './LiquidGlassButton'
 
 const PaginationNumber = ({ page, totalPage }) => {
   const { locale } = useGlobal()
@@ -15,32 +16,46 @@ const PaginationNumber = ({ page, totalPage }) => {
   }
 
   return (
-    <div className='flex justify-center gap-2 mt-8'>
+    <div className='flex justify-center items-center gap-2 mt-8 flex-wrap'>
       {currentPage > 1 && (
-        <SmartLink
-          href={`/page/${currentPage - 1}`}
-          className='glass-btn text-gray-600 dark:text-gray-400'>
-          <i className='fas fa-chevron-left' />
-        </SmartLink>
+        <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
+          <LiquidGlassButton
+            label='←'
+            btnStyle='surface'
+            onTap={() => router.push(`/page/${currentPage - 1}`)}
+            width='48px'
+            height='48px'
+            className='rounded-xl overflow-hidden'
+          />
+        </div>
       )}
       {pages.map(p => (
-        <SmartLink
+        <div
           key={p}
-          href={p === 1 ? '/' : `/page/${p}`}
-          className={`glass-btn ${
-            p === currentPage
-              ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700'
-              : 'text-gray-600 dark:text-gray-400'
-          }`}>
-          {p}
-        </SmartLink>
+          className='rounded-xl overflow-hidden'
+          style={{ width: '48px', height: '48px' }}
+        >
+          <LiquidGlassButton
+            label={String(p)}
+            btnStyle={p === currentPage ? 'blue' : 'surface'}
+            onTap={() => router.push(p === 1 ? '/' : `/page/${p}`)}
+            width='48px'
+            height='48px'
+            className='rounded-xl overflow-hidden'
+          />
+        </div>
       ))}
       {currentPage < totalPage && (
-        <SmartLink
-          href={`/page/${currentPage + 1}`}
-          className='glass-btn text-gray-600 dark:text-gray-400'>
-          <i className='fas fa-chevron-right' />
-        </SmartLink>
+        <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
+          <LiquidGlassButton
+            label='→'
+            btnStyle='surface'
+            onTap={() => router.push(`/page/${currentPage + 1}`)}
+            width='48px'
+            height='48px'
+            className='rounded-xl overflow-hidden'
+          />
+        </div>
       )}
     </div>
   )

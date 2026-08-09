@@ -2,6 +2,7 @@ import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
 import { siteConfig } from '@/lib/config'
+import LiquidGlassButton from './LiquidGlassButton'
 
 const ArticleLock = ({ validPassword }) => {
   const { locale } = useGlobal()
@@ -28,15 +29,20 @@ const ArticleLock = ({ validPassword }) => {
           }
         }}
       />
-      <button
-        onClick={() => {
-          const input = document.getElementById('password-input')
-          if (input) validPassword(input.value)
-        }}
-        className='glass-btn mt-4 text-indigo-500 dark:text-indigo-400 w-full'>
-        <i className='fas fa-unlock mr-2' />
-        {locale.COMMON.SUBMIT || '提交'}
-      </button>
+      <div className='mt-4 w-full rounded-2xl overflow-hidden' style={{ height: '52px' }}>
+        <LiquidGlassButton
+          label={locale.COMMON.SUBMIT || '提交'}
+          btnStyle='blue'
+          onTap={() => {
+            const input = document.getElementById('password-input')
+            if (input) validPassword(input.value)
+          }}
+          width='100%'
+          height='52px'
+          className='rounded-2xl overflow-hidden'
+          fallbackClassName='text-indigo-500 dark:text-indigo-400'
+        />
+      </div>
     </div>
   )
 }

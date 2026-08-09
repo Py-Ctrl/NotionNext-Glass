@@ -5,7 +5,6 @@ import CONFIG from '../config'
 import { useRouter } from 'next/router'
 import { useRef } from 'react'
 import Logo from './Logo'
-import DarkModeButton from './DarkModeButton'
 import SearchInput from './SearchInput'
 import TagGroups from './TagGroups'
 import CategoryGroup from './CategoryGroup'
@@ -31,7 +30,6 @@ const SideBar = (props) => {
       {/* Logo */}
       <div className='flex items-center justify-between mb-6'>
         <Logo {...props} />
-        <DarkModeButton />
       </div>
 
       {/* 分类 */}

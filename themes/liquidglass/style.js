@@ -322,6 +322,24 @@ const Style = () => {
       width: 100%;
     }
 
+    /* ========== liquid-glass 按钮容器 ========== */
+    #theme-liquidglass .liquid-glass-btn-wrapper {
+      position: relative;
+    }
+
+    #theme-liquidglass .liquid-glass-btn-wrapper liquid-glass {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ========== liquid-glass 标签栏容器 ========== */
+    #theme-liquidglass .liquid-glass-tabs-wrapper liquid-glass {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
     /* ========== 移动端响应式 ========== */
     @media (max-width: 640px) {
       #theme-liquidglass {

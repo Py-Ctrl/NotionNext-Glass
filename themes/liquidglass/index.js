@@ -20,7 +20,6 @@ import BlogListBar from './components/BlogListBar'
 import BlogPostArchive from './components/BlogPostArchive'
 import BlogPostListPage from './components/BlogPostListPage'
 import BlogPostListScroll from './components/BlogPostListScroll'
-import FloatDarkModeButton from './components/FloatDarkModeButton'
 import Footer from './components/Footer'
 import JumpToBottomButton from './components/JumpToBottomButton'
 import JumpToTopButton from './components/JumpToTopButton'
@@ -185,7 +184,6 @@ const LayoutBase = props => {
             }>
             <JumpToTopButton percent={percent} />
             <JumpToBottomButton />
-            <FloatDarkModeButton />
             {floatSlot}
           </div>
         </div>

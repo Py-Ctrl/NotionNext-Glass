@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import BlogPostCard from './BlogPostCard'
 import BlogPostListEmpty from './BlogPostListEmpty'
+import LiquidGlassButton from './LiquidGlassButton'
 
 const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
   const { locale } = useGlobal()
@@ -43,10 +44,14 @@ const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
 
       {showLoadMore && postsToShow.length < posts.length && (
         <div className='flex justify-center pt-2 sm:pt-4'>
-          <button onClick={loadMore} className='glass-btn text-indigo-500 dark:text-indigo-400'>
-            <i className='fas fa-chevron-down mr-2' />
-            {locale.COMMON.MORE || '加载更多'}
-          </button>
+          <LiquidGlassButton
+            label={locale.COMMON.MORE || '加载更多'}
+            btnStyle='blue'
+            onTap={loadMore}
+            width='200px'
+            height='56px'
+            className='rounded-2xl overflow-hidden'
+          />
         </div>
       )}
     </div>
