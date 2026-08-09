@@ -27,11 +27,11 @@ const BlogPostCard = ({ post, index, showSummary }) => {
   return (
     <div className='glass-post-item w-full' {...aosProps}>
       <div key={post.id} className='flex flex-col-reverse justify-between'>
-        <div className='lg:p-8 p-4 flex flex-col w-full'>
+        <div className='p-4 sm:p-6 lg:p-8 flex flex-col w-full'>
           {/* 标题 */}
           <SmartLink
             href={post?.href}
-            className={`cursor-pointer text-2xl font-semibold ${showPreview ? 'text-center' : ''} text-gray-800 dark:text-gray-100 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors`}>
+            className={`cursor-pointer text-xl sm:text-2xl font-semibold ${showPreview ? 'text-center' : ''} text-gray-800 dark:text-gray-100 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors`}>
             {siteConfig('POST_TITLE_ICON') && (
               <NotionIcon icon={post.pageIcon} />
             )}{' '}
@@ -40,12 +40,12 @@ const BlogPostCard = ({ post, index, showSummary }) => {
 
           {/* 元信息 */}
           <div
-            className={`flex mt-3 items-center ${showPreview ? 'justify-center' : 'justify-start'} flex-wrap text-gray-500 dark:text-gray-400 text-sm gap-x-3 gap-y-1`}>
+            className={`flex mt-2 sm:mt-3 items-center ${showPreview ? 'justify-center' : 'justify-start'} flex-wrap text-gray-500 dark:text-gray-400 text-xs sm:text-sm gap-x-2 sm:gap-x-3 gap-y-1`}>
             {post.category && (
               <>
                 <SmartLink
                   href={`/category/${post.category}`}
-                  className='glass-link text-sm'>
+                  className='glass-link'>
                   <i className='mr-1 fas fa-folder' />
                   {post.category}
                 </SmartLink>
@@ -54,14 +54,11 @@ const BlogPostCard = ({ post, index, showSummary }) => {
             )}
             <SmartLink
               href={`/archive#${formatDateFmt(post?.publishDate, 'yyyy-MM')}`}
-              className='glass-link text-sm'>
+              className='glass-link'>
               {post.date?.start_date}
             </SmartLink>
 
-            <TwikooCommentCount
-              post={post}
-              className='glass-link text-sm'
-            />
+            <TwikooCommentCount post={post} className='glass-link' />
 
             <div className='flex flex-wrap gap-1'>
               {post.tagItems?.map(tag => (
@@ -72,14 +69,14 @@ const BlogPostCard = ({ post, index, showSummary }) => {
 
           {/* 摘要 */}
           {(!showPreview || showSummary) && !post.results && (
-            <p className='mt-4 mb-10 text-gray-600 dark:text-gray-400 text-sm leading-7'>
+            <p className='mt-3 sm:mt-4 mb-8 sm:mb-10 text-gray-600 dark:text-gray-400 text-sm leading-7'>
               {post.summary}
             </p>
           )}
 
           {/* 搜索结果 */}
           {post.results && (
-            <p className='line-clamp-4 mt-4 text-gray-600 dark:text-gray-400 text-sm leading-7'>
+            <p className='line-clamp-4 mt-3 sm:mt-4 text-gray-600 dark:text-gray-400 text-sm leading-7'>
               {post.results.map((r, idx) => (
                 <span key={idx}>{r}</span>
               ))}
@@ -94,10 +91,10 @@ const BlogPostCard = ({ post, index, showSummary }) => {
           )}
 
           {/* 阅读更多 */}
-          <div className='text-right border-t pt-6 border-gray-200/50 dark:border-gray-700/50'>
+          <div className='text-right border-t pt-4 sm:pt-6 border-gray-200/50 dark:border-gray-700/50'>
             <SmartLink
               href={post?.href}
-              className='glass-btn inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400'>
+              className='glass-btn inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 text-sm'>
               {locale.COMMON.ARTICLE_DETAIL}
               <i className='fas fa-angle-right text-xs' />
             </SmartLink>
@@ -108,7 +105,7 @@ const BlogPostCard = ({ post, index, showSummary }) => {
         {siteConfig('LIQUID_POST_LIST_COVER', null, CONFIG) &&
           post?.pageCoverThumbnail && (
             <SmartLink href={post?.href}>
-              <div className='h-56 w-full relative overflow-hidden rounded-t-2xl'>
+              <div className='h-44 sm:h-56 w-full relative overflow-hidden rounded-t-2xl'>
                 <LazyImage
                   className='w-full h-full object-cover hover:scale-105 transition-transform duration-500'
                   src={post?.pageCoverThumbnail}

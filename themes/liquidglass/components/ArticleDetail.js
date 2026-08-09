@@ -1,16 +1,12 @@
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
-import { siteConfig } from '@/lib/config'
-import CONFIG from '../config'
-import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import Comment from '@/components/Comment'
-import ShareBar from '@/components/ShareBar'
 import NotionPage from '@/components/NotionPage'
 import WWAds from '@/components/WWAds'
 import ArticleCopyright from './ArticleCopyright'
 import RecommendPosts from './RecommendPosts'
 import BlogAround from './BlogAround'
+import Comment from '@/components/Comment'
+import ShareBar from '@/components/ShareBar'
 
 const ArticleDetail = (props) => {
   const { post, prev, next, recommendPosts } = props
@@ -19,8 +15,8 @@ const ArticleDetail = (props) => {
   return (
     <div className={`px-2 ${fullWidth ? '' : 'xl:max-w-4xl 2xl:max-w-6xl'}`}>
       {/* 文章标题区 */}
-      <div className='glass-card p-6 md:p-10 mb-6'>
-        <h1 className='text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100'>
+      <div className='glass-card p-4 sm:p-6 lg:p-10 mb-4 sm:mb-6'>
+        <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100'>
           {post?.title}
         </h1>
 
@@ -28,7 +24,7 @@ const ArticleDetail = (props) => {
           <div className='mt-2 text-4xl'>{post.pageIcon}</div>
         )}
 
-        <div className='flex flex-wrap items-center gap-3 mt-4 text-sm text-gray-500 dark:text-gray-400'>
+        <div className='flex flex-wrap items-center gap-2 sm:gap-3 mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400'>
           {post?.date?.start_date && (
             <span>
               <i className='far fa-calendar mr-1' />
@@ -59,10 +55,10 @@ const ArticleDetail = (props) => {
       </div>
 
       {/* 广告 */}
-      <WWAds orientation='horizontal' className='w-full mb-6' />
+      <WWAds orientation='horizontal' className='w-full mb-4 sm:mb-6' />
 
       {/* 文章内容 */}
-      <div id='article-wrapper' className='glass-card p-4 md:p-8'>
+      <div id='article-wrapper' className='glass-card p-3 sm:p-4 md:p-8'>
         <NotionPage post={post} />
       </div>
 
@@ -70,20 +66,20 @@ const ArticleDetail = (props) => {
       <ArticleCopyright post={post} />
 
       {/* 分享 */}
-      <div className='mt-6'>
+      <div className='mt-4 sm:mt-6'>
         <ShareBar post={post} />
       </div>
 
       {/* 前后文章 */}
       {post?.type === 'Post' && (
-        <div className='mt-6'>
+        <div className='mt-4 sm:mt-6'>
           <BlogAround prev={prev} next={next} />
           <RecommendPosts recommendPosts={recommendPosts} />
         </div>
       )}
 
       {/* 评论区 */}
-      <div className='glass-card p-4 md:p-6 mt-6'>
+      <div className='glass-card p-3 sm:p-4 md:p-6 mt-4 sm:mt-6'>
         <Comment frontMatter={post} />
       </div>
     </div>

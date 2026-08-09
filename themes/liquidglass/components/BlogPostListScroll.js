@@ -1,9 +1,8 @@
 import { useGlobal } from '@/lib/global'
 import { useRouter } from 'next/router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import BlogPostCard from './BlogPostCard'
 import BlogPostListEmpty from './BlogPostListEmpty'
-import LoadingCover from '@/components/LoadingCover'
 
 const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
   const { locale } = useGlobal()
@@ -16,6 +15,7 @@ const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
 
   useEffect(() => {
     setCurrentPage(1)
+    setShowLoadMore(true)
   }, [router.asPath])
 
   const loadMore = () => {
@@ -31,7 +31,7 @@ const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
   }
 
   return (
-    <div className='space-y-6 w-full'>
+    <div className='space-y-4 sm:space-y-6 w-full'>
       {postsToShow.map((post, index) => (
         <BlogPostCard
           key={post.id}
@@ -42,7 +42,7 @@ const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
       ))}
 
       {showLoadMore && postsToShow.length < posts.length && (
-        <div className='flex justify-center pt-4'>
+        <div className='flex justify-center pt-2 sm:pt-4'>
           <button onClick={loadMore} className='glass-btn text-indigo-500 dark:text-indigo-400'>
             <i className='fas fa-chevron-down mr-2' />
             {locale.COMMON.MORE || '加载更多'}

@@ -5,7 +5,7 @@ import CONFIG from './config'
 const Style = () => {
   return <style jsx global>{`
 
-    /* ========== 全局玻璃质感基础 ========== */
+    /* ========== 全局背景 — 玻璃效果可见的关键 ========== */
     #theme-liquidglass {
       --glass-bg: rgba(255, 255, 255, 0.25);
       --glass-bg-dark: rgba(15, 15, 25, 0.55);
@@ -16,6 +16,13 @@ const Style = () => {
       --glass-blur: 16px;
       --glass-radius: 16px;
       color-scheme: light;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99, 102, 241, 0.15), transparent),
+        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(139, 92, 246, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 50% 80%, rgba(6, 182, 212, 0.1), transparent),
+        linear-gradient(135deg, #eef2ff 0%, #faf5ff 30%, #ecfeff 70%, #f0fdf4 100%);
+      background-attachment: fixed;
     }
 
     .dark #theme-liquidglass {
@@ -23,6 +30,12 @@ const Style = () => {
       --glass-border: rgba(255, 255, 255, 0.08);
       --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       color-scheme: dark;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99, 102, 241, 0.12), transparent),
+        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(139, 92, 246, 0.1), transparent),
+        radial-gradient(ellipse 60% 40% at 50% 80%, rgba(6, 182, 212, 0.08), transparent),
+        linear-gradient(135deg, #0a0a1a 0%, #0f0f23 30%, #0a1a1f 70%, #0a0f0a 100%);
+      background-attachment: fixed;
     }
 
     /* ========== 玻璃卡片 ========== */
@@ -97,7 +110,7 @@ const Style = () => {
       border-color: rgba(255, 255, 255, 0.15);
     }
 
-    /* ========== 玻璃搜索框 ========== */
+    /* ========== 玻璃搜索框（CSS 回退） ========== */
     #theme-liquidglass .glass-search {
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
@@ -294,6 +307,80 @@ const Style = () => {
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--glass-border);
       border-radius: 12px;
+    }
+
+    /* ========== liquid-glass-search 容器 ========== */
+    #theme-liquidglass .liquid-glass-search-wrapper {
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+    }
+
+    #theme-liquidglass .liquid-glass-search-wrapper liquid-glass-search {
+      display: block;
+      width: 100%;
+    }
+
+    /* ========== 移动端响应式 ========== */
+    @media (max-width: 640px) {
+      #theme-liquidglass {
+        --glass-blur: 10px;
+        --glass-radius: 12px;
+      }
+
+      #theme-liquidglass .glass-card {
+        border-radius: 12px;
+      }
+
+      #theme-liquidglass .glass-post-item {
+        border-radius: 12px;
+      }
+
+      #theme-liquidglass .glass-sidebar {
+        border-radius: 12px;
+      }
+
+      #theme-liquidglass .glass-nav {
+        padding: 0.5rem 0.75rem;
+      }
+
+      #theme-liquidglass .glass-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+
+      #theme-liquidglass .glass-float-btn {
+        width: 36px;
+        height: 36px;
+      }
+
+      #theme-liquidglass .liquid-glass-search-wrapper {
+        border-radius: 14px;
+      }
+    }
+
+    /* ========== 平板适配 ========== */
+    @media (min-width: 641px) and (max-width: 1023px) {
+      #theme-liquidglass .glass-card {
+        border-radius: 14px;
+      }
+    }
+
+    /* ========== 大屏适配 ========== */
+    @media (min-width: 1280px) {
+      #theme-liquidglass {
+        --glass-blur: 20px;
+        --glass-radius: 20px;
+      }
+    }
+
+    /* ========== 减少动画偏好 ========== */
+    @media (prefers-reduced-motion: reduce) {
+      #theme-liquidglass * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
     }
 
     ${themeConsoleStyle('liquidglass', CONFIG)}

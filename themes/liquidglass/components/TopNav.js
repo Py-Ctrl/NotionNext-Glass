@@ -1,18 +1,16 @@
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
+import LazyImage from '@/components/LazyImage'
+import { siteConfig } from '@/lib/config'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Collapse from '@/components/Collapse'
-import Logo from './Logo'
 import { MenuList } from './MenuList'
 import SearchDrawer from './SearchDrawer'
-import TagGroups from './TagGroups'
-import CategoryGroup from './CategoryGroup'
 import CONFIG from '../config'
-import { siteConfig } from '@/lib/config'
 import { useRouter } from 'next/router'
 
 const TopNav = (props) => {
-  const { tags, currentTag, categories, currentCategory } = props
+  const { tags, currentTag, categories, currentCategory, siteInfo } = props
   const { locale } = useGlobal()
   const searchDrawer = useRef()
   const collapseRef = useRef(null)
@@ -40,9 +38,7 @@ const TopNav = (props) => {
     })
   }, [])
 
-  const menuCollapseHide = useCallback(() => {
-    changeShow(false)
-  }, [])
+  const menuCollapseHide = useCallback(() => changeShow(false), [])
 
   useEffect(() => {
     if (siteConfig('LIQUID_NAV_TYPE', null, CONFIG) === 'autoCollapse') {
@@ -60,85 +56,70 @@ const TopNav = (props) => {
 
   useEffect(() => {
     router.events.on('routeChangeComplete', menuCollapseHide)
-    return () => {
-      router.events.off('routeChangeComplete', menuCollapseHide)
-    }
+    return () => router.events.off('routeChangeComplete', menuCollapseHide)
   }, [menuCollapseHide, router.events])
 
-  const toggleMenuOpen = () => {
-    changeShow(!isOpen)
-  }
-
-  const showSearchDrawer = () => {
-    searchDrawer?.current?.show()
-  }
-
-  const searchDrawerSlot = (
-    <>
-      {categories && (
-        <section className='mt-8'>
-          <div className='text-sm flex flex-nowrap justify-between font-light px-2'>
-            <div className='text-gray-600 dark:text-gray-200'>
-              <i className='mr-2 fas fa-th-list' />
-              {locale.COMMON.CATEGORY}
-            </div>
-            <SmartLink
-              href='/category'
-              className='glass-link text-sm'>
-              {locale.COMMON.MORE} <i className='fas fa-angle-double-right' />
-            </SmartLink>
-          </div>
-          <CategoryGroup currentCategory={currentCategory} categories={categories} />
-        </section>
-      )}
-
-      {tags && (
-        <section className='mt-4'>
-          <div className='text-sm py-2 px-2 flex flex-nowrap justify-between font-light dark:text-gray-200'>
-            <div className='text-gray-600 dark:text-gray-200'>
-              <i className='mr-2 fas fa-tag' />
-              {locale.COMMON.TAGS}
-            </div>
-            <SmartLink
-              href='/tag'
-              className='glass-link text-sm'>
-              {locale.COMMON.MORE} <i className='fas fa-angle-double-right' />
-            </SmartLink>
-          </div>
-          <div className='p-2'>
-            <TagGroups tags={tags} currentTag={currentTag} />
-          </div>
-        </section>
-      )}
-    </>
-  )
+  const toggleMenuOpen = () => changeShow(!isOpen)
 
   return (
     <div id='top-nav' className='block lg:hidden'>
-      <SearchDrawer cRef={searchDrawer} slot={searchDrawerSlot} />
+      <SearchDrawer cRef={searchDrawer} slot={
+        <>
+          {categories && (
+            <section className='mt-6'>
+              <div className='text-sm font-medium text-gray-600 dark:text-gray-200 mb-2'>
+                <i className='mr-2 fas fa-th-list' />
+                {locale.COMMON.CATEGORY}
+              </div>
+              <CategoryGroupWrapper categories={categories} currentCategory={currentCategory} />
+            </section>
+          )}
+          {tags && (
+            <section className='mt-4'>
+              <div className='text-sm font-medium text-gray-600 dark:text-gray-200 mb-2'>
+                <i className='mr-2 fas fa-tag' />
+                {locale.COMMON.TAGS}
+              </div>
+              <TagGroupsWrapper tags={tags} currentTag={currentTag} />
+            </section>
+          )}
+        </>
+      } />
 
       <div
         id='sticky-nav'
-        className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'fixed' : 'relative'} lg:relative w-full top-0 z-20 transition-transform duration-500`}>
-        <div className='glass-nav w-full flex justify-between items-center px-4 py-3'>
-          <div className='flex flex-none flex-grow-0'>
-            <div onClick={toggleMenuOpen} className='w-8 cursor-pointer'>
-              {isOpen ? (
-                <i className='fas fa-times text-gray-700 dark:text-gray-300' />
-              ) : (
-                <i className='fas fa-bars text-gray-700 dark:text-gray-300' />
-              )}
-            </div>
+        className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'fixed' : 'relative'} lg:relative w-full top-0 z-30 transition-transform duration-500`}>
+        <div className='glass-nav w-full flex justify-between items-center px-4 py-2.5'>
+          {/* 左侧菜单按钮 */}
+          <div onClick={toggleMenuOpen} className='w-8 h-8 flex items-center justify-center cursor-pointer'>
+            {isOpen ? (
+              <i className='fas fa-times text-gray-700 dark:text-gray-300' />
+            ) : (
+              <i className='fas fa-bars text-gray-700 dark:text-gray-300' />
+            )}
           </div>
 
-          <div className='flex'>
-            <Logo {...props} />
+          {/* 中间 Logo + 头像 */}
+          <div className='flex items-center space-x-2'>
+            <div className='w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/30 dark:ring-white/10'>
+              <LazyImage
+                priority={true}
+                src={siteInfo?.icon}
+                className='rounded-full w-full h-full object-cover'
+                width={28}
+                height={28}
+                alt={siteConfig('AUTHOR')}
+              />
+            </div>
+            <span className='text-sm font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[120px]'>
+              {siteInfo?.title || siteConfig('TITLE')}
+            </span>
           </div>
 
-          <div className='mr-1 flex justify-end items-center text-sm space-x-4'>
-            <div className='cursor-pointer' onClick={showSearchDrawer}>
-              <i className='fas fa-search text-gray-600 dark:text-gray-400' />
-            </div>
+          {/* 右侧搜索 */}
+          <div className='w-8 h-8 flex items-center justify-center cursor-pointer'
+               onClick={() => searchDrawer?.current?.show()}>
+            <i className='fas fa-search text-gray-600 dark:text-gray-400' />
           </div>
         </div>
 
@@ -155,5 +136,16 @@ const TopNav = (props) => {
     </div>
   )
 }
+
+// 内联组件避免循环依赖
+import CategoryGroup from './CategoryGroup'
+import TagGroups from './TagGroups'
+
+const CategoryGroupWrapper = ({ categories, currentCategory }) => (
+  <CategoryGroup categories={categories} currentCategory={currentCategory} />
+)
+const TagGroupsWrapper = ({ tags, currentTag }) => (
+  <TagGroups tags={tags} currentTag={currentTag} />
+)
 
 export default TopNav

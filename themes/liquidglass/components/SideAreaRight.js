@@ -8,17 +8,17 @@ import CategoryGroup from './CategoryGroup'
 import SmartLink from '@/components/SmartLink'
 
 const SideAreaRight = (props) => {
-  const { tags, currentTag, categories, currentCategory, post, slot } = props
+  const { tags, currentTag, categories, currentCategory, slot } = props
   const { locale } = useGlobal()
   const router = useRouter()
 
   return (
-    <aside className='hidden xl:block w-72 shrink-0'>
-      <div className='glass-sidebar p-5 sticky top-8'>
-        {/* 搜索 */}
+    <aside className='hidden xl:block w-72 shrink-0 ml-4 xl:ml-8'>
+      <div className='glass-sidebar p-5 sticky top-6'>
+        {/* 搜索框 */}
         {siteConfig('LIQUID_MENU_SEARCH', null, CONFIG) && (
           <div className='mb-5'>
-            <SearchInput {...props} onSearch={(key) => {
+            <SearchInput {...props} compact onSearch={(key) => {
               if (key) {
                 router.push({ pathname: '/search/' + key })
               }

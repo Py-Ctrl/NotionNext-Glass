@@ -1,5 +1,4 @@
 import replaceSearchResult from '@/components/Mark'
-import NotionPage from '@/components/NotionPage'
 import { siteConfig } from '@/lib/config'
 import { useGlobal } from '@/lib/global'
 import { isBrowser } from '@/lib/utils'
@@ -41,13 +40,9 @@ const AlgoliaSearchModal = dynamic(
   { ssr: false }
 )
 
-// 主题全局状态
 const ThemeGlobalLiquidGlass = createContext()
 export const useLiquidGlassGlobal = () => useContext(ThemeGlobalLiquidGlass)
 
-/**
- * 基础布局 — 左中右三栏，玻璃质感
- */
 const LayoutBase = props => {
   const { children, headerSlot, rightAreaSlot, post } = props
   const targetRef = useRef(null)
@@ -127,7 +122,7 @@ const LayoutBase = props => {
     <ThemeGlobalLiquidGlass.Provider value={{ searchModal }}>
       <div
         id='theme-liquidglass'
-        className={`${siteConfig('FONT_STYLE')} dark:bg-black scroll-smooth`}>
+        className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth`}>
         <Style />
         <LiquidGlassScript />
 
@@ -138,16 +133,16 @@ const LayoutBase = props => {
 
         <>{headerSlot}</>
 
-        {/* 顶部装饰线 */}
+        {/* 顶部渐变装饰线 */}
         <div className='h-0.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 hidden lg:block' />
 
-        {/* 主区 */}
+        {/* 主区 — 自适应三栏布局 */}
         <main
           id='wrapper'
           className={
             (JSON.parse(siteConfig('LAYOUT_SIDEBAR_REVERSE'))
               ? 'flex-row-reverse'
-              : '') + ' liquidglass relative flex justify-center flex-1 pb-12'
+              : '') + ' liquidglass relative flex justify-center flex-1 pb-12 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
           }>
           {/* 左侧栏 */}
           <SideAreaLeft targetRef={targetRef} {...props} />
@@ -155,7 +150,7 @@ const LayoutBase = props => {
           {/* 中央内容 */}
           <section
             id='container-inner'
-            className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-24' : ''} lg:max-w-3xl xl:max-w-4xl flex-grow md:mt-0 min-h-screen w-full relative z-10 px-4 lg:px-0`}
+            className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-20 lg:mt-0' : ''} w-full lg:max-w-2xl xl:max-w-3xl flex-grow min-h-screen relative z-10 px-1 sm:px-2`}
             ref={targetRef}>
             <div className='glass-transition'>
               {children}
@@ -182,7 +177,7 @@ const LayoutBase = props => {
         {/* 右下角悬浮按钮组 */}
         <div
           ref={floatButtonGroup}
-          className='right-8 bottom-12 lg:right-2 fixed justify-end z-20'>
+          className='right-4 sm:right-8 bottom-12 lg:right-2 fixed justify-end z-20'>
           <div
             className={
               (showRightFloat ? 'animate__animated ' : 'hidden') +
@@ -202,20 +197,14 @@ const LayoutBase = props => {
   )
 }
 
-/**
- * 首页
- */
 const LayoutIndex = props => {
   const { notice } = props
   return (
     <>
-      {/* 移动端公告 */}
       <div className='my-2 lg:hidden'>
         <Announcement post={notice} />
       </div>
-
       <BlogListBar {...props} />
-
       {siteConfig('POST_LIST_STYLE') !== 'page' ? (
         <BlogPostListScroll {...props} showSummary={true} />
       ) : (
@@ -225,9 +214,6 @@ const LayoutIndex = props => {
   )
 }
 
-/**
- * 博客列表
- */
 const LayoutPostList = props => {
   return (
     <>
@@ -241,9 +227,6 @@ const LayoutPostList = props => {
   )
 }
 
-/**
- * 搜索
- */
 const LayoutSearch = props => {
   const { locale } = useGlobal()
   const { posts, keyword } = props
@@ -264,7 +247,7 @@ const LayoutSearch = props => {
   return (
     <>
       <StickyBar>
-        <div className='p-4 dark:text-gray-200'>
+        <div className='p-3 sm:p-4 dark:text-gray-200 text-sm'>
           <i className='mr-1 fas fa-search' /> {posts?.length}{' '}
           {locale.COMMON.RESULT_OF_SEARCH}
         </div>
@@ -280,9 +263,6 @@ const LayoutSearch = props => {
   )
 }
 
-/**
- * 404
- */
 const Layout404 = props => {
   const router = useRouter()
   useEffect(() => {
@@ -295,12 +275,12 @@ const Layout404 = props => {
   }, [])
 
   return (
-    <div className='md:-mt-20 text-black w-full h-screen text-center justify-center content-center items-center flex flex-col'>
-      <div className='glass-card p-12 text-center'>
-        <div className='text-6xl mb-4 opacity-20'>
+    <div className='min-h-screen flex items-center justify-center px-4'>
+      <div className='glass-card p-8 sm:p-12 text-center'>
+        <div className='text-5xl sm:text-6xl mb-4 opacity-20'>
           <i className='fas fa-ghost' />
         </div>
-        <h2 className='text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2'>
+        <h2 className='text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2'>
           <i className='mr-2 fas fa-spinner animate-spin' />
           404
         </h2>
@@ -312,14 +292,10 @@ const Layout404 = props => {
   )
 }
 
-/**
- * 归档
- */
 const LayoutArchive = props => {
   const { archivePosts } = props
-
   return (
-    <div className='mb-10 pb-20 md:p-12 p-3 min-h-full'>
+    <div className='mb-10 pb-20 p-2 sm:p-6 md:p-12 min-h-full'>
       {Object.keys(archivePosts).map(archiveTitle => (
         <BlogPostArchive
           key={archiveTitle}
@@ -331,9 +307,6 @@ const LayoutArchive = props => {
   )
 }
 
-/**
- * 文章详情
- */
 const LayoutSlug = props => {
   const { post, lock, validPassword } = props
   const router = useRouter()
@@ -362,16 +335,13 @@ const LayoutSlug = props => {
   )
 }
 
-/**
- * 分类列表
- */
 const LayoutCategoryIndex = props => {
   const { allPosts, categoryOptions } = props
   const { locale } = useGlobal()
 
   return (
-    <div className='glass-card p-8'>
-      <div className='dark:text-gray-200 mb-5'>
+    <div className='glass-card p-4 sm:p-8'>
+      <div className='dark:text-gray-200 mb-5 text-sm sm:text-base'>
         <i className='mr-4 fas fa-th-list' />
         {locale.COMMON.CATEGORY}:
       </div>
@@ -390,16 +360,13 @@ const LayoutCategoryIndex = props => {
   )
 }
 
-/**
- * 标签列表
- */
 const LayoutTagIndex = props => {
   const { tagOptions } = props
   const { locale } = useGlobal()
 
   return (
-    <div className='glass-card p-8'>
-      <div className='dark:text-gray-200 mb-5'>
+    <div className='glass-card p-4 sm:p-8'>
+      <div className='dark:text-gray-200 mb-5 text-sm sm:text-base'>
         <i className='fas fa-tags mr-4' />
         {locale.COMMON.TAGS}:
       </div>
