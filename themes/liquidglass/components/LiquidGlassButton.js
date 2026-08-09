@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useId } from 'react'
+import { useGlobal } from '@/lib/global'
 
 let webglContextCount = 0
 const MAX_WEBGL_CONTEXTS = 6
@@ -10,9 +11,9 @@ const LiquidGlassButton = ({
   width = '100%',
   height = '48px',
   className = '',
-  fallbackClassName = '',
-  dark = false
+  fallbackClassName = ''
 }) => {
+  const { isDarkMode } = useGlobal()
   const containerRef = useRef(null)
   const [useWebGL, setUseWebGL] = useState(false)
   const [renderFailed, setRenderFailed] = useState(false)
@@ -43,7 +44,7 @@ const LiquidGlassButton = ({
 
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'buttons')
-    if (dark) el.setAttribute('dark', '')
+    if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)
 
@@ -78,7 +79,7 @@ const LiquidGlassButton = ({
       webglContextCount = Math.max(0, webglContextCount - 1)
       if (container.contains(el)) container.removeChild(el)
     }
-  }, [useWebGL, label, btnStyle, dark])
+  }, [useWebGL, label, btnStyle, isDarkMode])
 
   const showFallback = !useWebGL || renderFailed
 
@@ -86,7 +87,7 @@ const LiquidGlassButton = ({
     <div
       ref={containerRef}
       className={className}
-      style={{ width, height, position: 'relative', borderRadius: 'inherit', overflow: 'hidden' }}
+      style={{ width, height, position: 'relative', borderRadius: 'inherit', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
     >
       {showFallback && (
         <button

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, useId } from 'react'
+import { useGlobal } from '@/lib/global'
 
 const LiquidGlassTabs = ({
   tabs = [],
   onSelect,
   width = '100%',
   height = '120px',
-  dark = false,
   className = ''
 }) => {
+  const { isDarkMode } = useGlobal()
   const containerRef = useRef(null)
   const [useWebGL, setUseWebGL] = useState(false)
   const tabsIdRef = useRef(useId())
@@ -43,9 +44,7 @@ const LiquidGlassTabs = ({
     el.style.cssText = `display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden`
     wrapper.appendChild(el)
 
-    if (dark) el.setAttribute('dark', '')
-
-    el.setAttribute('wallpaper', 'gradient')
+    if (isDarkMode) el.setAttribute('dark', '')
 
     requestAnimationFrame(() => {
       el.setAttribute('mode', 'single-bottom-tabs')
@@ -72,7 +71,7 @@ const LiquidGlassTabs = ({
       document.removeEventListener('lg-statechange', handleStateChange)
       if (wrapper.contains(el)) wrapper.removeChild(el)
     }
-  }, [useWebGL, tabs])
+  }, [useWebGL, tabs, isDarkMode])
 
   if (!useWebGL) {
     return (
@@ -104,7 +103,7 @@ const LiquidGlassTabs = ({
     >
       <div
         ref={containerRef}
-        style={{ width: '100%', height: '100%', borderRadius: 'inherit', overflow: 'hidden' }}
+        style={{ width: '100%', height: '100%', borderRadius: 'inherit', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
       />
     </div>
   )

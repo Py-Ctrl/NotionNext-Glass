@@ -5,7 +5,7 @@ import { siteConfig } from '@/lib/config'
 import CONFIG from '../config'
 
 const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
-  const { locale } = useGlobal()
+  const { locale, isDarkMode } = useGlobal()
   const router = useRouter()
   const containerRef = useRef(null)
   const [useWebGL, setUseWebGL] = useState(false)
@@ -68,8 +68,7 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
     el.style.cssText = `display:block;width:100%;height:${height}px`
     wrapper.appendChild(el)
 
-    // 设置壁纸避免画布默认黑色
-    el.setAttribute('wallpaper', 'gradient')
+    if (isDarkMode) el.setAttribute('dark', '')
 
     webglRef.current = el
 
@@ -104,7 +103,7 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
         wrapper.removeChild(el)
       }
     }
-  }, [useWebGL, currentTag])
+  }, [useWebGL, currentTag, isDarkMode])
 
   // 回退搜索框处理
   const handleFallbackKeyUp = (e) => {
@@ -126,7 +125,7 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
         <div
           ref={containerRef}
           className='liquid-glass-search-wrapper w-full'
-          style={{ borderRadius: '20px', overflow: 'hidden' }}
+          style={{ borderRadius: '20px', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
         />
       ) : (
         <div ref={containerRef} className='glass-search flex w-full items-center'>
