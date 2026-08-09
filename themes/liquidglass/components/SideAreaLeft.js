@@ -4,6 +4,10 @@ import CONFIG from '../config'
 import { siteConfig } from '@/lib/config'
 import { useRouter } from 'next/router'
 import LiquidGlassButton from './LiquidGlassButton'
+import DarkModeButton from './DarkModeButton'
+import dynamic from 'next/dynamic'
+
+const Live2D = dynamic(() => import('@/components/Live2D'), { ssr: false })
 
 const SideAreaLeft = (props) => {
   const { locale } = useGlobal()
@@ -64,6 +68,16 @@ const SideAreaLeft = (props) => {
               />
             </div>
           ))}
+        </div>
+
+        {/* 主题切换 */}
+        <div className='flex justify-center mt-4'>
+          <DarkModeButton />
+        </div>
+
+        {/* 宠物挂件 */}
+        <div className='flex justify-center mt-4'>
+          <Live2D />
         </div>
       </div>
     </aside>

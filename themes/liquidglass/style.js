@@ -340,6 +340,12 @@ const Style = () => {
       height: 100%;
     }
 
+    /* ========== Live2D 宠物挂件 ========== */
+    #theme-liquidglass #live2d {
+      max-width: 100%;
+      height: auto;
+    }
+
     /* ========== 移动端响应式 ========== */
     @media (max-width: 640px) {
       #theme-liquidglass {
