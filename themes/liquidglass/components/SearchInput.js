@@ -68,6 +68,9 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
     el.style.cssText = `display:block;width:100%;height:${height}px`
     wrapper.appendChild(el)
 
+    // 设置壁纸避免画布默认黑色
+    el.setAttribute('wallpaper', 'gradient')
+
     webglRef.current = el
 
     const placeholder = currentTag

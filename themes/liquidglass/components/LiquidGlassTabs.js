@@ -45,6 +45,8 @@ const LiquidGlassTabs = ({
 
     if (dark) el.setAttribute('dark', '')
 
+    el.setAttribute('wallpaper', 'gradient')
+
     requestAnimationFrame(() => {
       el.setAttribute('mode', 'single-bottom-tabs')
       requestAnimationFrame(() => {

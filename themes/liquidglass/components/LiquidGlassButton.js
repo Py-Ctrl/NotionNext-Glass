@@ -44,6 +44,9 @@ const LiquidGlassButton = ({
     el.style.cssText = `display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden`
     wrapper.appendChild(el)
 
+    // 设置壁纸为渐变，避免画布默认黑色
+    el.setAttribute('wallpaper', 'gradient')
+
     if (dark) el.setAttribute('dark', '')
 
     requestAnimationFrame(() => {
