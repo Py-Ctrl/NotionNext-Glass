@@ -38,18 +38,15 @@ const LiquidGlassButton = ({
     if (!useWebGL || !containerRef.current) return
 
     webglContextCount++
-    const frame = containerRef.current
-    frame.innerHTML = ''
+    const container = containerRef.current
+    container.innerHTML = ''
 
-    // 按文档：先创建元素并设置 mode，再 append
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'buttons')
-    el.setAttribute('wallpaper', 'gradient')
     if (dark) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
-    frame.appendChild(el)
+    container.appendChild(el)
 
-    // 带重试的 setButtons 调用
     let retries = 5
     let retryTimer = null
     let failed = false
@@ -79,7 +76,7 @@ const LiquidGlassButton = ({
       clearTimeout(retryTimer)
       document.removeEventListener('lg-buttontap', handleTap)
       webglContextCount = Math.max(0, webglContextCount - 1)
-      if (frame.contains(el)) frame.removeChild(el)
+      if (container.contains(el)) container.removeChild(el)
     }
   }, [useWebGL, label, btnStyle, dark])
 
@@ -87,28 +84,17 @@ const LiquidGlassButton = ({
 
   return (
     <div
+      ref={containerRef}
       className={className}
-      style={{ width, height, position: 'relative' }}
+      style={{ width, height, position: 'relative', borderRadius: 'inherit', overflow: 'hidden' }}
     >
-      {showFallback ? (
+      {showFallback && (
         <button
           onClick={onTap}
           className={`glass-btn w-full h-full flex items-center justify-center cursor-pointer ${fallbackClassName}`}
         >
           {label}
         </button>
-      ) : (
-        <div
-          ref={containerRef}
-          className='liquid-glass-btn-frame'
-          style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: 'inherit',
-            overflow: 'hidden',
-            background: 'rgba(99, 102, 241, 0.1)'
-          }}
-        />
       )}
     </div>
   )
