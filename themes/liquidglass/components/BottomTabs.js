@@ -48,6 +48,19 @@ const STYLE_PREFIXES = ['fa-solid', 'fa-regular', 'fa-brands', 'fa-light', 'fa-t
 
 const getIconPath = (iconClass) => {
   if (!iconClass) return DEFAULT_ICON
+  // Handle non-string inputs (arrays from multi_select, objects, numbers, etc.)
+  if (typeof iconClass !== 'string') {
+    if (Array.isArray(iconClass)) {
+      // If it's an array, try the first string element
+      const str = iconClass.find(s => typeof s === 'string')
+      if (!str) return DEFAULT_ICON
+      iconClass = str
+    } else if (typeof iconClass === 'object' && iconClass.name) {
+      iconClass = String(iconClass.name)
+    } else {
+      iconClass = String(iconClass)
+    }
+  }
   const parts = iconClass.split(/\s+/)
   for (const part of parts) {
     const trimmed = part.trim()
@@ -98,16 +111,33 @@ const BottomTabs = (props) => {
     return links
   }, [customMenu, customNav, locale])
 
-  const tabs = useMemo(() => menuItems.map(item => ({
-    icon: getIconPath(item.icon),
-    label: item.name || item.title || '',
-    href: item.href || '/',
-    subMenus: item.subMenus || [],
-    viewport: 24
-  })), [menuItems])
+  const tabs = useMemo(() => menuItems.map(item => {
+    // Clean subMenus: extract only needed props, avoid storing full Notion page objects
+    let cleanSubMenus = []
+    if (Array.isArray(item.subMenus)) {
+      cleanSubMenus = item.subMenus.map(s => ({
+        name: s?.name || s?.title || '',
+        href: s?.href || s?.slug || '/',
+        icon: typeof s?.icon === 'string' ? s.icon : ''
+      }))
+    }
+    return {
+      icon: getIconPath(item.icon),
+      label: typeof item.name === 'string' ? item.name : (typeof item.title === 'string' ? item.title : (item.label || '')),
+      href: item.href || item.url || item.slug || '/',
+      subMenus: cleanSubMenus,
+      viewport: 24
+    }
+  }), [menuItems])
 
-  // Serialize tabs content to detect actual content changes (not reference changes)
-  const tabsKey = JSON.stringify(tabs)
+  // Only serialize data passed to setTabs() — exclude subMenus (large page property objects)
+  const tabsKey = useMemo(() => {
+    try {
+      return JSON.stringify(tabs.map(t => ({ icon: t.icon, label: t.label, viewport: t.viewport })))
+    } catch {
+      return String(tabs.length)
+    }
+  }, [tabs])
   const tabsRef = useRef(tabs)
   tabsRef.current = tabs
 
@@ -228,7 +258,7 @@ const BottomTabs = (props) => {
                 onClick={() => setSubMenuOpen(null)}
               >
                 {s.icon && <i className={s.icon + ' mr-2'} />}
-                {s.title || s.name}
+                {s.name}
               </SmartLink>
             ))}
           </div>
@@ -282,7 +312,7 @@ const BottomTabs = (props) => {
               onClick={() => setSubMenuOpen(null)}
             >
               {s.icon && <i className={s.icon + ' mr-2'} />}
-              {s.title || s.name}
+              {s.name}
             </SmartLink>
           ))}
         </div>
