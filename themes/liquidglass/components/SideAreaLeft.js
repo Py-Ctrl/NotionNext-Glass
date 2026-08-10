@@ -4,6 +4,7 @@ import CONFIG from '../config'
 import { siteConfig } from '@/lib/config'
 import { useRouter } from 'next/router'
 import DarkModeButton from './DarkModeButton'
+import SocialButton from './SocialButton'
 import dynamic from 'next/dynamic'
 
 const Live2D = dynamic(() => import('@/components/Live2D'), { ssr: false })
@@ -40,6 +41,11 @@ const SideAreaLeft = (props) => {
         {/* 主题切换 */}
         <div className='flex justify-center mt-4'>
           <DarkModeButton />
+        </div>
+
+        {/* 联系方式 */}
+        <div className='mt-5 pt-4 border-t border-gray-200/30 dark:border-gray-700/30'>
+          <SocialButton />
         </div>
 
         {/* 宠物挂件 */}
