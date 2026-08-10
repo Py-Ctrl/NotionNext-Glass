@@ -208,7 +208,7 @@ const LayoutBase = props => {
         </div>
 
         {/* 底部标签栏 */}
-        <BottomTabs />
+        <BottomTabs {...props} />
 
         {/* 页脚 */}
         <Footer title={siteConfig('TITLE')} />
