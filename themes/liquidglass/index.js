@@ -201,9 +201,7 @@ const LayoutIndex = props => {
   const { notice } = props
   return (
     <>
-      <div className='my-2 lg:hidden'>
-        <Announcement post={notice} />
-      </div>
+      <Announcement post={notice} />
       <BlogListBar {...props} />
       {siteConfig('POST_LIST_STYLE') !== 'page' ? (
         <BlogPostListScroll {...props} showSummary={true} />

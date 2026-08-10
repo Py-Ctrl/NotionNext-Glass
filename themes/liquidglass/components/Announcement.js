@@ -1,18 +1,21 @@
 import { useGlobal } from '@/lib/global'
-import SmartLink from '@/components/SmartLink'
+import NotionPage from '@/components/NotionPage'
 
 const Announcement = ({ post }) => {
+  const { locale } = useGlobal()
   if (!post) return null
 
   return (
-    <div className='glass-card p-4 text-sm text-gray-600 dark:text-gray-400'>
-      <div className='flex items-center gap-2 mb-1'>
+    <div className='glass-card p-4 mb-4'>
+      <div className='text-sm pb-1 px-2 flex items-center gap-2'>
         <i className='fas fa-bullhorn text-indigo-400' />
-        <span className='font-medium text-gray-700 dark:text-gray-300'>公告</span>
+        <span className='font-medium text-gray-700 dark:text-gray-300'>
+          {locale.COMMON.ANNOUNCEMENT}
+        </span>
       </div>
-      <SmartLink href={post?.href} className='glass-link'>
-        {post.title}
-      </SmartLink>
+      <div id='announcement-content'>
+        <NotionPage post={post} />
+      </div>
     </div>
   )
 }
