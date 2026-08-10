@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useId } from 'react'
 import { useGlobal } from '@/lib/global'
+import { getWallpaper } from './liquidGlassWallpaper'
 
 let webglContextCount = 0
 const MAX_WEBGL_CONTEXTS = 6
@@ -44,6 +45,7 @@ const LiquidGlassButton = ({
 
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'buttons')
+    el.setAttribute('wallpaper', getWallpaper(isDarkMode))
     if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)

@@ -3,6 +3,7 @@ import { useGlobal } from '@/lib/global'
 import { useEffect, useRef, useState } from 'react'
 import { siteConfig } from '@/lib/config'
 import CONFIG from '../config'
+import { getWallpaper } from './liquidGlassWallpaper'
 
 const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
   const { locale, isDarkMode } = useGlobal()
@@ -68,6 +69,7 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
     el.style.cssText = `display:block;width:100%;height:${height}px`
     wrapper.appendChild(el)
 
+    el.setAttribute('wallpaper', getWallpaper(isDarkMode))
     if (isDarkMode) el.setAttribute('dark', '')
 
     webglRef.current = el

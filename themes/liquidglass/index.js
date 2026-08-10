@@ -13,7 +13,6 @@ import {
   useRef,
   useState
 } from 'react'
-import Announcement from './components/Announcement'
 import ArticleDetail from './components/ArticleDetail'
 import { ArticleLock } from './components/ArticleLock'
 import BlogListBar from './components/BlogListBar'
@@ -198,10 +197,8 @@ const LayoutBase = props => {
 }
 
 const LayoutIndex = props => {
-  const { notice } = props
   return (
     <>
-      <Announcement post={notice} />
       <BlogListBar {...props} />
       {siteConfig('POST_LIST_STYLE') !== 'page' ? (
         <BlogPostListScroll {...props} showSummary={true} />
