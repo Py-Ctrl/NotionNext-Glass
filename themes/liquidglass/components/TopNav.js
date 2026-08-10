@@ -10,7 +10,7 @@ import CONFIG from '../config'
 import { useRouter } from 'next/router'
 
 const TopNav = (props) => {
-  const { tags, currentTag, categories, currentCategory, siteInfo } = props
+  const { tags, currentTag, categories, currentCategory, siteInfo, searchModal } = props
   const { locale } = useGlobal()
   const searchDrawer = useRef()
   const collapseRef = useRef(null)
@@ -19,6 +19,7 @@ const TopNav = (props) => {
   const navRef = useRef(null)
   const windowTopRef = useRef(0)
   const [isOpen, changeShow] = useState(false)
+  const searchInputRef = useRef(null)
 
   const scrollTrigger = useCallback(() => {
     if (rafRef.current) return
@@ -61,12 +62,45 @@ const TopNav = (props) => {
 
   const toggleMenuOpen = () => changeShow(!isOpen)
 
+  const handleMobileSearch = (key) => {
+    if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
+      searchDrawer?.current?.hide()
+      searchModal.current.openSearch()
+      return
+    }
+    if (key && key !== '') {
+      searchDrawer?.current?.hide()
+      router.push({ pathname: '/search/' + key })
+    }
+  }
+
   return (
     <div id='top-nav' className='block lg:hidden'>
       <SearchDrawer cRef={searchDrawer} slot={
         <>
+          {/* 搜索框 */}
+          <div className='glass-search flex w-full items-center mb-4'>
+            <i className='fas fa-search text-gray-400 dark:text-gray-500 ml-4 text-sm' />
+            <input
+              ref={searchInputRef}
+              type='text'
+              placeholder={locale.SEARCH?.ARTICLES || '搜索文章'}
+              className='outline-none w-full text-sm px-3 py-2.5 bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500'
+              onKeyUp={(e) => {
+                if (e.keyCode === 13) {
+                  handleMobileSearch(e.target.value)
+                }
+              }}
+              onFocus={() => {
+                if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
+                  searchDrawer?.current?.hide()
+                  searchModal.current.openSearch()
+                }
+              }}
+            />
+          </div>
           {categories && (
-            <section className='mt-6'>
+            <section className='mt-2'>
               <div className='text-sm font-medium text-gray-600 dark:text-gray-200 mb-2'>
                 <i className='mr-2 fas fa-th-list' />
                 {locale.COMMON.CATEGORY}

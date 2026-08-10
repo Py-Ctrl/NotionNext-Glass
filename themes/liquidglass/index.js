@@ -127,7 +127,7 @@ const LayoutBase = props => {
         <LiquidGlassScript />
 
         {/* 移动端顶部导航 */}
-        <TopNav {...props} />
+        <TopNav {...props} searchModal={searchModal} />
 
         <AlgoliaSearchModal cRef={searchModal} {...props} />
 

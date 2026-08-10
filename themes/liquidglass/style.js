@@ -372,8 +372,7 @@ const Style = () => {
 
     /* 桌面端隐藏全局 APlayer 固定栏，使用主题内置侧边栏播放器替代 */
     @media (min-width: 1024px) {
-      #theme-liquidglass ~ .aplayer,
-      #theme-liquidglass .aplayer.aplayer-fixed {
+      .aplayer.aplayer-fixed {
         display: none !important;
       }
     }
