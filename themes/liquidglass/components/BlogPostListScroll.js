@@ -1,9 +1,9 @@
 import { useGlobal } from '@/lib/global'
 import { useRouter } from 'next/router'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
+import BlogPostCard from './BlogPostCard'
 import BlogPostListEmpty from './BlogPostListEmpty'
 import LiquidGlassButton from './LiquidGlassButton'
-import LiquidGlassScrollContainer from './LiquidGlassScrollContainer'
 
 const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
   const { locale } = useGlobal()
@@ -27,29 +27,23 @@ const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
     }
   }
 
-  const scrollItems = useMemo(() => {
-    return postsToShow.map(post => ({
-      title: post.title,
-      subtitle: [post.date?.start_date, post.category, post.summary].filter(Boolean).join(' · ').slice(0, 120),
-      link: {
-        text: locale.COMMON?.ARTICLE_DETAIL || '阅读更多',
-        href: post.href
-      }
-    }))
-  }, [postsToShow, locale])
-
   if (!posts || posts.length === 0) {
     return <BlogPostListEmpty />
   }
 
   return (
-    <div className='w-full'>
-      <div style={{ borderRadius: '24px', overflow: 'hidden' }}>
-        <LiquidGlassScrollContainer items={scrollItems} height='600px' />
-      </div>
+    <div className='space-y-4 sm:space-y-6 w-full'>
+      {postsToShow.map((post, index) => (
+        <BlogPostCard
+          key={post.id}
+          post={post}
+          index={index}
+          showSummary={showSummary}
+        />
+      ))}
 
       {showLoadMore && postsToShow.length < posts.length && (
-        <div className='flex justify-center pt-4 sm:pt-6'>
+        <div className='flex justify-center pt-2 sm:pt-4'>
           <LiquidGlassButton
             label={locale.COMMON.MORE || '加载更多'}
             btnStyle='blue'

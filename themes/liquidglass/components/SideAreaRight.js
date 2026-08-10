@@ -2,40 +2,16 @@ import { useGlobal } from '@/lib/global'
 import CONFIG from '../config'
 import { siteConfig } from '@/lib/config'
 import { useRouter } from 'next/router'
-import { useMemo } from 'react'
 import SearchInput from './SearchInput'
+import TagGroups from './TagGroups'
+import CategoryGroup from './CategoryGroup'
 import SmartLink from '@/components/SmartLink'
 import Announcement from './Announcement'
-import LiquidGlassScrollContainer from './LiquidGlassScrollContainer'
 
 const SideAreaRight = (props) => {
-  const { tags, categories, slot, notice } = props
+  const { tags, currentTag, categories, currentCategory, slot, notice } = props
   const { locale } = useGlobal()
   const router = useRouter()
-
-  const categoryItems = useMemo(() => {
-    if (!categories || categories.length === 0) return []
-    return categories.map(category => ({
-      title: category.name,
-      subtitle: `${category.count || 0} ${locale.COMMON?.ARTICLES || '篇文章'}`,
-      link: {
-        text: locale.COMMON?.MORE || '查看',
-        href: `/category/${category.name}`
-      }
-    }))
-  }, [categories, locale])
-
-  const tagItems = useMemo(() => {
-    if (!tags || tags.length === 0) return []
-    return tags.map(tag => ({
-      title: tag.name,
-      subtitle: `${tag.count || 0} ${locale.COMMON?.ARTICLES || '篇文章'}`,
-      link: {
-        text: locale.COMMON?.MORE || '查看',
-        href: `/tag/${encodeURIComponent(tag.name)}`
-      }
-    }))
-  }, [tags, locale])
 
   return (
     <aside className='hidden xl:block w-72 shrink-0 ml-4 xl:ml-8'>
@@ -62,7 +38,7 @@ const SideAreaRight = (props) => {
         {slot}
 
         {/* 分类 */}
-        {siteConfig('LIQUID_MENU_CATEGORY', null, CONFIG) && categoryItems.length > 0 && (
+        {siteConfig('LIQUID_MENU_CATEGORY', null, CONFIG) && categories && (
           <section className='mb-5'>
             <div className='flex items-center justify-between mb-2'>
               <h3 className='text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider'>
@@ -73,17 +49,12 @@ const SideAreaRight = (props) => {
                 {locale.COMMON.MORE}
               </SmartLink>
             </div>
-            <div style={{ borderRadius: '20px', overflow: 'hidden' }}>
-              <LiquidGlassScrollContainer
-                items={categoryItems}
-                height='300px'
-              />
-            </div>
+            <CategoryGroup currentCategory={currentCategory} categories={categories} />
           </section>
         )}
 
         {/* 标签 */}
-        {siteConfig('LIQUID_MENU_TAG', null, CONFIG) && tagItems.length > 0 && (
+        {siteConfig('LIQUID_MENU_TAG', null, CONFIG) && tags && (
           <section>
             <div className='flex items-center justify-between mb-2'>
               <h3 className='text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider'>
@@ -94,12 +65,7 @@ const SideAreaRight = (props) => {
                 {locale.COMMON.MORE}
               </SmartLink>
             </div>
-            <div style={{ borderRadius: '20px', overflow: 'hidden' }}>
-              <LiquidGlassScrollContainer
-                items={tagItems}
-                height='300px'
-              />
-            </div>
+            <TagGroups tags={tags} currentTag={currentTag} />
           </section>
         )}
       </div>
