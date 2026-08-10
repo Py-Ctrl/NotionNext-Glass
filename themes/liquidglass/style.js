@@ -377,6 +377,185 @@ const Style = () => {
       }
     }
 
+    /* ========== Algolia 搜索弹窗美化 ========== */
+
+    /* 弹窗主体 */
+    #theme-liquidglass #search-wrapper > div:first-child {
+      background: rgba(255, 255, 255, 0.72) !important;
+      backdrop-filter: blur(28px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      border-radius: 20px !important;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper > div:first-child {
+      background: rgba(18, 18, 32, 0.78) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* 标题渐变 */
+    #theme-liquidglass #search-wrapper .text-2xl {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+    }
+
+    /* 关闭按钮 */
+    #theme-liquidglass #search-wrapper .fa-xmark {
+      transition: all 0.25s ease !important;
+    }
+
+    #theme-liquidglass #search-wrapper .fa-xmark:hover {
+      transform: rotate(90deg) scale(1.15) !important;
+      color: #6366f1 !important;
+    }
+
+    /* 搜索输入框 */
+    #theme-liquidglass #search-wrapper input[type='text'] {
+      background: rgba(255, 255, 255, 0.5) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      border-radius: 12px !important;
+      color: #1f2937 !important;
+      transition: all 0.3s ease !important;
+    }
+
+    #theme-liquidglass #search-wrapper input[type='text']::placeholder {
+      color: rgba(107, 114, 128, 0.6) !important;
+    }
+
+    #theme-liquidglass #search-wrapper input[type='text']:focus {
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+      background: rgba(255, 255, 255, 0.7) !important;
+      outline: none !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper input[type='text'] {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      color: #e5e7eb !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper input[type='text']::placeholder {
+      color: rgba(156, 163, 175, 0.5) !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper input[type='text']:focus {
+      border-color: #818cf8 !important;
+      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15) !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* 标签组 */
+    #theme-liquidglass #search-wrapper #tags-group > a > div {
+      background: rgba(255, 255, 255, 0.3) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      border-radius: 10px !important;
+      transition: all 0.2s ease !important;
+    }
+
+    #theme-liquidglass #search-wrapper #tags-group > a > div:hover {
+      background: rgba(99, 102, 241, 0.18) !important;
+      border-color: rgba(99, 102, 241, 0.4) !important;
+      color: #6366f1 !important;
+      transform: scale(1.08) !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper #tags-group > a > div {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      color: #d1d5db !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper #tags-group > a > div:hover {
+      background: rgba(129, 140, 248, 0.15) !important;
+      border-color: rgba(129, 140, 248, 0.3) !important;
+      color: #a5b4fc !important;
+    }
+
+    /* 搜索结果项 */
+    #theme-liquidglass #search-wrapper ul li {
+      background: transparent !important;
+      border: 1px solid transparent !important;
+      transition: all 0.2s ease !important;
+    }
+
+    #theme-liquidglass #search-wrapper ul li:hover {
+      background: rgba(99, 102, 241, 0.08) !important;
+      border-color: rgba(99, 102, 241, 0.2) !important;
+      transform: translateX(4px) !important;
+    }
+
+    #theme-liquidglass #search-wrapper ul li.bg-blue-600,
+    .dark #theme-liquidglass #search-wrapper ul li.bg-blue-600 {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.92), rgba(139, 92, 246, 0.92)) !important;
+      border-color: rgba(99, 102, 241, 0.5) !important;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper ul li:hover {
+      background: rgba(129, 140, 248, 0.1) !important;
+      border-color: rgba(129, 140, 248, 0.2) !important;
+    }
+
+    /* 分页按钮 */
+    #theme-liquidglass #search-wrapper .cursor-pointer.w-6 {
+      background: rgba(255, 255, 255, 0.2) !important;
+      backdrop-filter: blur(8px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 8px !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    #theme-liquidglass #search-wrapper .cursor-pointer.w-6:hover {
+      background: rgba(99, 102, 241, 0.15) !important;
+      border-color: rgba(99, 102, 241, 0.3) !important;
+    }
+
+    #theme-liquidglass #search-wrapper .cursor-pointer.w-6.font-bold {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+      border-color: rgba(99, 102, 241, 0.5) !important;
+      color: white !important;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper .cursor-pointer.w-6 {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      color: #d1d5db !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper .cursor-pointer.w-6.font-bold {
+      background: linear-gradient(135deg, #818cf8, #a78bfa) !important;
+      color: white !important;
+    }
+
+    /* 遮罩层 */
+    #theme-liquidglass #search-wrapper > .glassmorphism {
+      background: rgba(10, 10, 20, 0.25) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+
+    /* 底部信息栏 */
+    #theme-liquidglass #search-wrapper .fa-algolia {
+      color: #6366f1 !important;
+    }
+
+    .dark #theme-liquidglass #search-wrapper .fa-algolia {
+      color: #818cf8 !important;
+    }
+
     /* ========== 移动端响应式 ========== */
     @media (max-width: 640px) {
       #theme-liquidglass {
