@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useId } from 'react'
 import { useGlobal } from '@/lib/global'
+import { getWallpaper } from './liquidGlassWallpaper'
 
 const LiquidGlassButtonGroup = ({
   buttons = [],
@@ -42,7 +43,7 @@ const LiquidGlassButtonGroup = ({
 
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'buttons')
-    el.setAttribute('wallpaper', 'gradient')
+    el.setAttribute('wallpaper', getWallpaper(isDarkMode))
     if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)
