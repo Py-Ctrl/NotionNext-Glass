@@ -72,7 +72,6 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false, searchMod
     el.style.cssText = `display:block;width:100%;height:${height}px`
     wrapper.appendChild(el)
 
-    el.setAttribute('wallpaper', 'gradient')
     if (isDarkMode) el.setAttribute('dark', '')
 
     webglRef.current = el

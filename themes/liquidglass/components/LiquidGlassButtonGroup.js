@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useId } from 'react'
 import { useGlobal } from '@/lib/global'
-import { getWallpaper } from './liquidGlassWallpaper'
 
 const LiquidGlassButtonGroup = ({
   buttons = [],
@@ -43,7 +42,6 @@ const LiquidGlassButtonGroup = ({
 
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'buttons')
-    el.setAttribute('wallpaper', getWallpaper(isDarkMode))
     if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)
@@ -91,7 +89,7 @@ const LiquidGlassButtonGroup = ({
     <div
       ref={containerRef}
       className={className}
-      style={{ width, height: containerHeight, position: 'relative', borderRadius: 'inherit', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
+      style={{ width, height: containerHeight, position: 'relative', borderRadius: 'inherit', overflow: 'hidden' }}
     >
       {showFallback && (
         <div className='flex flex-col gap-2 p-2'>

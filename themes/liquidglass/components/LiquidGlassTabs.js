@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useId } from 'react'
 import { useGlobal } from '@/lib/global'
-import { getWallpaper } from './liquidGlassWallpaper'
 
 const LiquidGlassTabs = ({
   tabs = [],
@@ -45,7 +44,6 @@ const LiquidGlassTabs = ({
     el.style.cssText = `display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden`
     wrapper.appendChild(el)
 
-    el.setAttribute('wallpaper', getWallpaper(isDarkMode))
     if (isDarkMode) el.setAttribute('dark', '')
 
     requestAnimationFrame(() => {
@@ -105,7 +103,7 @@ const LiquidGlassTabs = ({
     >
       <div
         ref={containerRef}
-        style={{ width: '100%', height: '100%', borderRadius: 'inherit', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
+        style={{ width: '100%', height: '100%', borderRadius: 'inherit', overflow: 'hidden' }}
       />
     </div>
   )
