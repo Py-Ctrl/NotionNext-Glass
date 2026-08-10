@@ -44,6 +44,7 @@ const LiquidGlassTabs = ({
     el.style.cssText = `display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden`
     wrapper.appendChild(el)
 
+    el.setAttribute('wallpaper', 'gradient')
     if (isDarkMode) el.setAttribute('dark', '')
 
     requestAnimationFrame(() => {
@@ -98,14 +99,10 @@ const LiquidGlassTabs = ({
 
   return (
     <div
+      ref={containerRef}
       className={className}
-      style={{ width, height, position: 'relative' }}
-    >
-      <div
-        ref={containerRef}
-        style={{ width: '100%', height: '100%', borderRadius: 'inherit', overflow: 'hidden' }}
-      />
-    </div>
+      style={{ width, height, position: 'relative', borderRadius: 'inherit', overflow: 'hidden' }}
+    />
   )
 }
 

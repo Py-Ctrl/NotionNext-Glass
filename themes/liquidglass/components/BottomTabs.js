@@ -132,6 +132,7 @@ const BottomTabs = (props) => {
 
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'single-bottom-tabs')
+    el.setAttribute('wallpaper', 'gradient')
     if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)
@@ -261,13 +262,11 @@ const BottomTabs = (props) => {
           ))}
         </div>
       )}
-      <nav className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-sm'>
-        <div
-          ref={containerRef}
-          className='rounded-3xl overflow-hidden'
-          style={{ height: '72px' }}
-        />
-      </nav>
+      <nav
+        ref={containerRef}
+        className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-sm rounded-3xl overflow-hidden'
+        style={{ height: '72px' }}
+      />
     </>
   )
 }
