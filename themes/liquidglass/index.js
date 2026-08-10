@@ -10,6 +10,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState
 } from 'react'
@@ -34,6 +35,7 @@ import TopNav from './components/TopNav'
 import CONFIG from './config'
 import { Style } from './style'
 import LiquidGlassScript from './components/LiquidGlassScript'
+import LiquidGlassScrollContainer from './components/LiquidGlassScrollContainer'
 import LoadingCover from '@/components/LoadingCover'
 import { Transition } from '@headlessui/react'
 
@@ -355,23 +357,41 @@ const LayoutCategoryIndex = props => {
   const { allPosts, categoryOptions } = props
   const { locale } = useGlobal()
 
+  const categoryItems = useMemo(() => {
+    if (!categoryOptions || categoryOptions.length === 0) return []
+    return categoryOptions.map(category => ({
+      title: category.name,
+      subtitle: `${category.count || 0} ${locale.COMMON?.ARTICLES || '篇文章'}`,
+      link: {
+        text: locale.COMMON?.MORE || '查看',
+        href: `/category/${category.name}`
+      }
+    }))
+  }, [categoryOptions, locale])
+
   return (
     <div className='glass-card p-4 sm:p-8'>
       <div className='dark:text-gray-200 mb-5 text-sm sm:text-base'>
         <i className='mr-4 fas fa-th-list' />
         {locale.COMMON.CATEGORY}:
       </div>
-      <div id='category-list' className='flex flex-wrap gap-2'>
-        {categoryOptions?.map(category => (
-          <SmartLink
-            key={category.name}
-            href={`/category/${category.name}`}
-            className='glass-tag inline-block'>
-            <i className='mr-2 fas fa-folder' />
-            {category.name} ({category.count})
-          </SmartLink>
-        ))}
-      </div>
+      {categoryItems.length > 0 ? (
+        <div id='category-list' style={{ borderRadius: '20px', overflow: 'hidden', maxWidth: '600px', margin: '0 auto' }}>
+          <LiquidGlassScrollContainer items={categoryItems} height='500px' />
+        </div>
+      ) : (
+        <div id='category-list' className='flex flex-wrap gap-2'>
+          {categoryOptions?.map(category => (
+            <SmartLink
+              key={category.name}
+              href={`/category/${category.name}`}
+              className='glass-tag inline-block'>
+              <i className='mr-2 fas fa-folder' />
+              {category.name} ({category.count})
+            </SmartLink>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -380,17 +400,35 @@ const LayoutTagIndex = props => {
   const { tagOptions } = props
   const { locale } = useGlobal()
 
+  const tagItems = useMemo(() => {
+    if (!tagOptions || tagOptions.length === 0) return []
+    return tagOptions.map(tag => ({
+      title: tag.name,
+      subtitle: `${tag.count || 0} ${locale.COMMON?.ARTICLES || '篇文章'}`,
+      link: {
+        text: locale.COMMON?.MORE || '查看',
+        href: `/tag/${encodeURIComponent(tag.name)}`
+      }
+    }))
+  }, [tagOptions, locale])
+
   return (
     <div className='glass-card p-4 sm:p-8'>
       <div className='dark:text-gray-200 mb-5 text-sm sm:text-base'>
         <i className='fas fa-tags mr-4' />
         {locale.COMMON.TAGS}:
       </div>
-      <div id='tags-list' className='flex flex-wrap gap-2'>
-        {tagOptions.map(tag => (
-          <TagItem key={tag.name} tag={tag} />
-        ))}
-      </div>
+      {tagItems.length > 0 ? (
+        <div id='tags-list' style={{ borderRadius: '20px', overflow: 'hidden', maxWidth: '600px', margin: '0 auto' }}>
+          <LiquidGlassScrollContainer items={tagItems} height='500px' />
+        </div>
+      ) : (
+        <div id='tags-list' className='flex flex-wrap gap-2'>
+          {tagOptions.map(tag => (
+            <TagItem key={tag.name} tag={tag} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
