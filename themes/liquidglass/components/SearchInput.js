@@ -3,7 +3,6 @@ import { useGlobal } from '@/lib/global'
 import { useEffect, useRef, useState } from 'react'
 import { siteConfig } from '@/lib/config'
 import CONFIG from '../config'
-import { getWallpaper } from './liquidGlassWallpaper'
 
 const SearchInput = ({ currentTag, keyword, onSearch, compact = false, searchModal }) => {
   const { locale, isDarkMode } = useGlobal()
@@ -73,7 +72,7 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false, searchMod
     el.style.cssText = `display:block;width:100%;height:${height}px`
     wrapper.appendChild(el)
 
-    el.setAttribute('wallpaper', getWallpaper(isDarkMode))
+    el.setAttribute('wallpaper', 'gradient')
     if (isDarkMode) el.setAttribute('dark', '')
 
     webglRef.current = el
@@ -131,7 +130,7 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false, searchMod
         <div
           ref={containerRef}
           className='liquid-glass-search-wrapper w-full cursor-pointer'
-          style={{ borderRadius: '20px', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
+          style={{ borderRadius: '20px', overflow: 'hidden' }}
           onClick={() => {
             if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
               searchModal.current.openSearch()
