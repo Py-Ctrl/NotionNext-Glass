@@ -5,6 +5,7 @@ import { siteConfig } from '@/lib/config'
 import { useRouter } from 'next/router'
 import DarkModeButton from './DarkModeButton'
 import SocialButton from './SocialButton'
+import MusicPlayer from './MusicPlayer'
 import dynamic from 'next/dynamic'
 
 const Live2D = dynamic(() => import('@/components/Live2D'), { ssr: false })
@@ -13,6 +14,7 @@ const SideAreaLeft = (props) => {
   const { locale } = useGlobal()
   const { siteInfo } = props
   const router = useRouter()
+  const musicPlayerEnabled = siteConfig('MUSIC_PLAYER')
 
   return (
     <aside className='hidden lg:block w-56 xl:w-60 shrink-0 mr-1 xl:mr-2'>
@@ -47,6 +49,13 @@ const SideAreaLeft = (props) => {
         <div className='mt-5 pt-4 border-t border-gray-200/30 dark:border-gray-700/30'>
           <SocialButton />
         </div>
+
+        {/* 音乐播放器 */}
+        {musicPlayerEnabled && (
+          <div className='mt-5 pt-4 border-t border-gray-200/30 dark:border-gray-700/30'>
+            <MusicPlayer />
+          </div>
+        )}
 
         {/* 宠物挂件 */}
         <div className='flex justify-center mt-4'>

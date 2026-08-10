@@ -346,6 +346,38 @@ const Style = () => {
       height: auto;
     }
 
+    /* ========== 音乐播放器 ========== */
+    #theme-liquidglass .glass-music-player {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .dark #theme-liquidglass .glass-music-player {
+      background: var(--glass-bg-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    #theme-liquidglass .animate-spin-slow {
+      animation: spin-slow 8s linear infinite;
+    }
+
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* 桌面端隐藏全局 APlayer 固定栏，使用主题内置侧边栏播放器替代 */
+    @media (min-width: 1024px) {
+      #theme-liquidglass ~ .aplayer,
+      #theme-liquidglass .aplayer.aplayer-fixed {
+        display: none !important;
+      }
+    }
+
     /* ========== 移动端响应式 ========== */
     @media (max-width: 640px) {
       #theme-liquidglass {
