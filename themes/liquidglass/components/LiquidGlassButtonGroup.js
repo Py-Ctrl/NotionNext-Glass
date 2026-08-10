@@ -42,6 +42,7 @@ const LiquidGlassButtonGroup = ({
 
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'buttons')
+    el.setAttribute('wallpaper', 'gradient')
     if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)
