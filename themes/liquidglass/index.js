@@ -24,10 +24,10 @@ import FloatDarkModeButton from './components/FloatDarkModeButton'
 import Footer from './components/Footer'
 import JumpToBottomButton from './components/JumpToBottomButton'
 import JumpToTopButton from './components/JumpToTopButton'
-import LiquidGlassScrollContainer from './components/LiquidGlassScrollContainer'
 import SideAreaLeft from './components/SideAreaLeft'
 import SideAreaRight from './components/SideAreaRight'
 import StickyBar from './components/StickyBar'
+import TagItem from './components/TagItem'
 import TocDrawer from './components/TocDrawer'
 import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
@@ -337,19 +337,23 @@ const LayoutCategoryIndex = props => {
   const { allPosts, categoryOptions } = props
   const { locale } = useGlobal()
 
-  const items = (categoryOptions || []).map(c => ({
-    title: c.name,
-    subtitle: `${c.count} 篇文章`,
-    link: { text: '查看', href: `/category/${c.name}` }
-  }))
-
   return (
     <div className='glass-card p-4 sm:p-8'>
       <div className='dark:text-gray-200 mb-5 text-sm sm:text-base'>
         <i className='mr-4 fas fa-th-list' />
         {locale.COMMON.CATEGORY}:
       </div>
-      <LiquidGlassScrollContainer items={items} height={500} />
+      <div id='category-list' className='flex flex-wrap gap-2'>
+        {categoryOptions?.map(category => (
+          <SmartLink
+            key={category.name}
+            href={`/category/${category.name}`}
+            className='glass-tag inline-block'>
+            <i className='mr-2 fas fa-folder' />
+            {category.name} ({category.count})
+          </SmartLink>
+        ))}
+      </div>
     </div>
   )
 }
@@ -358,19 +362,17 @@ const LayoutTagIndex = props => {
   const { tagOptions } = props
   const { locale } = useGlobal()
 
-  const items = (tagOptions || []).map(t => ({
-    title: t.name,
-    subtitle: `${t.count} 篇文章`,
-    link: { text: '查看', href: `/tag/${t.name}` }
-  }))
-
   return (
     <div className='glass-card p-4 sm:p-8'>
       <div className='dark:text-gray-200 mb-5 text-sm sm:text-base'>
         <i className='fas fa-tags mr-4' />
         {locale.COMMON.TAGS}:
       </div>
-      <LiquidGlassScrollContainer items={items} height={500} />
+      <div id='tags-list' className='flex flex-wrap gap-2'>
+        {tagOptions.map(tag => (
+          <TagItem key={tag.name} tag={tag} />
+        ))}
+      </div>
     </div>
   )
 }
