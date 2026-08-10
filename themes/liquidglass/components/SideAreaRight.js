@@ -2,9 +2,9 @@ import { useGlobal } from '@/lib/global'
 import CONFIG from '../config'
 import { siteConfig } from '@/lib/config'
 import { useRouter } from 'next/router'
+import { useMemo } from 'react'
 import SearchInput from './SearchInput'
-import TagGroups from './TagGroups'
-import CategoryGroup from './CategoryGroup'
+import LiquidGlassScrollContainer from './LiquidGlassScrollContainer'
 import SmartLink from '@/components/SmartLink'
 import Announcement from './Announcement'
 
@@ -12,6 +12,24 @@ const SideAreaRight = (props) => {
   const { tags, currentTag, categories, currentCategory, slot, notice } = props
   const { locale } = useGlobal()
   const router = useRouter()
+
+  const categoryItems = useMemo(() => {
+    if (!categories) return []
+    return categories.map(c => ({
+      title: c.name,
+      subtitle: `${c.count} 篇文章`,
+      link: { text: '查看', href: `/category/${c.name}` }
+    }))
+  }, [categories])
+
+  const tagItems = useMemo(() => {
+    if (!tags) return []
+    return tags.map(t => ({
+      title: t.name,
+      subtitle: `${t.count} 篇文章`,
+      link: { text: '查看', href: `/tag/${t.name}` }
+    }))
+  }, [tags])
 
   return (
     <aside className='hidden xl:block w-72 shrink-0 ml-4 xl:ml-8'>
@@ -49,7 +67,7 @@ const SideAreaRight = (props) => {
                 {locale.COMMON.MORE}
               </SmartLink>
             </div>
-            <CategoryGroup currentCategory={currentCategory} categories={categories} />
+            <LiquidGlassScrollContainer items={categoryItems} height={280} />
           </section>
         )}
 
@@ -65,7 +83,7 @@ const SideAreaRight = (props) => {
                 {locale.COMMON.MORE}
               </SmartLink>
             </div>
-            <TagGroups tags={tags} currentTag={currentTag} />
+            <LiquidGlassScrollContainer items={tagItems} height={280} />
           </section>
         )}
       </div>
