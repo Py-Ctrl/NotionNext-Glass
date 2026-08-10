@@ -37,7 +37,6 @@ import { Style } from './style'
 import LiquidGlassScript from './components/LiquidGlassScript'
 import LiquidGlassScrollContainer from './components/LiquidGlassScrollContainer'
 import LoadingCover from '@/components/LoadingCover'
-import { Transition } from '@headlessui/react'
 
 const AlgoliaSearchModal = dynamic(
   () => import('@/components/AlgoliaSearchModal'),
@@ -49,7 +48,7 @@ export const useLiquidGlassGlobal = () => useContext(ThemeGlobalLiquidGlass)
 
 const LayoutBase = props => {
   const { children, headerSlot, rightAreaSlot, post } = props
-  const { onLoading } = useGlobal()
+  const router = useRouter()
   const targetRef = useRef(null)
   const floatButtonGroup = useRef(null)
   const [showRightFloat, switchShow] = useState(false)
@@ -158,21 +157,9 @@ const LayoutBase = props => {
             id='container-inner'
             className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-20 lg:mt-0' : ''} w-full lg:max-w-2xl xl:max-w-3xl flex-grow min-h-screen relative z-10 px-1 sm:px-2`}
             ref={targetRef}>
-            <Transition
-              show={!onLoading}
-              appear={true}
-              enter='transition ease-in-out duration-300 transform'
-              enterFrom='opacity-0 translate-y-4'
-              enterTo='opacity-100 translate-y-0'
-              leave='transition ease-in-out duration-200 transform'
-              leaveFrom='opacity-100 translate-y-0'
-              leaveTo='opacity-0 -translate-y-4'
-              unmount={false}
-            >
-              <div className='glass-transition'>
-                {children}
-              </div>
-            </Transition>
+            <div className='glass-transition' key={router.asPath}>
+              {children}
+            </div>
           </section>
 
           {/* 右侧栏 */}

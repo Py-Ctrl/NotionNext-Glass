@@ -39,8 +39,7 @@ const ICON_MAP = {
   'moon': 'M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z',
   'github': 'M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.523 2 12 2z',
   'twitter': 'M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z',
-  'weibo': 'M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.737 5.439zm9.222-7.717c-.245-.066-.413-.11-.286-.42.276-.683.31-1.273.014-1.696-.566-.808-2.108-.766-3.871-.022 0 0-.553.243-.41-.197.273-.876.227-1.611-.197-2.034-.949-.952-3.484.04-5.667 2.224-1.626 1.627-2.572 3.348-2.572 4.847 0 2.857 3.66 4.604 7.245 4.604 4.687 0 7.812-2.728 7.812-4.876 0-1.293-1.094-2.043-2.055-2.334z',
-  'rss': 'M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20 5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z'
+  'weibo': 'M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.737 5.439zm9.222-7.717c-.245-.066-.413-.11-.286-.42.276-.683.31-1.273.014-1.696-.566-.808-2.108-.766-3.871-.022 0 0-.553.243-.41-.197.273-.876.227-1.611-.197-2.034-.949-.952-3.484.04-5.667 2.224-1.626 1.627-2.572 3.348-2.572 4.847 0 2.857 3.66 4.604 7.245 4.604 4.687 0 7.812-2.728 7.812-4.876 0-1.293-1.094-2.043-2.055-2.334z'
 }
 
 const DEFAULT_ICON = 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'
@@ -63,11 +62,17 @@ const BottomTabs = (props) => {
   const { isDarkMode, locale } = useGlobal()
   const { customMenu, customNav } = props
   const router = useRouter()
+  const routerRef = useRef(router)
   const containerRef = useRef(null)
+  const elRef = useRef(null)
   const [useWebGL, setUseWebGL] = useState(false)
   const isSettingStateRef = useRef(false)
   const [subMenuOpen, setSubMenuOpen] = useState(null)
+  const subMenuOpenRef = useRef(null)
   const subMenuRef = useRef(null)
+
+  useEffect(() => { routerRef.current = router }, [router])
+  useEffect(() => { subMenuOpenRef.current = subMenuOpen }, [subMenuOpen])
 
   const menuItems = useMemo(() => {
     if (siteConfig('CUSTOM_MENU') && customMenu && customMenu.length > 0) {
@@ -125,6 +130,7 @@ const BottomTabs = (props) => {
     setUseWebGL(true)
   }, [])
 
+  // Effect A: 创建元素和设置 tabs（仅在 tabs/isDarkMode/useWebGL 变化时重建）
   useEffect(() => {
     if (!useWebGL || !containerRef.current) return
 
@@ -137,6 +143,7 @@ const BottomTabs = (props) => {
     if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)
+    elRef.current = el
 
     let retries = 5
     let retryTimer = null
@@ -148,11 +155,6 @@ const BottomTabs = (props) => {
           label: t.label,
           viewport: t.viewport
         }))])
-        isSettingStateRef.current = true
-        if (typeof el.setState === 'function') {
-          el.setState({ selectedTab: activeTab })
-        }
-        setTimeout(() => { isSettingStateRef.current = false }, 200)
       } else if (retries > 0) {
         retries--
         retryTimer = setTimeout(trySetTabs, 100)
@@ -165,10 +167,10 @@ const BottomTabs = (props) => {
       const idx = e.detail?.selectedTab
       if (typeof idx === 'number' && idx >= 0 && tabs[idx]) {
         if (tabs[idx].subMenus.length > 0) {
-          setSubMenuOpen(subMenuOpen === idx ? null : idx)
+          setSubMenuOpen(subMenuOpenRef.current === idx ? null : idx)
         } else {
           setSubMenuOpen(null)
-          router.push(tabs[idx].href)
+          routerRef.current.push(tabs[idx].href)
         }
       }
     }
@@ -178,8 +180,20 @@ const BottomTabs = (props) => {
       clearTimeout(retryTimer)
       document.removeEventListener('lg-statechange', handleStateChange)
       if (container.contains(el)) container.removeChild(el)
+      elRef.current = null
     }
-  }, [useWebGL, isDarkMode, activeTab, tabs, router, subMenuOpen])
+  }, [useWebGL, isDarkMode, tabs])
+
+  // Effect B: 仅更新选中状态（路由变化时只调 setState，不重建元素）
+  useEffect(() => {
+    if (!useWebGL || !elRef.current) return
+    const el = elRef.current
+    if (typeof el.setState === 'function') {
+      isSettingStateRef.current = true
+      el.setState({ selectedTab: activeTab })
+      setTimeout(() => { isSettingStateRef.current = false }, 200)
+    }
+  }, [useWebGL, activeTab])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
