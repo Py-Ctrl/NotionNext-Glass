@@ -34,7 +34,6 @@ import TopNav from './components/TopNav'
 import CONFIG from './config'
 import { Style } from './style'
 import LiquidGlassScript from './components/LiquidGlassScript'
-import LoadingCover from '@/components/LoadingCover'
 
 const AlgoliaSearchModal = dynamic(
   () => import('@/components/AlgoliaSearchModal'),
@@ -126,7 +125,6 @@ const LayoutBase = props => {
         className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth`}>
         <Style />
         <LiquidGlassScript />
-        <LoadingCover />
 
         {/* 移动端顶部导航 */}
         <TopNav {...props} />

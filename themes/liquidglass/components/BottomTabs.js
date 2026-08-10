@@ -106,6 +106,11 @@ const BottomTabs = (props) => {
     viewport: 24
   })), [menuItems])
 
+  // Serialize tabs content to detect actual content changes (not reference changes)
+  const tabsKey = JSON.stringify(tabs)
+  const tabsRef = useRef(tabs)
+  tabsRef.current = tabs
+
   const activeTab = useMemo(() => {
     let idx = 0
     tabs.forEach((t, i) => {
@@ -130,10 +135,11 @@ const BottomTabs = (props) => {
     setUseWebGL(true)
   }, [])
 
-  // Effect A: 创建元素和设置 tabs（仅在 tabs/isDarkMode/useWebGL 变化时重建）
+  // Effect A: 创建元素和设置 tabs（仅在 tabs 内容/isDarkMode/useWebGL 变化时重建）
   useEffect(() => {
     if (!useWebGL || !containerRef.current) return
 
+    const currentTabs = tabsRef.current
     const container = containerRef.current
     container.innerHTML = ''
 
@@ -150,7 +156,7 @@ const BottomTabs = (props) => {
 
     const trySetTabs = () => {
       if (typeof el.setTabs === 'function') {
-        el.setTabs([tabs.map(t => ({
+        el.setTabs([currentTabs.map(t => ({
           icon: t.icon,
           label: t.label,
           viewport: t.viewport
@@ -165,12 +171,13 @@ const BottomTabs = (props) => {
     const handleStateChange = (e) => {
       if (isSettingStateRef.current) return
       const idx = e.detail?.selectedTab
-      if (typeof idx === 'number' && idx >= 0 && tabs[idx]) {
-        if (tabs[idx].subMenus.length > 0) {
+      const t = tabsRef.current
+      if (typeof idx === 'number' && idx >= 0 && t[idx]) {
+        if (t[idx].subMenus.length > 0) {
           setSubMenuOpen(subMenuOpenRef.current === idx ? null : idx)
         } else {
           setSubMenuOpen(null)
-          routerRef.current.push(tabs[idx].href)
+          routerRef.current.push(t[idx].href)
         }
       }
     }
@@ -182,7 +189,7 @@ const BottomTabs = (props) => {
       if (container.contains(el)) container.removeChild(el)
       elRef.current = null
     }
-  }, [useWebGL, isDarkMode, tabs])
+  }, [useWebGL, isDarkMode, tabsKey])
 
   // Effect B: 仅更新选中状态（路由变化时只调 setState，不重建元素）
   useEffect(() => {
