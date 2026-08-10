@@ -269,7 +269,7 @@ const BottomTabs = (props) => {
       <nav
         ref={containerRef}
         className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-3xl overflow-hidden'
-        style={{ height: '72px', width: `min(calc(100% - 2rem), ${tabs.length * 76}px)` }}
+        style={{ height: '72px', width: `min(calc(100% - 2rem), ${tabs.length * 76}px)`, background: isDarkMode ? '#000' : '#fff' }}
       />
     </>
   )

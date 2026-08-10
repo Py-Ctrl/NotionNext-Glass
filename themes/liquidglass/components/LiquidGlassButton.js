@@ -89,7 +89,7 @@ const LiquidGlassButton = ({
     <div
       ref={containerRef}
       className={className}
-      style={{ width, height, position: 'relative', borderRadius: 'inherit', overflow: 'hidden' }}
+      style={{ width, height, position: 'relative', borderRadius: 'inherit', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
     >
       {showFallback && (
         <button

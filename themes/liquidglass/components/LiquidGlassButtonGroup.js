@@ -91,7 +91,7 @@ const LiquidGlassButtonGroup = ({
     <div
       ref={containerRef}
       className={className}
-      style={{ width, height: containerHeight, position: 'relative', borderRadius: 'inherit', overflow: 'hidden' }}
+      style={{ width, height: containerHeight, position: 'relative', borderRadius: 'inherit', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
     >
       {showFallback && (
         <div className='flex flex-col gap-2 p-2'>
