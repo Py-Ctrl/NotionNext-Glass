@@ -46,7 +46,6 @@ export const useLiquidGlassGlobal = () => useContext(ThemeGlobalLiquidGlass)
 
 const LayoutBase = props => {
   const { children, headerSlot, rightAreaSlot, post } = props
-  const router = useRouter()
   const targetRef = useRef(null)
   const floatButtonGroup = useRef(null)
   const [showRightFloat, switchShow] = useState(false)
@@ -155,9 +154,7 @@ const LayoutBase = props => {
             id='container-inner'
             className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-20 lg:mt-0' : ''} w-full lg:max-w-2xl xl:max-w-3xl flex-grow min-h-screen relative z-10 px-1 sm:px-2`}
             ref={targetRef}>
-            <div className='glass-transition' key={router.asPath}>
-              {children}
-            </div>
+            {children}
           </section>
 
           {/* 右侧栏 */}
