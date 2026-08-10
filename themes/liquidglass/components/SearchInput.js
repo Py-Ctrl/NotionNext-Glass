@@ -5,7 +5,7 @@ import { siteConfig } from '@/lib/config'
 import CONFIG from '../config'
 import { getWallpaper } from './liquidGlassWallpaper'
 
-const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
+const SearchInput = ({ currentTag, keyword, onSearch, compact = false, searchModal }) => {
   const { locale, isDarkMode } = useGlobal()
   const router = useRouter()
   const containerRef = useRef(null)
@@ -35,6 +35,10 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
 
   // 搜索处理
   const doSearch = (key) => {
+    if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
+      searchModal.current.openSearch()
+      return
+    }
     if (onSearch) {
       onSearch(key)
       return
@@ -126,8 +130,13 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
       {useWebGL ? (
         <div
           ref={containerRef}
-          className='liquid-glass-search-wrapper w-full'
+          className='liquid-glass-search-wrapper w-full cursor-pointer'
           style={{ borderRadius: '20px', overflow: 'hidden', background: isDarkMode ? '#000' : '#fff' }}
+          onClick={() => {
+            if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
+              searchModal.current.openSearch()
+            }
+          }}
         />
       ) : (
         <div ref={containerRef} className='glass-search flex w-full items-center'>
@@ -138,6 +147,11 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false }) => {
             placeholder={placeholder}
             className='outline-none w-full text-sm px-3 py-2.5 bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500'
             onKeyUp={handleFallbackKeyUp}
+            onFocus={() => {
+              if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
+                searchModal.current.openSearch()
+              }
+            }}
             onChange={(e) => setShowClean(!!e.target.value)}
             defaultValue={keyword || ''}
           />

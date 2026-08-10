@@ -16,13 +16,6 @@ const SideAreaRight = (props) => {
   return (
     <aside className='hidden xl:block w-72 shrink-0 ml-4 xl:ml-8'>
       <div className='glass-sidebar p-5 sticky top-6'>
-        {/* 公告 */}
-        {notice && (
-          <div className='mb-5'>
-            <Announcement post={notice} />
-          </div>
-        )}
-
         {/* 搜索框 */}
         {siteConfig('LIQUID_MENU_SEARCH', null, CONFIG) && (
           <div className='mb-5'>
@@ -31,6 +24,13 @@ const SideAreaRight = (props) => {
                 router.push({ pathname: '/search/' + key })
               }
             }} />
+          </div>
+        )}
+
+        {/* 公告 */}
+        {notice && (
+          <div className='mb-5'>
+            <Announcement post={notice} />
           </div>
         )}
 

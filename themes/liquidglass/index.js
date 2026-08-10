@@ -19,6 +19,7 @@ import BlogListBar from './components/BlogListBar'
 import BlogPostArchive from './components/BlogPostArchive'
 import BlogPostListPage from './components/BlogPostListPage'
 import BlogPostListScroll from './components/BlogPostListScroll'
+import BottomTabs from './components/BottomTabs'
 import FloatDarkModeButton from './components/FloatDarkModeButton'
 import Footer from './components/Footer'
 import JumpToBottomButton from './components/JumpToBottomButton'
@@ -33,6 +34,8 @@ import TopNav from './components/TopNav'
 import CONFIG from './config'
 import { Style } from './style'
 import LiquidGlassScript from './components/LiquidGlassScript'
+import LoadingCover from '@/components/LoadingCover'
+import { Transition } from '@headlessui/react'
 
 const AlgoliaSearchModal = dynamic(
   () => import('@/components/AlgoliaSearchModal'),
@@ -44,6 +47,7 @@ export const useLiquidGlassGlobal = () => useContext(ThemeGlobalLiquidGlass)
 
 const LayoutBase = props => {
   const { children, headerSlot, rightAreaSlot, post } = props
+  const { onLoading } = useGlobal()
   const targetRef = useRef(null)
   const floatButtonGroup = useRef(null)
   const [showRightFloat, switchShow] = useState(false)
@@ -124,6 +128,7 @@ const LayoutBase = props => {
         className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth`}>
         <Style />
         <LiquidGlassScript />
+        <LoadingCover />
 
         {/* 移动端顶部导航 */}
         <TopNav {...props} />
@@ -141,7 +146,7 @@ const LayoutBase = props => {
           className={
             (JSON.parse(siteConfig('LAYOUT_SIDEBAR_REVERSE'))
               ? 'flex-row-reverse'
-              : '') + ' liquidglass relative flex justify-center flex-1 pb-12 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
+              : '') + ' liquidglass relative flex justify-center flex-1 pb-28 lg:pb-28 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
           }>
           {/* 左侧栏 */}
           <SideAreaLeft targetRef={targetRef} {...props} />
@@ -151,9 +156,21 @@ const LayoutBase = props => {
             id='container-inner'
             className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-20 lg:mt-0' : ''} w-full lg:max-w-2xl xl:max-w-3xl flex-grow min-h-screen relative z-10 px-1 sm:px-2`}
             ref={targetRef}>
-            <div className='glass-transition'>
-              {children}
-            </div>
+            <Transition
+              show={!onLoading}
+              appear={true}
+              enter='transition ease-in-out duration-300 transform'
+              enterFrom='opacity-0 translate-y-4'
+              enterTo='opacity-100 translate-y-0'
+              leave='transition ease-in-out duration-200 transform'
+              leaveFrom='opacity-100 translate-y-0'
+              leaveTo='opacity-0 -translate-y-4'
+              unmount={false}
+            >
+              <div className='glass-transition'>
+                {children}
+              </div>
+            </Transition>
           </section>
 
           {/* 右侧栏 */}
@@ -162,6 +179,7 @@ const LayoutBase = props => {
               targetRef={targetRef}
               slot={rightAreaSlot}
               {...props}
+              searchModal={searchModal}
             />
           )}
         </main>
@@ -188,6 +206,9 @@ const LayoutBase = props => {
             {floatSlot}
           </div>
         </div>
+
+        {/* 底部标签栏 */}
+        <BottomTabs />
 
         {/* 页脚 */}
         <Footer title={siteConfig('TITLE')} />
