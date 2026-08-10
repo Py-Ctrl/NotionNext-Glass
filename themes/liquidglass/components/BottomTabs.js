@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { siteConfig } from '@/lib/config'
 import CONFIG from '../config'
 import SmartLink from '@/components/SmartLink'
+import { getWallpaper } from './liquidGlassWallpaper'
 
 const ICON_MAP = {
   'fa-house': 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
@@ -106,6 +107,7 @@ const BottomTabs = (props) => {
 
     const el = document.createElement('liquid-glass')
     el.setAttribute('mode', 'single-bottom-tabs')
+    el.setAttribute('wallpaper', getWallpaper(isDarkMode))
     if (isDarkMode) el.setAttribute('dark', '')
     el.style.cssText = 'width:100%;height:100%'
     container.appendChild(el)
@@ -239,7 +241,7 @@ const BottomTabs = (props) => {
         <div
           ref={containerRef}
           className='rounded-3xl overflow-hidden'
-          style={{ height: '72px' }}
+          style={{ height: '72px', background: isDarkMode ? '#000' : '#fff' }}
         />
       </nav>
     </>
