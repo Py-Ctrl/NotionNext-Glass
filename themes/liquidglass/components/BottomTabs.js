@@ -211,7 +211,10 @@ const BottomTabs = (props) => {
           </div>
         )}
         <nav className='fixed bottom-0 left-0 right-0 z-30 glass-nav'>
-          <div className='flex justify-around items-center max-w-md mx-auto py-2'>
+          <div
+            className='flex justify-around items-center mx-auto py-2'
+            style={{ width: `min(calc(100% - 2rem), ${tabs.length * 76}px)` }}
+          >
             {tabs.map((tab, idx) => (
               <button
                 key={idx}
@@ -263,8 +266,8 @@ const BottomTabs = (props) => {
       )}
       <nav
         ref={containerRef}
-        className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-sm rounded-3xl overflow-hidden'
-        style={{ height: '72px' }}
+        className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-3xl overflow-hidden'
+        style={{ height: '72px', width: `min(calc(100% - 2rem), ${tabs.length * 76}px)` }}
       />
     </>
   )
