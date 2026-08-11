@@ -1,4 +1,27 @@
+import { useEffect, useState } from 'react'
+
 const JumpToBottomButton = () => {
+  const [isAtBottom, setIsAtBottom] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      const windowHeight = window.innerHeight
+      const docHeight = document.documentElement.scrollHeight
+      // 距离底部小于 100px 时视为已到底部
+      setIsAtBottom(scrollTop + windowHeight >= docHeight - 100)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
+    }
+  }, [])
+
+  if (isAtBottom) return null
+
   const handleScrollToBottom = () => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
   }

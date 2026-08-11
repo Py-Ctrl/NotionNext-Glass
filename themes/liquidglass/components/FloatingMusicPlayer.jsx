@@ -55,20 +55,24 @@ const FloatingMusicPlayer = () => {
     }
   }, [musicPlayerEnabled])
 
-  // 暂停全局 APlayer
+  // 彻底禁用全局 APlayer（避免双重播放）
   useEffect(() => {
     if (!musicPlayerEnabled) return
-    const pauseGlobalAPlayer = () => {
-      const aplayer = document.querySelector('.aplayer')
-      if (aplayer) {
+    const disableAPlayer = () => {
+      const aplayers = document.querySelectorAll('.aplayer')
+      aplayers.forEach(aplayer => {
         aplayer.style.display = 'none'
         const aplayerAudio = aplayer.querySelector('audio')
-        if (aplayerAudio && !aplayerAudio.paused) aplayerAudio.pause()
-      }
+        if (aplayerAudio) {
+          aplayerAudio.pause()
+          aplayerAudio.removeAttribute('src')
+          aplayerAudio.load()
+        }
+      })
     }
-    pauseGlobalAPlayer()
-    const interval = setInterval(pauseGlobalAPlayer, 2000)
-    const observer = new MutationObserver(pauseGlobalAPlayer)
+    disableAPlayer()
+    const interval = setInterval(disableAPlayer, 1000)
+    const observer = new MutationObserver(disableAPlayer)
     observer.observe(document.body, { childList: true, subtree: true })
     return () => {
       clearInterval(interval)
@@ -148,7 +152,7 @@ const FloatingMusicPlayer = () => {
     setDragProgress(pct * 100)
   }, [])
 
-  // ========== 高性能窗口拖拽 ==========
+  // ========== 高性能窗口拖拽（Pointer Events，同时支持鼠标和触摸） ==========
   const applyTransform = useCallback(() => {
     const el = playerRef.current
     if (!el) return
@@ -161,7 +165,7 @@ const FloatingMusicPlayer = () => {
     s.rafId = null
   }, [])
 
-  const onMouseMove = useCallback((e) => {
+  const onPointerMove = useCallback((e) => {
     const s = dragState.current
     if (!s.isDragging) return
     s.currentX = e.clientX - s.offsetX
@@ -175,7 +179,7 @@ const FloatingMusicPlayer = () => {
     }
   }, [applyTransform])
 
-  const onMouseUp = useCallback(() => {
+  const onPointerUp = useCallback(() => {
     const s = dragState.current
     if (!s.isDragging) return
     s.isDragging = false
@@ -185,11 +189,12 @@ const FloatingMusicPlayer = () => {
     }
     // 最终位置应用
     applyTransform()
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointercancel', onPointerUp)
     document.body.style.userSelect = ''
     document.body.style.cursor = ''
-  }, [onMouseMove, applyTransform])
+  }, [onPointerMove, applyTransform])
 
   const startDrag = useCallback((e) => {
     // 不拦截按钮和输入框
@@ -218,19 +223,21 @@ const FloatingMusicPlayer = () => {
     s.offsetY = e.clientY - rect.top
     document.body.style.userSelect = 'none'
     document.body.style.cursor = 'grabbing'
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-  }, [useTransform, onMouseMove, onMouseUp])
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerUp)
+  }, [useTransform, onPointerMove, onPointerUp])
 
   // 清理
   useEffect(() => {
     return () => {
       const s = dragState.current
       if (s.rafId) cancelAnimationFrame(s.rafId)
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerUp)
     }
-  }, [onMouseMove, onMouseUp])
+  }, [onPointerMove, onPointerUp])
 
   if (!musicPlayerEnabled || !audioList || audioList.length === 0) return null
 
@@ -274,7 +281,8 @@ const FloatingMusicPlayer = () => {
           <div className='glass-card p-4 w-72 sm:w-80 mb-2 shadow-2xl'>
             <div
               className='flex justify-between items-center mb-3 cursor-grab active:cursor-grabbing'
-              onMouseDown={startDrag}
+              onPointerDown={startDrag}
+              style={{ touchAction: 'none' }}
             >
               <span className='text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                 正在播放
@@ -317,8 +325,9 @@ const FloatingMusicPlayer = () => {
         {!isExpanded && (
           <div
             className='glass-card rounded-2xl shadow-xl cursor-grab active:cursor-grabbing transition-shadow hover:shadow-2xl relative'
-            onMouseDown={startDrag}
+            onPointerDown={startDrag}
             onClick={handleCompactClick}
+            style={{ touchAction: 'none' }}
           >
             <div className='flex items-center gap-2 p-2'>
               <div
