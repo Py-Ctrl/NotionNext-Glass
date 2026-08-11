@@ -1,261 +1,155 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { siteConfig } from '@/lib/config'
-import LazyImage from '@/components/LazyImage'
+import { useRef, useState, useEffect, useCallback } from 'react'
 
-const MusicPlayer = ({ compact = false }) => {
-  const audioList = siteConfig('MUSIC_PLAYER_AUDIO_LIST')
-  const order = siteConfig('MUSIC_PLAYER_ORDER')
+/**
+ * 解析 LRC 格式歌词
+ * @param {string} lrcText - LRC 格式的歌词文本
+ * @returns {Array<{time: number, text: string}>} 解析后的歌词数组
+ */
+const parseLRC = (lrcText) => {
+  if (!lrcText) return []
+  const lines = lrcText.split('\n')
+  const result = []
+  const timeRegex = /\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\]/g
 
-  const audioRef = useRef(null)
-  const [currentIdx, setCurrentIdx] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [volume, setVolume] = useState(0.7)
-  const [showPlaylist, setShowPlaylist] = useState(false)
-  const draggingRef = useRef(false)
+  for (const line of lines) {
+    const matches = [...line.matchAll(timeRegex)]
+    const text = line.replace(timeRegex, '').trim()
+    if (!text) continue
+    for (const match of matches) {
+      const minutes = parseInt(match[1], 10)
+      const seconds = parseInt(match[2], 10)
+      const ms = match[3] ? parseInt(match[3].padEnd(3, '0'), 10) : 0
+      const time = minutes * 60 + seconds + ms / 1000
+      result.push({ time, text })
+    }
+  }
+  return result.sort((a, b) => a.time - b.time)
+}
+
+/**
+ * 格式化时间为 mm:ss
+ */
+const formatTime = (sec) => {
+  if (!sec || isNaN(sec)) return '0:00'
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+/**
+ * 音乐播放器 UI 组件（纯展示，播放逻辑由父组件控制）
+ */
+const MusicPlayer = ({
+  currentTrack,
+  isPlaying,
+  progress,
+  duration,
+  currentTime,
+  volume,
+  showPlaylist,
+  audioList,
+  currentIdx,
+  onTogglePlay,
+  onPlayNext,
+  onPlayPrev,
+  onSeek,
+  onVolumeChange,
+  onTogglePlaylist,
+  onSelectTrack,
+  onProgressDragStart,
+  onProgressDragMove,
+  onProgressDragEnd,
+  isDragging
+}) => {
   const progressRef = useRef(null)
+  const [lyrics, setLyrics] = useState([])
+  const [currentLyricIdx, setCurrentLyricIdx] = useState(-1)
 
-  const currentTrack = audioList?.[currentIdx]
-
-  const playTrack = useCallback((idx) => {
-    if (!audioList || idx < 0 || idx >= audioList.length) return
-    setCurrentIdx(idx)
-    setIsPlaying(true)
-  }, [audioList])
-
-  const togglePlay = useCallback(() => {
-    if (!audioRef.current) return
-    if (isPlaying) {
-      audioRef.current.pause()
+  // 解析歌词
+  useEffect(() => {
+    if (currentTrack?.lrc) {
+      setLyrics(parseLRC(currentTrack.lrc))
     } else {
-      audioRef.current.play().catch(() => {})
+      setLyrics([])
     }
-  }, [isPlaying])
+    setCurrentLyricIdx(-1)
+  }, [currentTrack])
 
-  const playNext = useCallback(() => {
-    if (!audioList || audioList.length === 0) return
-    if (order === 'random' && audioList.length > 1) {
-      let next
-      do { next = Math.floor(Math.random() * audioList.length) } while (next === currentIdx)
-      playTrack(next)
-    } else {
-      playTrack((currentIdx + 1) % audioList.length)
-    }
-  }, [audioList, currentIdx, order, playTrack])
-
-  const playPrev = useCallback(() => {
-    if (!audioList || audioList.length === 0) return
-    playTrack((currentIdx - 1 + audioList.length) % audioList.length)
-  }, [audioList, currentIdx, playTrack])
-
+  // 更新当前歌词
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio || !currentTrack) return
-
-    audio.src = currentTrack.url
-    if (isPlaying) {
-      audio.play().catch(() => {
-        setIsPlaying(false)
-      })
-    }
-  }, [currentIdx])
-
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    if (isPlaying) {
-      audio.play().catch(() => setIsPlaying(false))
-    } else {
-      audio.pause()
-    }
-  }, [isPlaying])
-
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume
-  }, [volume])
-
-  // 桌面端暂停全局 APlayer，避免双重播放
-  useEffect(() => {
-    const pauseGlobalAPlayer = () => {
-      const aplayerAudio = document.querySelector('.aplayer.aplayer-fixed audio')
-      if (aplayerAudio && !aplayerAudio.paused) {
-        aplayerAudio.pause()
+    if (lyrics.length === 0) return
+    let idx = -1
+    for (let i = 0; i < lyrics.length; i++) {
+      if (currentTime >= lyrics[i].time) {
+        idx = i
+      } else {
+        break
       }
     }
-
-    pauseGlobalAPlayer()
-    const interval = setInterval(pauseGlobalAPlayer, 2000)
-
-    const observer = new MutationObserver(() => {
-      const aplayerAudio = document.querySelector('.aplayer.aplayer-fixed audio')
-      if (aplayerAudio && !aplayerAudio.paused) {
-        aplayerAudio.pause()
-      }
-    })
-    observer.observe(document.body, { childList: true, subtree: true })
-
-    return () => {
-      clearInterval(interval)
-      observer.disconnect()
-    }
-  }, [])
-
-  const handleTimeUpdate = () => {
-    if (draggingRef.current) return
-    const audio = audioRef.current
-    if (!audio || !audio.duration) return
-    setCurrentTime(audio.currentTime)
-    setProgress((audio.currentTime / audio.duration) * 100)
-  }
-
-  const handleLoadedMetadata = () => {
-    const audio = audioRef.current
-    if (audio) setDuration(audio.duration || 0)
-  }
-
-  const handleEnded = () => { playNext() }
-
-  const seekTo = (clientX) => {
-    const audio = audioRef.current
-    const bar = progressRef.current
-    if (!audio || !audio.duration || !bar) return
-    const rect = bar.getBoundingClientRect()
-    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    audio.currentTime = pct * audio.duration
-    setProgress(pct * 100)
-    setCurrentTime(pct * audio.duration)
-  }
+    setCurrentLyricIdx(idx)
+  }, [currentTime, lyrics])
 
   const handlePointerDown = (e) => {
-    draggingRef.current = true
+    onProgressDragStart?.()
     e.currentTarget.setPointerCapture(e.pointerId)
     seekTo(e.clientX)
   }
 
   const handlePointerMove = (e) => {
-    if (!draggingRef.current) return
+    if (!isDragging) return
     seekTo(e.clientX)
   }
 
   const handlePointerUp = (e) => {
-    if (!draggingRef.current) return
-    draggingRef.current = false
+    if (!isDragging) return
     e.currentTarget.releasePointerCapture(e.pointerId)
     seekTo(e.clientX)
+    onProgressDragEnd?.()
   }
 
-  const formatTime = (sec) => {
-    if (!sec || isNaN(sec)) return '0:00'
-    const m = Math.floor(sec / 60)
-    const s = Math.floor(sec % 60)
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }
-
-  if (!audioList || audioList.length === 0) return null
-
-  // 紧凑模式：只显示封面 + 播放/暂停 + 下一首
-  if (compact) {
-    return (
-      <div className='glass-music-player-compact flex items-center gap-2 p-2'>
-        <audio
-          ref={audioRef}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={handleEnded}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
-        <div className='relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-1 ring-white/20 shadow-lg'>
-          {currentTrack?.cover ? (
-            <LazyImage
-              src={currentTrack.cover}
-              className={`w-full h-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
-              width={40}
-              height={40}
-              alt={currentTrack?.name}
-            />
-          ) : (
-            <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500'>
-              <i className='fas fa-music text-white text-sm' />
-            </div>
-          )}
-        </div>
-        <div className='flex-1 min-w-0'>
-          <div className='text-xs font-medium text-gray-700 dark:text-gray-200 truncate'>
-            {currentTrack?.name || '未知曲目'}
-          </div>
-          <div className='text-[10px] text-gray-500 dark:text-gray-400 truncate'>
-            {currentTrack?.artist || '未知艺术家'}
-          </div>
-        </div>
-        <button
-          onClick={togglePlay}
-          className='w-9 h-9 rounded-full flex items-center justify-center bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300 transition-all hover:scale-110 active:scale-95'
-          title={isPlaying ? '暂停' : '播放'}
-        >
-          {isPlaying ? (
-            <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
-              <path d='M6 5h4v14H6zm8 0h4v14h-4z' />
-            </svg>
-          ) : (
-            <svg className='w-4 h-4 ml-0.5' viewBox='0 0 24 24' fill='currentColor'>
-              <path d='M8 5v14l11-7z' />
-            </svg>
-          )}
-        </button>
-        <button
-          onClick={playNext}
-          className='w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-500 hover:bg-white/50 dark:hover:bg-white/10 transition-all'
-          title='下一首'
-        >
-          <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
-            <path d='M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z' />
-          </svg>
-        </button>
-      </div>
-    )
+  const seekTo = (clientX) => {
+    const bar = progressRef.current
+    if (!bar) return
+    const rect = bar.getBoundingClientRect()
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    onSeek?.(pct)
   }
 
   return (
-    <div className='glass-music-player'>
-      <audio
-        ref={audioRef}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={handleEnded}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-      />
-
-      {/* 封面 + 信息 */}
-      <div className='flex items-center gap-3 mb-3'>
-        <div className='relative w-14 h-14 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/20 shadow-lg'>
+    <div className='music-player-ui'>
+      {/* 封面 + 信息 + 字幕 */}
+      <div className='flex items-start gap-3 mb-3'>
+        <div className='relative w-14 h-14 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/10 shadow-md'>
           {currentTrack?.cover ? (
-            <LazyImage
+            <img
               src={currentTrack.cover}
               className={`w-full h-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
-              width={56}
-              height={56}
               alt={currentTrack?.name}
             />
           ) : (
-            <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500'>
-              <i className='fas fa-music text-white' />
+            <div className='w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700'>
+              <i className='fas fa-music text-gray-400' />
             </div>
           )}
-          {/* 播放时的光晕效果 */}
-          {isPlaying && (
-            <div className='absolute inset-0 rounded-xl bg-indigo-500/20 animate-pulse pointer-events-none' />
-          )}
         </div>
-        <div className='flex-1 min-w-0'>
+        <div className='flex-1 min-w-0 pt-1'>
           <div className='text-sm font-semibold text-gray-800 dark:text-gray-100 truncate'>
             {currentTrack?.name || '未知曲目'}
           </div>
           <div className='text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5'>
             {currentTrack?.artist || '未知艺术家'}
+          </div>
+          {/* 字幕/歌词显示 */}
+          <div className='mt-1.5 h-4 overflow-hidden'>
+            {lyrics.length > 0 && currentLyricIdx >= 0 ? (
+              <div className='text-xs text-gray-600 dark:text-gray-300 truncate animate-[fadeIn_0.3s_ease]'>
+                {lyrics[currentLyricIdx]?.text}
+              </div>
+            ) : (
+              <div className='text-xs text-gray-400 dark:text-gray-500 truncate italic'>
+                {isPlaying ? '正在播放...' : '已暂停'}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -264,19 +158,19 @@ const MusicPlayer = ({ compact = false }) => {
       <div className='mb-3'>
         <div
           ref={progressRef}
-          className='group h-1.5 rounded-full bg-gray-200/60 dark:bg-gray-700/60 cursor-pointer relative touch-none'
+          className='group h-1.5 rounded-full bg-gray-200/60 dark:bg-gray-700/60 cursor-pointer relative touch-none select-none'
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
           <div
-            className='absolute h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 pointer-events-none transition-all'
+            className='absolute h-full rounded-full bg-gray-700 dark:bg-gray-200 pointer-events-none'
             style={{ width: `${progress}%` }}
           />
           <div
-            className='absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-lg ring-2 ring-indigo-500/50 pointer-events-none transition-transform group-hover:scale-125'
-            style={{ left: `calc(${progress}% - 7px)` }}
+            className='absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white dark:bg-gray-100 shadow-md pointer-events-none transition-transform group-hover:scale-125'
+            style={{ left: `calc(${progress}% - 6px)` }}
           />
         </div>
         <div className='flex justify-between mt-1.5 text-[10px] text-gray-400 dark:text-gray-500 tabular-nums font-medium'>
@@ -286,10 +180,10 @@ const MusicPlayer = ({ compact = false }) => {
       </div>
 
       {/* 控制按钮 */}
-      <div className='flex items-center justify-center gap-3 mb-3'>
+      <div className='flex items-center justify-center gap-4 mb-3'>
         <button
-          onClick={playPrev}
-          className='w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-500 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-95'
+          onClick={onPlayPrev}
+          className='w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all hover:scale-110 active:scale-95'
           title='上一首'
         >
           <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
@@ -297,8 +191,8 @@ const MusicPlayer = ({ compact = false }) => {
           </svg>
         </button>
         <button
-          onClick={togglePlay}
-          className='w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:scale-110 active:scale-95'
+          onClick={onTogglePlay}
+          className='w-11 h-11 rounded-full flex items-center justify-center bg-gray-800 dark:bg-white text-white dark:text-gray-800 shadow-lg hover:shadow-xl transition-all hover:scale-110 active:scale-95'
           title={isPlaying ? '暂停' : '播放'}
         >
           {isPlaying ? (
@@ -312,8 +206,8 @@ const MusicPlayer = ({ compact = false }) => {
           )}
         </button>
         <button
-          onClick={playNext}
-          className='w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-500 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-95'
+          onClick={onPlayNext}
+          className='w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all hover:scale-110 active:scale-95'
           title='下一首'
         >
           <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
@@ -326,8 +220,8 @@ const MusicPlayer = ({ compact = false }) => {
       <div className='flex items-center gap-2'>
         <div className='flex items-center gap-1.5 flex-1'>
           <button
-            onClick={() => setVolume(volume > 0 ? 0 : 0.7)}
-            className='text-gray-400 hover:text-indigo-500 transition-colors shrink-0'
+            onClick={() => onVolumeChange?.(volume > 0 ? 0 : 0.7)}
+            className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors shrink-0'
             title={volume > 0 ? '静音' : '取消静音'}
           >
             {volume > 0 ? (
@@ -346,17 +240,17 @@ const MusicPlayer = ({ compact = false }) => {
             max='1'
             step='0.01'
             value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            onChange={(e) => onVolumeChange?.(parseFloat(e.target.value))}
             className='flex-1 h-1 rounded-full appearance-none bg-gray-200/60 dark:bg-gray-700/60 cursor-pointer
-                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
-                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-indigo-500 [&::-webkit-slider-thumb]:to-purple-500
-                       [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md'
+                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5
+                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gray-600 dark:[&::-webkit-slider-thumb]:bg-gray-300
+                       [&::-webkit-slider-thumb]:cursor-pointer'
           />
         </div>
-        {audioList.length > 1 && (
+        {audioList?.length > 1 && (
           <button
-            onClick={() => setShowPlaylist(!showPlaylist)}
-            className={`p-1.5 rounded-lg transition-all ${showPlaylist ? 'text-indigo-500 bg-indigo-500/10' : 'text-gray-400 hover:text-indigo-500 hover:bg-white/50 dark:hover:bg-white/10'}`}
+            onClick={onTogglePlaylist}
+            className={`p-1.5 rounded-lg transition-all ${showPlaylist ? 'text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-800' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
             title='播放列表'
           >
             <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
@@ -367,30 +261,30 @@ const MusicPlayer = ({ compact = false }) => {
       </div>
 
       {/* 播放列表 */}
-      {showPlaylist && audioList.length > 1 && (
-        <div className='mt-3 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 max-h-40 overflow-y-auto space-y-1'>
+      {showPlaylist && audioList?.length > 1 && (
+        <div className='mt-3 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 max-h-40 overflow-y-auto space-y-0.5'>
           {audioList.map((track, idx) => (
             <button
               key={idx}
-              onClick={() => { playTrack(idx); setShowPlaylist(false) }}
-              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs transition-all
+              onClick={() => onSelectTrack?.(idx)}
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition-all
                           ${idx === currentIdx
-                            ? 'text-indigo-600 dark:text-indigo-300 bg-gradient-to-r from-indigo-500/10 to-purple-500/10'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-white/5'
+                            ? 'text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                           }`}
             >
-              <span className='w-5 text-center shrink-0 font-medium'>
+              <span className='w-5 text-center shrink-0'>
                 {idx === currentIdx && isPlaying ? (
                   <div className='flex items-end justify-center gap-0.5 h-3'>
-                    <span className='w-0.5 bg-indigo-500 rounded-full animate-[bounce_1s_infinite]' style={{ height: '40%', animationDelay: '0s' }} />
-                    <span className='w-0.5 bg-indigo-500 rounded-full animate-[bounce_1s_infinite]' style={{ height: '80%', animationDelay: '0.2s' }} />
-                    <span className='w-0.5 bg-indigo-500 rounded-full animate-[bounce_1s_infinite]' style={{ height: '60%', animationDelay: '0.4s' }} />
+                    <span className='w-0.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-pulse' style={{ height: '40%' }} />
+                    <span className='w-0.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-pulse' style={{ height: '80%', animationDelay: '0.2s' }} />
+                    <span className='w-0.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-pulse' style={{ height: '60%', animationDelay: '0.4s' }} />
                   </div>
                 ) : (
                   <span className='tabular-nums'>{idx + 1}</span>
                 )}
               </span>
-              <span className='truncate flex-1 font-medium'>{track.name}</span>
+              <span className='truncate flex-1'>{track.name}</span>
               {track.artist && (
                 <span className='text-[10px] text-gray-400 truncate max-w-[60px]'>{track.artist}</span>
               )}
