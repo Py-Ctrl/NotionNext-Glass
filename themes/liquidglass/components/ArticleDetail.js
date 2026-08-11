@@ -79,7 +79,7 @@ const ArticleDetail = (props) => {
       )}
 
       {/* 评论区 */}
-      <div className='glass-card p-3 sm:p-4 md:p-6 mt-4 sm:mt-6'>
+      <div className='glass-card p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28'>
         <Comment frontMatter={post} />
       </div>
     </div>

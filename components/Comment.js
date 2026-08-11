@@ -40,6 +40,8 @@ const Comment = ({ frontMatter, className }) => {
           observer.unobserve(entry.target)
         }
       })
+    }, {
+      rootMargin: '0px 0px 200px 0px' // 提前 200px 加载，避免移动端底栏遮挡导致不触发
     })
 
     if (commentRef.current) {
