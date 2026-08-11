@@ -15,6 +15,8 @@ const MusicPlayer = () => {
   const [currentTime, setCurrentTime] = useState(0)
   const [volume, setVolume] = useState(0.7)
   const [showPlaylist, setShowPlaylist] = useState(false)
+  const draggingRef = useRef(false)
+  const progressRef = useRef(null)
 
   const currentTrack = audioList?.[currentIdx]
 
@@ -81,7 +83,38 @@ const MusicPlayer = () => {
     }
   }, [])
 
+  // 桌面端暂停全局 APlayer，避免双重播放
+  useEffect(() => {
+    const pauseGlobalAPlayer = () => {
+      const aplayerAudio = document.querySelector('.aplayer.aplayer-fixed audio')
+      if (aplayerAudio && !aplayerAudio.paused) {
+        aplayerAudio.pause()
+      }
+      const aplayerPlayBtn = document.querySelector('.aplayer.aplayer-fixed .aplayer-play')
+      if (aplayerPlayBtn) {
+        aplayerPlayBtn.click()
+      }
+    }
+
+    pauseGlobalAPlayer()
+    const interval = setInterval(pauseGlobalAPlayer, 2000)
+
+    const observer = new MutationObserver(() => {
+      const aplayerAudio = document.querySelector('.aplayer.aplayer-fixed audio')
+      if (aplayerAudio && !aplayerAudio.paused) {
+        aplayerAudio.pause()
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+
+    return () => {
+      clearInterval(interval)
+      observer.disconnect()
+    }
+  }, [])
+
   const handleTimeUpdate = () => {
+    if (draggingRef.current) return
     const audio = audioRef.current
     if (!audio || !audio.duration) return
     setCurrentTime(audio.currentTime)
@@ -95,13 +128,33 @@ const MusicPlayer = () => {
 
   const handleEnded = () => { playNext() }
 
-  const handleSeek = (e) => {
+  const seekTo = (clientX) => {
     const audio = audioRef.current
-    if (!audio || !audio.duration) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const pct = (e.clientX - rect.left) / rect.width
+    const bar = progressRef.current
+    if (!audio || !audio.duration || !bar) return
+    const rect = bar.getBoundingClientRect()
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     audio.currentTime = pct * audio.duration
     setProgress(pct * 100)
+    setCurrentTime(pct * audio.duration)
+  }
+
+  const handlePointerDown = (e) => {
+    draggingRef.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    seekTo(e.clientX)
+  }
+
+  const handlePointerMove = (e) => {
+    if (!draggingRef.current) return
+    seekTo(e.clientX)
+  }
+
+  const handlePointerUp = (e) => {
+    if (!draggingRef.current) return
+    draggingRef.current = false
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    seekTo(e.clientX)
   }
 
   const formatTime = (sec) => {
@@ -151,19 +204,23 @@ const MusicPlayer = () => {
         </div>
       </div>
 
-      {/* 进度条 */}
+      {/* 进度条 — 支持拖动 */}
       <div className='mb-2'>
         <div
-          className='group h-1.5 rounded-full bg-gray-200/50 dark:bg-gray-700/50 cursor-pointer relative'
-          onClick={handleSeek}
+          ref={progressRef}
+          className='group h-1.5 rounded-full bg-gray-200/50 dark:bg-gray-700/50 cursor-pointer relative touch-none'
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
           <div
-            className='absolute h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500'
+            className='absolute h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 pointer-events-none'
             style={{ width: `${progress}%` }}
           />
           <div
-            className='absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity'
-            style={{ left: `calc(${progress}% - 6px)` }}
+            className='absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md pointer-events-none transition-transform group-hover:scale-110'
+            style={{ left: `calc(${progress}% - 7px)` }}
           />
         </div>
         <div className='flex justify-between mt-1 text-[10px] text-gray-400 dark:text-gray-500 tabular-nums'>

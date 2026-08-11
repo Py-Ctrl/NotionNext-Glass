@@ -14,16 +14,18 @@ const DarkModeButton = () => {
   }
 
   return (
-    <div
+    <button
       onClick={handleChangeDarkMode}
-      className='glass-float-btn cursor-pointer select-none'
+      className='liquid-glass-toggle cursor-pointer select-none relative overflow-hidden'
       title={isDarkMode ? '切换浅色模式' : '切换深色模式'}>
-      {isDarkMode ? (
-        <i className='fas fa-sun text-yellow-400 text-sm' />
-      ) : (
-        <i className='fas fa-moon text-indigo-500 text-sm' />
-      )}
-    </div>
+      <span className='liquid-glass-toggle-inner'>
+        {isDarkMode ? (
+          <i className='fas fa-sun text-yellow-400 text-sm' />
+        ) : (
+          <i className='fas fa-moon text-indigo-500 text-sm' />
+        )}
+      </span>
+    </button>
   )
 }
 

@@ -617,6 +617,200 @@ const Style = () => {
       }
     }
 
+    /* ========== Liquid Glass 切换按钮 ========== */
+    #theme-liquidglass .liquid-glass-toggle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #theme-liquidglass .liquid-glass-toggle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    #theme-liquidglass .liquid-glass-toggle:hover {
+      transform: scale(1.08);
+      box-shadow:
+        0 8px 24px rgba(99, 102, 241, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.08);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    #theme-liquidglass .liquid-glass-toggle:active {
+      transform: scale(0.95);
+    }
+
+    #theme-liquidglass .liquid-glass-toggle-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dark #theme-liquidglass .liquid-glass-toggle {
+      background: rgba(30, 30, 50, 0.5);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-toggle::before {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-toggle:hover {
+      box-shadow:
+        0 8px 24px rgba(129, 140, 248, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+      border-color: rgba(129, 140, 248, 0.25);
+    }
+
+    /* ========== Liquid Glass 卡片按钮（文章导航等） ========== */
+    #theme-liquidglass .liquid-glass-card {
+      display: block;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.06),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    #theme-liquidglass .liquid-glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    #theme-liquidglass .liquid-glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 32px rgba(99, 102, 241, 0.12),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35);
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-card {
+      background: rgba(25, 25, 40, 0.5);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-card::before {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.02) 100%);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-card:hover {
+      box-shadow:
+        0 12px 32px rgba(129, 140, 248, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08);
+      border-color: rgba(129, 140, 248, 0.2);
+    }
+
+    /* ========== Liquid Glass 按钮（阅读更多等） ========== */
+    #theme-liquidglass .liquid-glass-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+    }
+
+    #theme-liquidglass .liquid-glass-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    #theme-liquidglass .liquid-glass-btn-surface {
+      background: rgba(255, 255, 255, 0.15);
+      color: #374151;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    }
+
+    #theme-liquidglass .liquid-glass-btn-blue {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(139, 92, 246, 0.85));
+      color: #fff;
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    }
+
+    #theme-liquidglass .liquid-glass-btn:hover {
+      transform: translateY(-1px) scale(1.02);
+    }
+
+    #theme-liquidglass .liquid-glass-btn-surface:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+
+    #theme-liquidglass .liquid-glass-btn-blue:hover {
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-btn-surface {
+      background: rgba(25, 25, 40, 0.5);
+      color: #d1d5db;
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-btn-blue {
+      background: linear-gradient(135deg, rgba(129, 140, 248, 0.85), rgba(167, 139, 250, 0.85));
+      border-color: rgba(129, 140, 248, 0.35);
+      box-shadow: 0 4px 16px rgba(129, 140, 248, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-btn::before {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
+    }
+
     ${themeConsoleStyle('liquidglass', CONFIG)}
   `}</style>
 }

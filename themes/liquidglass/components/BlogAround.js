@@ -9,7 +9,7 @@ const BlogAround = ({ prev, next }) => {
   return (
     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
       {prev && (
-        <SmartLink href={prev?.href} className='glass-card p-3 sm:p-4 group hover:border-indigo-300 dark:hover:border-indigo-700'>
+        <SmartLink href={prev?.href} className='liquid-glass-card group'>
           <div className='text-xs text-gray-400 dark:text-gray-500 mb-1'>
             <i className='fas fa-chevron-left mr-1' />
             {locale.COMMON.PREV_POST || '上一篇'}
@@ -20,7 +20,7 @@ const BlogAround = ({ prev, next }) => {
         </SmartLink>
       )}
       {next && (
-        <SmartLink href={next?.href} className='glass-card p-3 sm:p-4 group hover:border-indigo-300 dark:hover:border-indigo-700 sm:text-right'>
+        <SmartLink href={next?.href} className='liquid-glass-card group sm:text-right'>
           <div className='text-xs text-gray-400 dark:text-gray-500 mb-1'>
             {locale.COMMON.NEXT_POST || '下一篇'}
             <i className='fas fa-chevron-right ml-1' />
