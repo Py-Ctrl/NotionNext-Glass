@@ -9,7 +9,7 @@ import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
 import CONFIG from '../config'
 import TagItemMini from './TagItemMini'
-import GlassButton from './GlassButton'
+import LiquidGlassButton from './LiquidGlassButton'
 
 const BlogPostCard = ({ post, index, showSummary }) => {
   const { locale } = useGlobal()
@@ -95,17 +95,15 @@ const BlogPostCard = ({ post, index, showSummary }) => {
 
           {/* 阅读更多 */}
           <div className='flex justify-end border-t pt-4 sm:pt-6 border-gray-200/50 dark:border-gray-700/50'>
-            <div className='rounded-2xl overflow-hidden' style={{ width: '140px', height: '48px' }}>
-              <GlassButton
-                label={locale.COMMON.ARTICLE_DETAIL || '阅读更多'}
-                btnStyle='blue'
-                onTap={() => router.push(post?.href)}
-                width='140px'
-                height='48px'
-                className='rounded-2xl overflow-hidden'
-                fallbackClassName='text-indigo-600 dark:text-indigo-400 text-sm'
-              />
-            </div>
+            <LiquidGlassButton
+              label={locale.COMMON.ARTICLE_DETAIL || '阅读更多'}
+              btnStyle='blue'
+              onTap={() => router.push(post?.href)}
+              width='140px'
+              height='48px'
+              className='rounded-2xl overflow-hidden'
+              fallbackClassName='text-indigo-600 dark:text-indigo-400 text-sm'
+            />
           </div>
         </div>
 
