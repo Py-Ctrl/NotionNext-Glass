@@ -50,10 +50,16 @@ precision highp float;
 
 uniform sampler2D uTexture;
 uniform vec2 uCanvasSize;
+uniform float uPremultiply;
 
 void main() {
     vec2 uv = vec2(gl_FragCoord.x / uCanvasSize.x, gl_FragCoord.y / uCanvasSize.y);
-    gl_FragColor = texture2D(uTexture, uv);
+    vec4 c = texture2D(uTexture, uv);
+    if (uPremultiply > 0.5) {
+      gl_FragColor = vec4(c.rgb * c.a, c.a);
+    } else {
+      gl_FragColor = c;
+    }
 }
 `
 

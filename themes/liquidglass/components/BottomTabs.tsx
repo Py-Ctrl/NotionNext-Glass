@@ -8,7 +8,7 @@ import { siteConfig } from '@/lib/config'
 import { LiquidGlassCanvas } from '../lib/context'
 import { makeGlassShape, makeText, makeTabDragInteractions } from '../lib/helpers'
 import { getPalette, DEFAULT_HIGHLIGHT, DEFAULT_SHADOW } from '../lib/types'
-import { getGradientWallpaper } from './liquidGlassWallpaper'
+import { getTransparentWallpaper } from './liquidGlassWallpaper'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
@@ -299,11 +299,14 @@ const BottomTabs = (props) => {
         style={{
           height: `${CANVAS_H}px`,
           width: widthStyle,
+          borderRadius: `${CANVAS_H / 2}px`,
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         }}
       >
         {canvasW > 10 && tabs.length > 0 && (
           <LiquidGlassCanvas
-            wallpaperSrc={getGradientWallpaper(isDarkMode)}
+            wallpaperSrc={getTransparentWallpaper()}
             elements={elements}
             interactions={interactions}
             tabTargets={tabTargets}

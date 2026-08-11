@@ -152,7 +152,7 @@ export const renderMethods = {
     if (this.buttonConfigs.length === 0) {
       // No elements — blit fboA to the default framebuffer and done.
       this.bindFBO(null)
-      this.drawCopy(this.fboATex!)
+      this.drawCopyToScreen(this.fboATex!)
       this.perfMonitor.incDrawCall() // final blit
       this.perfMonitor.frameEnd()
       return
@@ -409,7 +409,7 @@ export const renderMethods = {
 
     // --- Final: blit curFbo → default framebuffer (visible canvas) ---
     this.bindFBO(null)
-    this.drawCopy(curTex)
+    this.drawCopyToScreen(curTex)
     this.perfMonitor.incDrawCall() // final blit
 
     // --- Clear event-driven dirty state (consumed by this frame) ---

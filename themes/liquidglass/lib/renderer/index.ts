@@ -679,8 +679,8 @@ export class LiquidGlassRenderer {
     //   cost on CPU rasterizers is severe. Do not re-add without hardware-
     //   acceleration verification.
     const gl = canvas.getContext('webgl', {
-      premultipliedAlpha: false,
-      alpha: false,
+      premultipliedAlpha: true,
+      alpha: true,
       antialias: false,
       preserveDrawingBuffer: false,
       powerPreference: 'low-power',
@@ -893,7 +893,7 @@ export class LiquidGlassRenderer {
       'uBlurRadius', 'uTintColor', 'uTintIntensity',
     ]
     for (const n of pbNames) this.uPb[n] = gl.getUniformLocation(this.progressiveBlurProgram, n)
-    const cpNames = ['uTexture', 'uCanvasSize']
+    const cpNames = ['uTexture', 'uCanvasSize', 'uPremultiply']
     for (const n of cpNames) this.uCp[n] = gl.getUniformLocation(this.copyProgram, n)
     const sfNames = ['uColor']
     for (const n of sfNames) this.uSf[n] = gl.getUniformLocation(this.solidFillProgram, n)

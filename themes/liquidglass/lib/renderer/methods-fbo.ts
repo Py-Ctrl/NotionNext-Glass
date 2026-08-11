@@ -8,6 +8,7 @@ declare module './index' {
     resizeFBOs(w: number, h: number, force?: boolean): void
     bindFBO(fb: WebGLFramebuffer | null): void
     drawCopy(srcTex: WebGLTexture): void
+    drawCopyToScreen(srcTex: WebGLTexture): void
     drawSolidFill(r: number, g: number, b: number, a: number): void
     /** Fullscreen colorControls pass: copy srcTex to the bound FBO applying
      *  brightness/contrast/saturation. Caller must bind the destination FBO. */
@@ -184,6 +185,25 @@ export const fboMethods = {
     gl.bindTexture(gl.TEXTURE_2D, srcTex)
     gl.uniform1i(this.uCp['uTexture'], 0)
     gl.uniform2f(this.uCp['uCanvasSize'], this.fboW, this.fboH)
+    gl.uniform1f(this.uCp['uPremultiply'], 0.0)
+    gl.disable(gl.BLEND)
+    gl.drawArrays(gl.TRIANGLES, 0, 6)
+  },
+
+  /** Final blit to the default framebuffer (visible canvas). Premultiplies
+   *  alpha so the browser compositor correctly renders transparent pixels
+   *  when alpha:true + premultipliedAlpha:true. */
+  drawCopyToScreen(this: LiquidGlassRenderer, srcTex: WebGLTexture) {
+    const gl = this.gl
+    gl.useProgram(this.copyProgram)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadBuffer)
+    gl.enableVertexAttribArray(this.aPosLocCp)
+    gl.vertexAttribPointer(this.aPosLocCp, 2, gl.FLOAT, false, 0, 0)
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, srcTex)
+    gl.uniform1i(this.uCp['uTexture'], 0)
+    gl.uniform2f(this.uCp['uCanvasSize'], this.fboW, this.fboH)
+    gl.uniform1f(this.uCp['uPremultiply'], 1.0)
     gl.disable(gl.BLEND)
     gl.drawArrays(gl.TRIANGLES, 0, 6)
   },
