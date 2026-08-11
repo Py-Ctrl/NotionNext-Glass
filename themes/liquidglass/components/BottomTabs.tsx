@@ -27,12 +27,33 @@ const BottomTabs = (props) => {
   const subMenuOpenRef = React.useRef(null)
   const subMenuRef = React.useRef(null)
   const [isDesktop, setIsDesktop] = React.useState(false)
+  const [isHidden, setIsHidden] = React.useState(false)
+  const lastScrollY = React.useRef(0)
 
   // 使用 UA 检测桌面端，避免 DevTools 改变窗口宽度导致误判
   React.useEffect(() => {
     const ua = navigator.userAgent || ''
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
     setIsDesktop(!isMobile)
+  }, [])
+
+  // 滚动时隐藏/显示底栏（向下滚动隐藏，向上滚动显示）
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY
+      const diff = currentY - lastScrollY.current
+      // 向下滚动超过 10px 且不在顶部时隐藏
+      if (diff > 10 && currentY > 100) {
+        setIsHidden(true)
+      }
+      // 向上滚动时显示
+      else if (diff < -10) {
+        setIsHidden(false)
+      }
+      lastScrollY.current = currentY
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   // 响应式尺寸：桌面端更大
@@ -281,7 +302,9 @@ const BottomTabs = (props) => {
     return (
       <>
         {renderSubMenu()}
-        <nav className='fixed bottom-0 left-0 right-0 z-30 glass-nav'>
+        <nav className={`fixed bottom-0 left-0 right-0 z-30 glass-nav transition-transform duration-300 ease-out ${
+          isHidden ? 'translate-y-full' : 'translate-y-0'
+        }`}>
           <div className='flex justify-around items-center mx-auto py-2' style={{ width: widthStyle }}>
             {tabs.map((tab, idx) => (
               <button
@@ -316,7 +339,9 @@ const BottomTabs = (props) => {
           contentHeight={CANVAS_H}
           dpr={1.5}
           containerRef={containerRef}
-          className='fixed bottom-0 left-1/2 -translate-x-1/2 z-30'
+          className={`fixed bottom-0 left-1/2 -translate-x-1/2 z-30 transition-transform duration-300 ease-out ${
+            isHidden ? 'translate-y-full' : 'translate-y-0'
+          }`}
           style={{
             height: `${CANVAS_H}px`,
             width: widthStyle,
