@@ -4,10 +4,9 @@ import MusicPlayer from './MusicPlayer'
 
 /**
  * 全局悬浮音乐播放器
- * - 折叠模式：迷你播放器（封面 + 播放/暂停 + 下一首）
- * - 展开模式：完整播放器
- * - 支持窗口拖拽
- * - 单例音频实例，避免双重播放
+ * - 折叠/展开共用同一音频实例
+ * - 高性能窗口拖拽（transform + requestAnimationFrame）
+ * - 折叠和展开模式都支持拖拽
  */
 const FloatingMusicPlayer = () => {
   const audioList = siteConfig('MUSIC_PLAYER_AUDIO_LIST')
@@ -29,11 +28,22 @@ const FloatingMusicPlayer = () => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
 
-  // 窗口拖拽状态
-  const [position, setPosition] = useState({ left: null, top: null, right: 16, bottom: 80 })
-  const [isDraggingWindow, setIsDraggingWindow] = useState(false)
-  const dragOffset = useRef({ x: 0, y: 0 })
+  // 拖拽相关 refs（避免重渲染）
   const playerRef = useRef(null)
+  const dragState = useRef({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    offsetX: 0,
+    offsetY: 0,
+    currentX: 0,
+    currentY: 0,
+    rafId: null,
+    moved: false
+  })
+  // 初始位置（右下角）
+  const initialPos = useRef({ right: 16, bottom: 80 })
+  const [useTransform, setUseTransform] = useState(false)
 
   const currentTrack = audioList?.[currentIdx]
 
@@ -45,33 +55,28 @@ const FloatingMusicPlayer = () => {
     }
   }, [musicPlayerEnabled])
 
-  // 暂停全局 APlayer，避免双重播放
+  // 暂停全局 APlayer
   useEffect(() => {
     if (!musicPlayerEnabled) return
-
     const pauseGlobalAPlayer = () => {
       const aplayer = document.querySelector('.aplayer')
       if (aplayer) {
         aplayer.style.display = 'none'
         const aplayerAudio = aplayer.querySelector('audio')
-        if (aplayerAudio && !aplayerAudio.paused) {
-          aplayerAudio.pause()
-        }
+        if (aplayerAudio && !aplayerAudio.paused) aplayerAudio.pause()
       }
     }
-
     pauseGlobalAPlayer()
     const interval = setInterval(pauseGlobalAPlayer, 2000)
     const observer = new MutationObserver(pauseGlobalAPlayer)
     observer.observe(document.body, { childList: true, subtree: true })
-
     return () => {
       clearInterval(interval)
       observer.disconnect()
     }
   }, [musicPlayerEnabled])
 
-  // 音频事件处理
+  // 音频事件
   const handleTimeUpdate = useCallback(() => {
     if (isDraggingProgress) return
     const audio = audioRef.current
@@ -84,9 +89,7 @@ const FloatingMusicPlayer = () => {
     if (audio) setDuration(audio.duration || 0)
   }, [])
 
-  const handleEnded = useCallback(() => {
-    playNext()
-  }, [])
+  const handleEnded = useCallback(() => { playNext() }, [])
 
   // 播放控制
   const playTrack = useCallback((idx) => {
@@ -97,11 +100,8 @@ const FloatingMusicPlayer = () => {
 
   const togglePlay = useCallback(() => {
     if (!audioRef.current) return
-    if (isPlaying) {
-      audioRef.current.pause()
-    } else {
-      audioRef.current.play().catch(() => {})
-    }
+    if (isPlaying) audioRef.current.pause()
+    else audioRef.current.play().catch(() => {})
   }, [isPlaying])
 
   const playNext = useCallback(() => {
@@ -120,28 +120,20 @@ const FloatingMusicPlayer = () => {
     playTrack((currentIdx - 1 + audioList.length) % audioList.length)
   }, [audioList, currentIdx, playTrack])
 
-  // 切换歌曲时加载新音频
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !currentTrack) return
     audio.src = currentTrack.url
-    if (isPlaying) {
-      audio.play().catch(() => setIsPlaying(false))
-    }
+    if (isPlaying) audio.play().catch(() => setIsPlaying(false))
   }, [currentIdx, currentTrack])
 
-  // 播放状态同步
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    if (isPlaying) {
-      audio.play().catch(() => setIsPlaying(false))
-    } else {
-      audio.pause()
-    }
+    if (isPlaying) audio.play().catch(() => setIsPlaying(false))
+    else audio.pause()
   }, [isPlaying])
 
-  // 音量同步
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume
   }, [volume])
@@ -156,64 +148,103 @@ const FloatingMusicPlayer = () => {
     setDragProgress(pct * 100)
   }, [])
 
-  const handleProgressDragStart = useCallback(() => {
-    setIsDraggingProgress(true)
+  // ========== 高性能窗口拖拽 ==========
+  const applyTransform = useCallback(() => {
+    const el = playerRef.current
+    if (!el) return
+    const s = dragState.current
+    const maxX = window.innerWidth - el.offsetWidth
+    const maxY = window.innerHeight - el.offsetHeight
+    s.currentX = Math.max(0, Math.min(maxX, s.currentX))
+    s.currentY = Math.max(0, Math.min(maxY, s.currentY))
+    el.style.transform = `translate(${s.currentX}px, ${s.currentY}px)`
+    s.rafId = null
   }, [])
 
-  const handleProgressDragEnd = useCallback(() => {
-    setIsDraggingProgress(false)
-  }, [])
+  const onMouseMove = useCallback((e) => {
+    const s = dragState.current
+    if (!s.isDragging) return
+    s.currentX = e.clientX - s.offsetX
+    s.currentY = e.clientY - s.offsetY
+    // 判断是否移动了足够距离（区分点击和拖拽）
+    if (Math.abs(e.clientX - s.startX) > 5 || Math.abs(e.clientY - s.startY) > 5) {
+      s.moved = true
+    }
+    if (!s.rafId) {
+      s.rafId = requestAnimationFrame(applyTransform)
+    }
+  }, [applyTransform])
 
-  // 窗口拖拽
-  const handleWindowDragStart = useCallback((e) => {
+  const onMouseUp = useCallback(() => {
+    const s = dragState.current
+    if (!s.isDragging) return
+    s.isDragging = false
+    if (s.rafId) {
+      cancelAnimationFrame(s.rafId)
+      s.rafId = null
+    }
+    // 最终位置应用
+    applyTransform()
+    window.removeEventListener('mousemove', onMouseMove)
+    window.removeEventListener('mouseup', onMouseUp)
+    document.body.style.userSelect = ''
+    document.body.style.cursor = ''
+  }, [onMouseMove, applyTransform])
+
+  const startDrag = useCallback((e) => {
+    // 不拦截按钮和输入框
     if (e.target.closest('button') || e.target.closest('input')) return
-    setIsDraggingWindow(true)
-    const rect = playerRef.current.getBoundingClientRect()
-    dragOffset.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    }
-    // 切换到 left/top 定位
-    setPosition({
-      left: rect.left,
-      top: rect.top,
-      right: null,
-      bottom: null
-    })
     e.preventDefault()
-  }, [])
-
-  const handleWindowDragMove = useCallback((e) => {
-    if (!isDraggingWindow) return
-    const playerWidth = playerRef.current?.offsetWidth || 300
-    const playerHeight = playerRef.current?.offsetHeight || 100
-    const x = Math.max(0, Math.min(window.innerWidth - playerWidth, e.clientX - dragOffset.current.x))
-    const y = Math.max(0, Math.min(window.innerHeight - playerHeight, e.clientY - dragOffset.current.y))
-    setPosition({ left: x, top: y, right: null, bottom: null })
-  }, [isDraggingWindow])
-
-  const handleWindowDragEnd = useCallback(() => {
-    setIsDraggingWindow(false)
-  }, [])
-
-  useEffect(() => {
-    if (isDraggingWindow) {
-      window.addEventListener('mousemove', handleWindowDragMove)
-      window.addEventListener('mouseup', handleWindowDragEnd)
-      return () => {
-        window.removeEventListener('mousemove', handleWindowDragMove)
-        window.removeEventListener('mouseup', handleWindowDragEnd)
-      }
+    const el = playerRef.current
+    if (!el) return
+    const s = dragState.current
+    const rect = el.getBoundingClientRect()
+    // 立即切换到 transform 定位，避免 React 重渲染延迟
+    if (!useTransform) {
+      setUseTransform(true)
+      el.style.left = '0'
+      el.style.top = '0'
+      el.style.right = 'auto'
+      el.style.bottom = 'auto'
     }
-  }, [isDraggingWindow, handleWindowDragMove, handleWindowDragEnd])
+    s.currentX = rect.left
+    s.currentY = rect.top
+    el.style.transform = `translate(${s.currentX}px, ${s.currentY}px)`
+    s.isDragging = true
+    s.moved = false
+    s.startX = e.clientX
+    s.startY = e.clientY
+    s.offsetX = e.clientX - rect.left
+    s.offsetY = e.clientY - rect.top
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'grabbing'
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }, [useTransform, onMouseMove, onMouseUp])
+
+  // 清理
+  useEffect(() => {
+    return () => {
+      const s = dragState.current
+      if (s.rafId) cancelAnimationFrame(s.rafId)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [onMouseMove, onMouseUp])
 
   if (!musicPlayerEnabled || !audioList || audioList.length === 0) return null
 
   const progress = isDraggingProgress ? dragProgress : (duration ? (currentTime / duration) * 100 : 0)
 
+  // 折叠模式点击（区分拖拽和点击）
+  const handleCompactClick = () => {
+    if (!dragState.current.moved) {
+      setIsExpanded(true)
+    }
+  }
+
   return (
     <>
-      {/* 全局唯一音频元素 */}
       <audio
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
@@ -225,24 +256,25 @@ const FloatingMusicPlayer = () => {
 
       <div
         ref={playerRef}
-        className={`fixed z-40 transition-all duration-300 ease-out select-none ${
+        className={`fixed z-40 transition-opacity duration-300 ease-out select-none ${
           isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        } ${isDraggingWindow ? 'transition-none cursor-grabbing' : ''}`}
+        }`}
         style={{
-          left: position.left !== null ? `${position.left}px` : 'auto',
-          top: position.top !== null ? `${position.top}px` : 'auto',
-          right: position.right !== null ? `${position.right}px` : 'auto',
-          bottom: position.bottom !== null ? `${position.bottom}px` : 'auto',
+          right: useTransform ? 'auto' : `${initialPos.current.right}px`,
+          bottom: useTransform ? 'auto' : `${initialPos.current.bottom}px`,
+          left: useTransform ? 0 : 'auto',
+          top: useTransform ? 0 : 'auto',
+          transform: useTransform ? `translate(${dragState.current.currentX}px, ${dragState.current.currentY}px)` : 'none',
+          willChange: 'transform',
           maxWidth: 'calc(100vw - 32px)'
         }}
       >
-        {/* 展开模式：完整播放器 */}
+        {/* 展开模式 */}
         {isExpanded && (
           <div className='glass-card p-4 w-72 sm:w-80 mb-2 shadow-2xl'>
-            {/* 顶部拖拽区域 */}
             <div
               className='flex justify-between items-center mb-3 cursor-grab active:cursor-grabbing'
-              onMouseDown={handleWindowDragStart}
+              onMouseDown={startDrag}
             >
               <span className='text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                 正在播放
@@ -275,17 +307,18 @@ const FloatingMusicPlayer = () => {
               onVolumeChange={setVolume}
               onTogglePlaylist={() => setShowPlaylist(!showPlaylist)}
               onSelectTrack={(idx) => { playTrack(idx); setShowPlaylist(false) }}
-              onProgressDragStart={handleProgressDragStart}
-              onProgressDragEnd={handleProgressDragEnd}
+              onProgressDragStart={() => setIsDraggingProgress(true)}
+              onProgressDragEnd={() => setIsDraggingProgress(false)}
             />
           </div>
         )}
 
-        {/* 折叠模式：迷你播放器 */}
+        {/* 折叠模式 */}
         {!isExpanded && (
           <div
-            className='glass-card rounded-2xl shadow-xl cursor-pointer transition-all hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]'
-            onClick={() => setIsExpanded(true)}
+            className='glass-card rounded-2xl shadow-xl cursor-grab active:cursor-grabbing transition-shadow hover:shadow-2xl relative'
+            onMouseDown={startDrag}
+            onClick={handleCompactClick}
           >
             <div className='flex items-center gap-2 p-2'>
               <div className='relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-1 ring-white/10 shadow-md'>
@@ -294,6 +327,7 @@ const FloatingMusicPlayer = () => {
                     src={currentTrack.cover}
                     className={`w-full h-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
                     alt={currentTrack?.name}
+                    draggable={false}
                   />
                 ) : (
                   <div className='w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700'>
@@ -310,8 +344,9 @@ const FloatingMusicPlayer = () => {
                 </div>
               </div>
               <button
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); togglePlay() }}
-                className='w-9 h-9 rounded-full flex items-center justify-center bg-gray-800 dark:bg-white text-white dark:text-gray-800 shadow-md hover:shadow-lg transition-all hover:scale-110 active:scale-95'
+                className='w-9 h-9 rounded-full flex items-center justify-center bg-gray-800 dark:bg-white text-white dark:text-gray-800 shadow-md hover:shadow-lg transition-all hover:scale-110 active:scale-95 shrink-0'
                 title={isPlaying ? '暂停' : '播放'}
               >
                 {isPlaying ? (
@@ -325,8 +360,9 @@ const FloatingMusicPlayer = () => {
                 )}
               </button>
               <button
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); playNext() }}
-                className='w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all'
+                className='w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all shrink-0'
                 title='下一首'
               >
                 <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
