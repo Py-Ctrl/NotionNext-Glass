@@ -11,7 +11,7 @@ import { Transition } from '@headlessui/react'
 import dynamic from 'next/dynamic'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef } from 'react'
+import React, { createContext, useEffect, useRef } from 'react'
 import ArticleDetail from './components/ArticleDetail'
 import ArticleLock from './components/ArticleLock'
 import AsideLeft from './components/AsideLeft'
@@ -27,7 +27,7 @@ const Live2D = dynamic(() => import('@/components/Live2D'))
 
 // 主题全局状态
 const ThemeGlobalFukasawa = createContext()
-export const useFukasawaGlobal = () => useContext(ThemeGlobalFukasawa)
+export const useFukasawaGlobal = () => React.useContext(ThemeGlobalFukasawa)
 
 /**
  * 基础布局 采用左右两侧布局，移动端使用顶部导航栏

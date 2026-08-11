@@ -4,7 +4,6 @@ import LazyImage from '@/components/LazyImage'
 
 const MusicPlayer = () => {
   const audioList = siteConfig('MUSIC_PLAYER_AUDIO_LIST')
-  const autoPlay = JSON.parse(siteConfig('MUSIC_PLAYER_AUTO_PLAY'))
   const order = siteConfig('MUSIC_PLAYER_ORDER')
 
   const audioRef = useRef(null)
@@ -77,22 +76,12 @@ const MusicPlayer = () => {
     if (audioRef.current) audioRef.current.volume = volume
   }, [volume])
 
-  useEffect(() => {
-    if (autoPlay && audioList && audioList.length > 0) {
-      setIsPlaying(true)
-    }
-  }, [])
-
   // 桌面端暂停全局 APlayer，避免双重播放
   useEffect(() => {
     const pauseGlobalAPlayer = () => {
       const aplayerAudio = document.querySelector('.aplayer.aplayer-fixed audio')
       if (aplayerAudio && !aplayerAudio.paused) {
         aplayerAudio.pause()
-      }
-      const aplayerPlayBtn = document.querySelector('.aplayer.aplayer-fixed .aplayer-play')
-      if (aplayerPlayBtn) {
-        aplayerPlayBtn.click()
       }
     }
 

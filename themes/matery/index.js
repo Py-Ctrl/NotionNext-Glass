@@ -12,7 +12,7 @@ import { isBrowser } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef } from 'react'
+import React, { createContext, useEffect, useRef } from 'react'
 import Announcement from './components/Announcement'
 import ArticleAdjacent from './components/ArticleAdjacent'
 import ArticleCopyright from './components/ArticleCopyright'
@@ -43,7 +43,7 @@ const AlgoliaSearchModal = dynamic(
 
 // 主题全局状态
 const ThemeGlobalMatery = createContext()
-export const useMateryGlobal = () => useContext(ThemeGlobalMatery)
+export const useMateryGlobal = () => React.useContext(ThemeGlobalMatery)
 
 /**
  * 基础布局

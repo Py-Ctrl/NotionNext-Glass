@@ -11,7 +11,7 @@ import { loadWowJS } from '@/lib/plugins/wow'
 import { deepClone, isBrowser, shuffleArray } from '@/lib/utils'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useEffect, useRef, useState } from 'react'
 import Announcement from './components/Announcement'
 import { ArticleLock } from './components/ArticleLock'
 import BlogArchiveItem from './components/BlogArchiveItem'
@@ -37,7 +37,7 @@ import { Style } from './style'
 
 // 主题全局状态
 const ThemeGlobalGame = createContext()
-export const useGameGlobal = () => useContext(ThemeGlobalGame)
+export const useGameGlobal = () => React.useContext(ThemeGlobalGame)
 
 /**
  * 基础布局 采用左右两侧布局，移动端使用顶部导航栏

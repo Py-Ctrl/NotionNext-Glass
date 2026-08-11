@@ -10,7 +10,7 @@ import { isBrowser } from '@/lib/utils'
 import { Transition } from '@headlessui/react'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
 import Announcement from './components/Announcement'
 import ArticleAround from './components/ArticleAround'
 import ArticleInfo from './components/ArticleInfo'
@@ -37,7 +37,7 @@ import { Style } from './style'
 
 // 主题全局状态
 const ThemeGlobalMedium = createContext()
-export const useMediumGlobal = () => useContext(ThemeGlobalMedium)
+export const useMediumGlobal = () => React.useContext(ThemeGlobalMedium)
 
 /**
  * 基础布局

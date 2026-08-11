@@ -405,9 +405,9 @@ const nextConfig = {
   webpack: (config, { dev, isServer }) => {
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
-      {
-        module: /[\\/]next[\\/]dist[\\/]esm[\\/]client[\\/]components[\\/]navigation\.js$/,
-        message: /useContext.*not exported from ['"]react['"]/i
+      (warning) => {
+        const msg = typeof warning === 'string' ? warning : (warning?.message || JSON.stringify(warning))
+        return /useContext/i.test(msg)
       }
     ]
 

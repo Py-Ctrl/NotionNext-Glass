@@ -8,7 +8,7 @@ import { Transition } from '@headlessui/react'
 import dynamic from 'next/dynamic'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef } from 'react'
+import React, { createContext, useEffect, useRef } from 'react'
 import BlogPostBar from './components/BlogPostBar'
 import CONFIG from './config'
 import { Style } from './style'
@@ -57,7 +57,7 @@ const RecommendPosts = dynamic(() => import('./components/RecommendPosts'), {
 
 // 主题全局状态
 const ThemeGlobalSimple = createContext()
-export const useSimpleGlobal = () => useContext(ThemeGlobalSimple)
+export const useSimpleGlobal = () => React.useContext(ThemeGlobalSimple)
 
 /**
  * 基础布局

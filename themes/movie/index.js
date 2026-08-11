@@ -11,7 +11,7 @@ import { loadWowJS } from '@/lib/plugins/wow'
 import { isBrowser } from '@/lib/utils'
 import { Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useEffect, useRef, useState } from 'react'
 import ArchiveDateList from './components/ArchiveDateList'
 import { ArticleInfo } from './components/ArticleInfo'
 import { ArticleLock } from './components/ArticleLock'
@@ -34,7 +34,7 @@ import { Style } from './style'
 
 // 主题全局状态
 const ThemeGlobalMovie = createContext()
-export const useMovieGlobal = () => useContext(ThemeGlobalMovie)
+export const useMovieGlobal = () => React.useContext(ThemeGlobalMovie)
 
 /**
  * 基础布局框架

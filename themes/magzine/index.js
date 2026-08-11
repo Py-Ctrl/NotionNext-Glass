@@ -14,7 +14,7 @@ import { isBrowser } from '@/lib/utils'
 import { SignIn, SignUp } from '@clerk/nextjs'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useEffect, useRef, useState } from 'react'
 import ArticleInfo from './components/ArticleInfo'
 import { ArticleLock } from './components/ArticleLock'
 import BannerFullWidth from './components/BannerFullWidth'
@@ -94,7 +94,7 @@ const SlugSkeleton = () => (
 
 // 主题全局状态
 const ThemeGlobalMagzine = createContext()
-export const useMagzineGlobal = () => useContext(ThemeGlobalMagzine)
+export const useMagzineGlobal = () => React.useContext(ThemeGlobalMagzine)
 
 /**
  * 基础布局

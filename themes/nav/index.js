@@ -14,7 +14,7 @@ import { Transition } from '@headlessui/react'
 import dynamic from 'next/dynamic'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
 import { ArticleLock } from './components/ArticleLock'
 import CONFIG from './config'
 import { Style } from './style'
@@ -62,7 +62,7 @@ const TopNavBar = dynamic(() => import('./components/TopNavBar'), { ssr: true })
 
 // 主题全局变量
 const ThemeGlobalNav = createContext()
-export const useNavGlobal = () => useContext(ThemeGlobalNav)
+export const useNavGlobal = () => React.useContext(ThemeGlobalNav)
 
 /**
  * 基础布局

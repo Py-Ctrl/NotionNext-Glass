@@ -10,7 +10,7 @@ import { Transition } from '@headlessui/react'
 import dynamic from 'next/dynamic'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useEffect, useRef, useState } from 'react'
 import Announcement from './components/Announcement'
 import { ArticleFooter } from './components/ArticleFooter'
 import { ArticleInfo } from './components/ArticleInfo'
@@ -34,7 +34,7 @@ const AlgoliaSearchModal = dynamic(
 
 // 主题全局状态
 const ThemeGlobalNobelium = createContext()
-export const useNobeliumGlobal = () => useContext(ThemeGlobalNobelium)
+export const useNobeliumGlobal = () => React.useContext(ThemeGlobalNobelium)
 
 /**
  * 基础布局 采用左右两侧布局，移动端使用顶部导航栏

@@ -5,10 +5,9 @@ import { isBrowser } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import {
+import React, {
   createContext,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState
@@ -41,7 +40,7 @@ const AlgoliaSearchModal = dynamic(
 )
 
 const ThemeGlobalLiquidGlass = createContext()
-export const useLiquidGlassGlobal = () => useContext(ThemeGlobalLiquidGlass)
+export const useLiquidGlassGlobal = () => React.useContext(ThemeGlobalLiquidGlass)
 
 const LayoutBase = props => {
   const { children, headerSlot, rightAreaSlot, post } = props

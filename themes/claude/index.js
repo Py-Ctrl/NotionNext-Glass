@@ -7,7 +7,7 @@ import { isBrowser } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef, memo } from 'react'
+import React, { createContext, useEffect, useRef, memo } from 'react'
 import BlogPostBar from './components/BlogPostBar'
 import CONFIG from './config'
 import { Style } from './style'
@@ -50,7 +50,7 @@ const RecommendPosts = dynamic(() => import('./components/RecommendPosts'), {
 
 // 主题全局状态
 const ThemeGlobalSimple = createContext()
-export const useSimpleGlobal = () => useContext(ThemeGlobalSimple)
+export const useSimpleGlobal = () => React.useContext(ThemeGlobalSimple)
 
 /**
  * 左侧栏内容 — 使用 React.memo 阻止父组件 props 变化引起的重新渲染。

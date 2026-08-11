@@ -3,6 +3,10 @@ const WP_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 
 export const getWallpaper = (isDarkMode) => isDarkMode ? WP_DARK : WP_LIGHT
 
+const WP_TRANSPARENT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+
+export const getTransparentWallpaper = () => WP_TRANSPARENT
+
 const buildGradientSVG = (isDarkMode) => {
   const base = isDarkMode
     ? ['#0a0a1a', '#0f0f23', '#0a1a1f', '#0a0f0a']

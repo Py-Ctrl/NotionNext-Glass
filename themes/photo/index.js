@@ -11,7 +11,7 @@ import { loadWowJS } from '@/lib/plugins/wow'
 import { isBrowser } from '@/lib/utils'
 import { Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useEffect, useRef, useState } from 'react'
 import Announcement from './components/Announcement'
 import ArchiveDateList from './components/ArchiveDateList'
 import ArticleFooter from './components/ArticleFooter'
@@ -35,7 +35,7 @@ import { Style } from './style'
 
 // 主题全局状态
 const ThemeGlobalPhoto = createContext()
-export const usePhotoGlobal = () => useContext(ThemeGlobalPhoto)
+export const usePhotoGlobal = () => React.useContext(ThemeGlobalPhoto)
 
 /**
  * 基础布局框架

@@ -18,7 +18,7 @@ import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import React, { createContext, useEffect, useRef, useState } from 'react'
 import Announcement from './components/Announcement'
 import ArticleAround from './components/ArticleAround'
 import ArticleInfo from './components/ArticleInfo'
@@ -47,7 +47,7 @@ const WWAds = dynamic(() => import('@/components/WWAds'), { ssr: false })
 
 // 主题全局变量
 const ThemeGlobalGitbook = createContext()
-export const useGitBookGlobal = () => useContext(ThemeGlobalGitbook)
+export const useGitBookGlobal = () => React.useContext(ThemeGlobalGitbook)
 
 /**
  * 给最新的文章标一个红点
