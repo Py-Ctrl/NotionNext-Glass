@@ -293,29 +293,25 @@ const BottomTabs = (props) => {
   return (
     <>
       {renderSubMenu()}
-      <nav
-        ref={containerRef}
-        className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30'
-        style={{
-          height: `${CANVAS_H}px`,
-          width: widthStyle,
-          borderRadius: `${CANVAS_H / 2}px`,
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        }}
-      >
-        {canvasW > 10 && tabs.length > 0 && (
-          <LiquidGlassCanvas
-            wallpaperSrc={getBottomBarWallpaper(isDarkMode)}
-            elements={elements}
-            interactions={interactions}
-            tabTargets={tabTargets}
-            rendererRef={rendererRef}
-            contentHeight={CANVAS_H}
-            dpr={1.5}
-          />
-        )}
-      </nav>
+      {canvasW > 10 && tabs.length > 0 && (
+        <LiquidGlassCanvas
+          wallpaperSrc={getBottomBarWallpaper(isDarkMode)}
+          elements={elements}
+          interactions={interactions}
+          tabTargets={tabTargets}
+          rendererRef={rendererRef}
+          contentHeight={CANVAS_H}
+          dpr={1.5}
+          containerRef={containerRef}
+          className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30'
+          style={{
+            height: `${CANVAS_H}px`,
+            width: widthStyle,
+            borderRadius: `${CANVAS_H / 2}px`,
+            overflow: 'hidden',
+          }}
+        />
+      )}
     </>
   )
 }

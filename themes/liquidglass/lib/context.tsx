@@ -83,6 +83,12 @@ export interface LiquidGlassCanvasProps {
    *  `renderer.showPefBbox`. Use for visualizing the per-element FBO regions
    *  during performance tuning. */
   showPefBboxOverlay?: boolean
+  /** Extra style applied to the container div. Merged on top of defaults
+   *  (position:relative), so callers can override position etc. */
+  style?: React.CSSProperties
+  /** Optional ref forwarded to the container div. Lets parents measure
+   *  the canvas size without an extra wrapper element. */
+  containerRef?: React.RefObject<HTMLDivElement>
 }
 
 export interface ElementInteraction {
@@ -164,9 +170,12 @@ export function LiquidGlassCanvas({
   showPefBboxOverlay = false,
   usePerElementFbo,
   perfMonitorEnabled,
+  style,
+  containerRef: externalContainerRef,
 }: LiquidGlassCanvasProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
-  const containerRef = React.useRef<HTMLDivElement>(null)
+  const internalContainerRef = React.useRef<HTMLDivElement>(null)
+  const containerRef = externalContainerRef || internalContainerRef
   const overlayCanvasRef = React.useRef<HTMLCanvasElement>(null)
   const rendererRefInternal = React.useRef<LiquidGlassRenderer | null>(null)
   // Keep refs to the latest state so pointer handlers can read them
@@ -1290,7 +1299,7 @@ export function LiquidGlassCanvas({
   )
 
   return (
-    <div ref={containerRef} className={className} style={{ position: 'relative' }}>
+    <div ref={containerRef} className={className} style={{ position: 'relative', ...style }}>
       <canvas
         ref={canvasRef}
         onPointerDown={handlePointerDown}
