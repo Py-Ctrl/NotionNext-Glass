@@ -152,7 +152,13 @@ const TopNav = (props) => {
 
           {/* 右侧搜索 */}
           <div className='w-8 h-8 flex items-center justify-center cursor-pointer'
-               onClick={() => searchDrawer?.current?.show()}>
+               onClick={() => {
+                 if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
+                   searchModal.current.openSearch()
+                 } else {
+                   searchDrawer?.current?.show()
+                 }
+               }}>
             <i className='fas fa-search text-gray-600 dark:text-gray-400' />
           </div>
         </div>

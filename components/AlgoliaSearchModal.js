@@ -131,9 +131,15 @@ export default function AlgoliaSearchModal({ cRef }) {
    */
   useEffect(() => {
     if (isModalOpen) {
-      setTimeout(() => {
+      // 移动端需要更短的延迟以确保键盘弹出
+      const timer = setTimeout(() => {
         inputRef.current?.focus()
-      }, 100)
+        // 移动端额外触发 click 确保键盘弹出
+        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+          inputRef.current?.click()
+        }
+      }, 50)
+      return () => clearTimeout(timer)
     } else {
       resetSearch()
     }
