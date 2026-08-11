@@ -1,11 +1,3 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
-import { useGlobal } from '@/lib/global'
-import { useRouter } from 'next/router'
-import { siteConfig } from '@/lib/config'
-import CONFIG from '../config'
-import SmartLink from '@/components/SmartLink'
-import { getWallpaper, getGradientWallpaper } from './liquidGlassWallpaper'
-
 const ICON_MAP = {
   'house': 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
   'home': 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
@@ -53,11 +45,9 @@ const ICON_MAP = {
   'terminal': 'M20 4H4c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.89-2-2-2zM4 18V6h16v12H4zm2-3.59L7.41 13 6 11.59V9.17L9.83 13 6 16.83v-2.42zM12 16.83L15.83 13 12 9.17v2.42L13.41 13 12 14.41v2.42z',
   'wrench': 'M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z',
   'cog': 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94 0 .31.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
-  'cogs': 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94 0 .31.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
   'phone': 'M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z',
   'camera': 'M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z',
   'image': 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z',
-  'photo': 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z',
   'play': 'M8 5v14l11-7z',
   'headphones': 'M12 3c-4.97 0-9 4.03-9 9v7c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2H5v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-2c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-7c0-4.97-4.03-9-9-9z',
   'music': 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z',
@@ -95,12 +85,10 @@ const DEFAULT_ICON = 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'
 
 const STYLE_PREFIXES = ['fa-solid', 'fa-regular', 'fa-brands', 'fa-light', 'fa-thin', 'fa-duotone', 'fas', 'far', 'fab', 'fal', 'fat', 'fad']
 
-const getIconPath = (iconClass) => {
+export function getIconPath(iconClass) {
   if (!iconClass) return DEFAULT_ICON
-  // Handle non-string inputs (arrays from multi_select, objects, numbers, etc.)
   if (typeof iconClass !== 'string') {
     if (Array.isArray(iconClass)) {
-      // If it's an array, try the first string element
       const str = iconClass.find(s => typeof s === 'string')
       if (!str) return DEFAULT_ICON
       iconClass = str
@@ -120,259 +108,4 @@ const getIconPath = (iconClass) => {
   return DEFAULT_ICON
 }
 
-const BottomTabs = (props) => {
-  const { isDarkMode, locale } = useGlobal()
-  const { customMenu, customNav } = props
-  const router = useRouter()
-  const routerRef = useRef(router)
-  const containerRef = useRef(null)
-  const elRef = useRef(null)
-  const [useWebGL, setUseWebGL] = useState(false)
-  const isSettingStateRef = useRef(false)
-  const [subMenuOpen, setSubMenuOpen] = useState(null)
-  const subMenuOpenRef = useRef(null)
-  const subMenuRef = useRef(null)
-
-  useEffect(() => { routerRef.current = router }, [router])
-  useEffect(() => { subMenuOpenRef.current = subMenuOpen }, [subMenuOpen])
-
-  const menuItems = useMemo(() => {
-    if (siteConfig('CUSTOM_MENU') && customMenu && customMenu.length > 0) {
-      return customMenu.filter(m => m && m.show !== false)
-    }
-    const defaults = []
-    if (siteConfig('LIQUID_MENU_CATEGORY', null, CONFIG) !== false) {
-      defaults.push({ name: locale.COMMON.CATEGORY, href: '/category', icon: 'fa-folder', subMenus: [] })
-    }
-    if (siteConfig('LIQUID_MENU_TAG', null, CONFIG) !== false) {
-      defaults.push({ name: locale.COMMON.TAGS, href: '/tag', icon: 'fa-tag', subMenus: [] })
-    }
-    if (siteConfig('LIQUID_MENU_ARCHIVE', null, CONFIG) !== false) {
-      defaults.push({ name: locale.COMMON.ARCHIVE || '归档', href: '/archive', icon: 'fa-archive', subMenus: [] })
-    }
-    let links = [
-      { name: locale.NAV?.HOME || '首页', href: '/', icon: 'fa-house', subMenus: [] },
-      ...defaults
-    ]
-    if (customNav) {
-      links = links.concat(customNav.filter(n => n && n.show !== false))
-    }
-    return links
-  }, [customMenu, customNav, locale])
-
-  const tabs = useMemo(() => menuItems.map(item => {
-    // Clean subMenus: extract only needed props, avoid storing full Notion page objects
-    let cleanSubMenus = []
-    if (Array.isArray(item.subMenus)) {
-      cleanSubMenus = item.subMenus.map(s => ({
-        name: s?.name || s?.title || '',
-        href: s?.href || s?.slug || '/',
-        icon: typeof s?.icon === 'string' ? s.icon : ''
-      }))
-    }
-    return {
-      icon: getIconPath(item.icon),
-      label: typeof item.name === 'string' ? item.name : (typeof item.title === 'string' ? item.title : (item.label || '')),
-      href: item.href || item.url || item.slug || '/',
-      subMenus: cleanSubMenus,
-      viewport: 24
-    }
-  }), [menuItems])
-
-  // Only serialize data passed to setTabs() — exclude subMenus (large page property objects)
-  const tabsKey = useMemo(() => {
-    try {
-      return JSON.stringify(tabs.map(t => ({ icon: t.icon, label: t.label, viewport: t.viewport })))
-    } catch {
-      return String(tabs.length)
-    }
-  }, [tabs])
-  const tabsRef = useRef(tabs)
-  tabsRef.current = tabs
-
-  const activeTab = useMemo(() => {
-    let idx = 0
-    tabs.forEach((t, i) => {
-      if (t.href !== '/' && router.asPath.startsWith(t.href)) idx = i
-      else if (t.href === '/' && router.asPath === '/') idx = i
-    })
-    return idx
-  }, [router.asPath, tabs])
-
-  useEffect(() => {
-    if (!window.__liquidGlassLoaded) {
-      const handler = () => setUseWebGL(true)
-      window.addEventListener('liquid-glass-ready', handler)
-      const timer = setTimeout(() => {
-        if (!window.__liquidGlassLoaded) setUseWebGL(false)
-      }, 5000)
-      return () => {
-        window.removeEventListener('liquid-glass-ready', handler)
-        clearTimeout(timer)
-      }
-    }
-    setUseWebGL(true)
-  }, [])
-
-  // Effect A: 创建元素和设置 tabs（仅在 tabs 内容/isDarkMode/useWebGL 变化时重建）
-  useEffect(() => {
-    if (!useWebGL || !containerRef.current) return
-
-    const currentTabs = tabsRef.current
-    const container = containerRef.current
-    container.innerHTML = ''
-
-    const el = document.createElement('liquid-glass')
-    el.setAttribute('mode', 'single-bottom-tabs')
-    el.setAttribute('wallpaper', getGradientWallpaper(isDarkMode))
-    if (isDarkMode) el.setAttribute('dark', '')
-    el.style.cssText = 'width:100%;height:100%'
-    container.appendChild(el)
-    elRef.current = el
-
-    let retries = 5
-    let retryTimer = null
-
-    const trySetTabs = () => {
-      if (typeof el.setTabs === 'function') {
-        el.setTabs([currentTabs.map(t => ({
-          icon: t.icon,
-          label: t.label,
-          viewport: t.viewport
-        }))])
-      } else if (retries > 0) {
-        retries--
-        retryTimer = setTimeout(trySetTabs, 100)
-      }
-    }
-    requestAnimationFrame(trySetTabs)
-
-    const handleStateChange = (e) => {
-      if (isSettingStateRef.current) return
-      const idx = e.detail?.selectedTab
-      const t = tabsRef.current
-      if (typeof idx === 'number' && idx >= 0 && t[idx]) {
-        if (t[idx].subMenus.length > 0) {
-          setSubMenuOpen(subMenuOpenRef.current === idx ? null : idx)
-        } else {
-          setSubMenuOpen(null)
-          routerRef.current.push(t[idx].href)
-        }
-      }
-    }
-    document.addEventListener('lg-statechange', handleStateChange)
-
-    return () => {
-      clearTimeout(retryTimer)
-      document.removeEventListener('lg-statechange', handleStateChange)
-      if (container.contains(el)) container.removeChild(el)
-      elRef.current = null
-    }
-  }, [useWebGL, isDarkMode, tabsKey])
-
-  // Effect B: 仅更新选中状态（路由变化时只调 setState，不重建元素）
-  useEffect(() => {
-    if (!useWebGL || !elRef.current) return
-    const el = elRef.current
-    if (typeof el.setState === 'function') {
-      isSettingStateRef.current = true
-      el.setState({ selectedTab: activeTab })
-      setTimeout(() => { isSettingStateRef.current = false }, 200)
-    }
-  }, [useWebGL, activeTab])
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (subMenuRef.current && !subMenuRef.current.contains(e.target)) {
-        setSubMenuOpen(null)
-      }
-    }
-    document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [])
-
-  if (!useWebGL) {
-    return (
-      <>
-        {subMenuOpen !== null && tabs[subMenuOpen]?.subMenus.length > 0 && (
-          <div
-            ref={subMenuRef}
-            className='fixed bottom-24 left-1/2 -translate-x-1/2 z-40 glass-card p-2 min-w-[160px]'
-          >
-            {tabs[subMenuOpen].subMenus.map((s, i) => (
-              <SmartLink
-                key={i}
-                href={s.href}
-                className='block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
-                onClick={() => setSubMenuOpen(null)}
-              >
-                {s.icon && <i className={s.icon + ' mr-2'} />}
-                {s.name}
-              </SmartLink>
-            ))}
-          </div>
-        )}
-        <nav className='fixed bottom-0 left-0 right-0 z-30 glass-nav'>
-          <div
-            className='flex justify-around items-center mx-auto py-2'
-            style={{ width: `min(calc(100% - 2rem), ${tabs.length * 76}px)` }}
-          >
-            {tabs.map((tab, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  if (tab.subMenus.length > 0) {
-                    setSubMenuOpen(subMenuOpen === idx ? null : idx)
-                  } else {
-                    setSubMenuOpen(null)
-                    router.push(tab.href)
-                  }
-                }}
-                className={`flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors ${
-                  activeTab === idx
-                    ? 'text-indigo-500'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                <svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
-                  <path d={tab.icon} />
-                </svg>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </nav>
-      </>
-    )
-  }
-
-  return (
-    <>
-      {subMenuOpen !== null && tabs[subMenuOpen]?.subMenus.length > 0 && (
-        <div
-          ref={subMenuRef}
-          className='fixed bottom-24 left-1/2 -translate-x-1/2 z-40 glass-card p-2 min-w-[160px]'
-        >
-          {tabs[subMenuOpen].subMenus.map((s, i) => (
-            <SmartLink
-              key={i}
-              href={s.href}
-              className='block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
-              onClick={() => setSubMenuOpen(null)}
-            >
-              {s.icon && <i className={s.icon + ' mr-2'} />}
-              {s.name}
-            </SmartLink>
-          ))}
-        </div>
-      )}
-      <nav
-        ref={containerRef}
-        className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-3xl overflow-hidden'
-        style={{ height: '72px', width: `min(calc(100% - 2rem), ${tabs.length * 76}px)`, background: isDarkMode ? '#0a0a1a' : '#eef2ff' }}
-      />
-    </>
-  )
-}
-
-export default BottomTabs
+export { ICON_MAP, DEFAULT_ICON }

@@ -2,7 +2,7 @@ import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
 import { siteConfig } from '@/lib/config'
-import LiquidGlassButton from './LiquidGlassButton'
+import GlassButton from './GlassButton'
 
 const ArticleLock = ({ validPassword }) => {
   const { locale } = useGlobal()
@@ -30,7 +30,7 @@ const ArticleLock = ({ validPassword }) => {
         }}
       />
       <div className='mt-4 w-full rounded-2xl overflow-hidden' style={{ height: '52px' }}>
-        <LiquidGlassButton
+        <GlassButton
           label={locale.COMMON.SUBMIT || '提交'}
           btnStyle='blue'
           onTap={() => {

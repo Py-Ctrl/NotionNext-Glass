@@ -33,7 +33,6 @@ import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
 import CONFIG from './config'
 import { Style } from './style'
-import LiquidGlassScript from './components/LiquidGlassScript'
 
 const AlgoliaSearchModal = dynamic(
   () => import('@/components/AlgoliaSearchModal'),
@@ -124,7 +123,6 @@ const LayoutBase = props => {
         id='theme-liquidglass'
         className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth`}>
         <Style />
-        <LiquidGlassScript />
 
         {/* 移动端顶部导航 */}
         <TopNav {...props} searchModal={searchModal} />

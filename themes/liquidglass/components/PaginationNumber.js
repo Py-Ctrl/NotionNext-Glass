@@ -1,7 +1,7 @@
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
-import LiquidGlassButton from './LiquidGlassButton'
+import GlassButton from './GlassButton'
 
 const PaginationNumber = ({ page, totalPage }) => {
   const { locale } = useGlobal()
@@ -19,7 +19,7 @@ const PaginationNumber = ({ page, totalPage }) => {
     <div className='flex justify-center items-center gap-2 mt-8 flex-wrap'>
       {currentPage > 1 && (
         <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
-          <LiquidGlassButton
+          <GlassButton
             label='←'
             btnStyle='surface'
             onTap={() => router.push(`/page/${currentPage - 1}`)}
@@ -35,7 +35,7 @@ const PaginationNumber = ({ page, totalPage }) => {
           className='rounded-xl overflow-hidden'
           style={{ width: '48px', height: '48px' }}
         >
-          <LiquidGlassButton
+          <GlassButton
             label={String(p)}
             btnStyle={p === currentPage ? 'blue' : 'surface'}
             onTap={() => router.push(p === 1 ? '/' : `/page/${p}`)}
@@ -47,7 +47,7 @@ const PaginationNumber = ({ page, totalPage }) => {
       ))}
       {currentPage < totalPage && (
         <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
-          <LiquidGlassButton
+          <GlassButton
             label='→'
             btnStyle='surface'
             onTap={() => router.push(`/page/${currentPage + 1}`)}
