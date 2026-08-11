@@ -295,11 +295,10 @@ const BottomTabs = (props) => {
       {renderSubMenu()}
       <nav
         ref={containerRef}
-        className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30 rounded-3xl overflow-hidden'
+        className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30'
         style={{
           height: `${CANVAS_H}px`,
           width: widthStyle,
-          background: isDarkMode ? '#0a0a1a' : '#eef2ff'
         }}
       >
         {canvasW > 10 && tabs.length > 0 && (
