@@ -104,6 +104,40 @@ const LayoutBase = props => {
     }
   }, [scrollListener])
 
+  // 卡片鼠标聚光效果：监听鼠标移动，动态设置 --mouse-x / --mouse-y
+  useEffect(() => {
+    if (!isBrowser) return
+    let rafId = null
+    let lastX = 0
+    let lastY = 0
+
+    const updateSpotlight = () => {
+      rafId = null
+      const el = document.elementFromPoint(lastX, lastY)
+      if (!el) return
+      const card = el.closest('.glass-card')
+      if (!card) return
+      const rect = card.getBoundingClientRect()
+      const x = ((lastX - rect.left) / rect.width) * 100
+      const y = ((lastY - rect.top) / rect.height) * 100
+      card.style.setProperty('--mouse-x', `${x}%`)
+      card.style.setProperty('--mouse-y', `${y}%`)
+    }
+
+    const handleMouseMove = (e) => {
+      lastX = e.clientX
+      lastY = e.clientY
+      if (rafId) return
+      rafId = requestAnimationFrame(updateSpotlight)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [])
+
   const drawerRight = useRef(null)
   const floatSlot = (
     <div className='block lg:hidden'>

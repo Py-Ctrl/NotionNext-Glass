@@ -40,6 +40,8 @@ const Style = () => {
 
     /* ========== 玻璃卡片 ========== */
     #theme-liquidglass .glass-card {
+      position: relative;
+      overflow: hidden;
       background: var(--glass-bg);
       backdrop-filter: blur(var(--glass-blur));
       -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -49,10 +51,85 @@ const Style = () => {
       transition: all 0.3s ease;
     }
 
+    /* 边框流光效果 */
+    #theme-liquidglass .glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: linear-gradient(
+        135deg,
+        rgba(99, 102, 241, 0.5),
+        rgba(139, 92, 246, 0.5),
+        rgba(6, 182, 212, 0.5),
+        rgba(99, 102, 241, 0.5)
+      );
+      background-size: 300% 300%;
+      animation: glass-border-flow 8s ease infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.4;
+      transition: opacity 0.3s ease, animation-duration 0.3s ease;
+    }
+
+    #theme-liquidglass .glass-card:hover::before {
+      opacity: 1;
+      animation-duration: 3s;
+    }
+
+    /* 鼠标聚光效果 */
+    #theme-liquidglass .glass-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(99, 102, 241, 0.12),
+        transparent 40%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: inherit;
+    }
+
+    #theme-liquidglass .glass-card:hover::after {
+      opacity: 1;
+    }
+
+    @keyframes glass-border-flow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     .dark #theme-liquidglass .glass-card {
       background: var(--glass-bg-dark);
       border-color: var(--glass-border-dark);
       box-shadow: var(--glass-shadow-dark);
+    }
+
+    .dark #theme-liquidglass .glass-card::before {
+      background: linear-gradient(
+        135deg,
+        rgba(129, 140, 248, 0.6),
+        rgba(167, 139, 250, 0.6),
+        rgba(34, 211, 238, 0.6),
+        rgba(129, 140, 248, 0.6)
+      );
+    }
+
+    .dark #theme-liquidglass .glass-card::after {
+      background: radial-gradient(
+        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(129, 140, 248, 0.15),
+        transparent 40%
+      );
     }
 
     #theme-liquidglass .glass-card:hover {
