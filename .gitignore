@@ -68,3 +68,6 @@ package-lock.json
 .perf/
 tsconfig.tsbuildinfo
 webpack-internal:/
+
+# Temp source from liquid-glass-webgl migration
+temp-liquid-glass-src/

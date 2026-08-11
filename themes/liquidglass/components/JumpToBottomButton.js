@@ -6,9 +6,11 @@ const JumpToBottomButton = () => {
   return (
     <div
       onClick={handleScrollToBottom}
-      className='glass-float-btn cursor-pointer'
+      className='liquid-glass-toggle cursor-pointer'
       title='跳到底部'>
-      <i className='fas fa-chevron-down text-gray-600 dark:text-gray-400 text-sm' />
+      <span className='liquid-glass-toggle-inner'>
+        <i className='fas fa-chevron-down text-gray-600 dark:text-gray-400 text-sm' />
+      </span>
     </div>
   )
 }

@@ -6,8 +6,9 @@ const JumpToTopButton = ({ percent }) => {
   return (
     <div
       onClick={handleScrollToTop}
-      className='glass-float-btn relative cursor-pointer'
+      className='liquid-glass-toggle cursor-pointer relative'
       title='回到顶部'>
+      <span className='liquid-glass-toggle-inner'>
       <svg className='w-5 h-5' viewBox='0 0 24 24' fill='none'>
         <circle
           cx='12'
@@ -38,6 +39,7 @@ const JumpToTopButton = ({ percent }) => {
           className='text-gray-600 dark:text-gray-400'
         />
       </svg>
+      </span>
     </div>
   )
 }
