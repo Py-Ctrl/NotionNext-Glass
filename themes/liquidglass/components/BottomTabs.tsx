@@ -171,39 +171,6 @@ const BottomTabs = (props) => {
 
     const dragInteractions = makeTabDragInteractions('tabs', tabW, tabs.length, handleTabSelect, rendererRef)
 
-    // 指示器放在 tab 内容之前渲染，避免覆盖首个 tab 的图标和文字
-    const indicatorEl = makeGlassShape(
-      'tabs-indicator',
-      { x: glassX, y: glassY, w: tabW, h: GLASS_H },
-      {
-        cornerRadius: glassR,
-        refractionHeight: 10,
-        refractionAmount: -14,
-        blurRadius: 0,
-        saturation: 1.0,
-        tintColor: [0, 0, 0, 0],
-        surfaceColor: [0, 0, 0, 0],
-        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-        outerShadow: { ...DEFAULT_SHADOW },
-        innerShadow: { radius: 8, alpha: 0.3, offsetX: 0, offsetY: 8 },
-        chromaticAberration: true,
-      }
-    )
-    indicatorEl.independentBackdrop = false
-    indicatorEl.isBottomTabIndicator = {
-      groupId: 'tabs',
-      dragWidth: tabW,
-      dimColor: palette.backIconColor,
-      accentColor: [...palette.tabsAccent],
-      containerRect: { x: glassX - GLASS_PAD, y: glassY, w: glassW + 2 * GLASS_PAD, h: GLASS_H },
-      containerCenterX: containerX + containerW / 2,
-      containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
-      containerWidth: containerW,
-      tabContentIds: tabs.map((_, i) => `tab-${i}`),
-      tabContentRects: tabs.map((_, i) => ({ x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H })),
-    }
-    els.push(indicatorEl)
-
     for (let i = 0; i < tabs.length; i++) {
       const tab = tabs[i]
       const tabEl = makeText(
@@ -236,6 +203,38 @@ const BottomTabs = (props) => {
     }
 
     ints['tabs-container'] = dragInteractions
+
+    // 指示器放在 tab 内容之后渲染，移除黑色内阴影避免黑蓝重叠
+    const indicatorEl = makeGlassShape(
+      'tabs-indicator',
+      { x: glassX, y: glassY, w: tabW, h: GLASS_H },
+      {
+        cornerRadius: glassR,
+        refractionHeight: 10,
+        refractionAmount: -14,
+        blurRadius: 0,
+        saturation: 1.0,
+        tintColor: [0, 0, 0, 0],
+        surfaceColor: [0, 0, 0, 0],
+        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
+        outerShadow: { ...DEFAULT_SHADOW },
+        chromaticAberration: true,
+      }
+    )
+    indicatorEl.independentBackdrop = false
+    indicatorEl.isBottomTabIndicator = {
+      groupId: 'tabs',
+      dragWidth: tabW,
+      dimColor: palette.backIconColor,
+      accentColor: [...palette.tabsAccent],
+      containerRect: { x: glassX - GLASS_PAD, y: glassY, w: glassW + 2 * GLASS_PAD, h: GLASS_H },
+      containerCenterX: containerX + containerW / 2,
+      containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
+      containerWidth: containerW,
+      tabContentIds: tabs.map((_, i) => `tab-${i}`),
+      tabContentRects: tabs.map((_, i) => ({ x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H })),
+    }
+    els.push(indicatorEl)
 
     return { elements: els, interactions: ints }
   }, [tabs, isDarkMode, canvasW, handleTabSelect, isDesktop])
@@ -317,8 +316,12 @@ const BottomTabs = (props) => {
           contentHeight={CANVAS_H}
           dpr={1.5}
           containerRef={containerRef}
-          className='fixed bottom-0 left-1/2 -translate-x-1/2 z-30'
+          className='z-30'
           style={{
+            position: 'fixed',
+            bottom: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
             height: `${CANVAS_H}px`,
             width: widthStyle,
             borderRadius: `${CANVAS_H / 2}px`,
