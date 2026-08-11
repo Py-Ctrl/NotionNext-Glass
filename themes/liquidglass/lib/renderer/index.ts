@@ -680,7 +680,7 @@ export class LiquidGlassRenderer {
     //   acceleration verification.
     const gl = canvas.getContext('webgl', {
       premultipliedAlpha: false,
-      alpha: true,
+      alpha: false,
       antialias: false,
       preserveDrawingBuffer: false,
       powerPreference: 'low-power',
