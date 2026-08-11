@@ -281,7 +281,7 @@ const BottomTabs = (props) => {
     return (
       <>
         {renderSubMenu()}
-        <nav className='fixed bottom-0 left-0 right-0 z-30 glass-nav'>
+        <nav className='fixed bottom-4 left-0 right-0 z-30 glass-nav'>
           <div className='flex justify-around items-center mx-auto py-2' style={{ width: widthStyle }}>
             {tabs.map((tab, idx) => (
               <button
@@ -319,7 +319,7 @@ const BottomTabs = (props) => {
           className='z-30'
           style={{
             position: 'fixed',
-            bottom: 0,
+            bottom: '16px',
             left: '50%',
             transform: 'translateX(-50%)',
             height: `${CANVAS_H}px`,
