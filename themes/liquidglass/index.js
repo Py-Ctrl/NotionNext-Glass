@@ -21,6 +21,7 @@ import BlogPostListScroll from './components/BlogPostListScroll'
 import BottomTabs from './components/BottomTabs'
 import FloatDarkModeButton from './components/FloatDarkModeButton'
 import Footer from './components/Footer'
+import FloatingMusicPlayer from './components/FloatingMusicPlayer'
 import JumpToBottomButton from './components/JumpToBottomButton'
 import JumpToTopButton from './components/JumpToTopButton'
 import SideAreaLeft from './components/SideAreaLeft'
@@ -190,6 +191,9 @@ const LayoutBase = props => {
 
         {/* 底部标签栏 */}
         <BottomTabs {...props} />
+
+        {/* 全局悬浮音乐播放器 */}
+        <FloatingMusicPlayer />
 
         {/* 页脚 */}
         <Footer title={siteConfig('TITLE')} />

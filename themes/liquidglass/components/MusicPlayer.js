@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { siteConfig } from '@/lib/config'
 import LazyImage from '@/components/LazyImage'
 
-const MusicPlayer = () => {
+const MusicPlayer = ({ compact = false }) => {
   const audioList = siteConfig('MUSIC_PLAYER_AUDIO_LIST')
   const order = siteConfig('MUSIC_PLAYER_ORDER')
 
@@ -155,6 +155,69 @@ const MusicPlayer = () => {
 
   if (!audioList || audioList.length === 0) return null
 
+  // 紧凑模式：只显示封面 + 播放/暂停 + 下一首
+  if (compact) {
+    return (
+      <div className='glass-music-player-compact flex items-center gap-2 p-2'>
+        <audio
+          ref={audioRef}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={handleEnded}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        />
+        <div className='relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-1 ring-white/20 shadow-lg'>
+          {currentTrack?.cover ? (
+            <LazyImage
+              src={currentTrack.cover}
+              className={`w-full h-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
+              width={40}
+              height={40}
+              alt={currentTrack?.name}
+            />
+          ) : (
+            <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500'>
+              <i className='fas fa-music text-white text-sm' />
+            </div>
+          )}
+        </div>
+        <div className='flex-1 min-w-0'>
+          <div className='text-xs font-medium text-gray-700 dark:text-gray-200 truncate'>
+            {currentTrack?.name || '未知曲目'}
+          </div>
+          <div className='text-[10px] text-gray-500 dark:text-gray-400 truncate'>
+            {currentTrack?.artist || '未知艺术家'}
+          </div>
+        </div>
+        <button
+          onClick={togglePlay}
+          className='w-9 h-9 rounded-full flex items-center justify-center bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300 transition-all hover:scale-110 active:scale-95'
+          title={isPlaying ? '暂停' : '播放'}
+        >
+          {isPlaying ? (
+            <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
+              <path d='M6 5h4v14H6zm8 0h4v14h-4z' />
+            </svg>
+          ) : (
+            <svg className='w-4 h-4 ml-0.5' viewBox='0 0 24 24' fill='currentColor'>
+              <path d='M8 5v14l11-7z' />
+            </svg>
+          )}
+        </button>
+        <button
+          onClick={playNext}
+          className='w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-500 hover:bg-white/50 dark:hover:bg-white/10 transition-all'
+          title='下一首'
+        >
+          <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
+            <path d='M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z' />
+          </svg>
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className='glass-music-player'>
       <audio
@@ -168,88 +231,92 @@ const MusicPlayer = () => {
 
       {/* 封面 + 信息 */}
       <div className='flex items-center gap-3 mb-3'>
-        <div className='relative w-12 h-12 rounded-lg overflow-hidden shrink-0 ring-1 ring-white/20'>
+        <div className='relative w-14 h-14 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/20 shadow-lg'>
           {currentTrack?.cover ? (
             <LazyImage
               src={currentTrack.cover}
               className={`w-full h-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
-              width={48}
-              height={48}
+              width={56}
+              height={56}
               alt={currentTrack?.name}
             />
           ) : (
-            <div className='w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700'>
-              <i className='fas fa-music text-gray-400' />
+            <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500'>
+              <i className='fas fa-music text-white' />
             </div>
+          )}
+          {/* 播放时的光晕效果 */}
+          {isPlaying && (
+            <div className='absolute inset-0 rounded-xl bg-indigo-500/20 animate-pulse pointer-events-none' />
           )}
         </div>
         <div className='flex-1 min-w-0'>
-          <div className='text-xs font-medium text-gray-700 dark:text-gray-200 truncate'>
+          <div className='text-sm font-semibold text-gray-800 dark:text-gray-100 truncate'>
             {currentTrack?.name || '未知曲目'}
           </div>
-          <div className='text-[10px] text-gray-500 dark:text-gray-400 truncate'>
+          <div className='text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5'>
             {currentTrack?.artist || '未知艺术家'}
           </div>
         </div>
       </div>
 
       {/* 进度条 — 支持拖动 */}
-      <div className='mb-2'>
+      <div className='mb-3'>
         <div
           ref={progressRef}
-          className='group h-1.5 rounded-full bg-gray-200/50 dark:bg-gray-700/50 cursor-pointer relative touch-none'
+          className='group h-1.5 rounded-full bg-gray-200/60 dark:bg-gray-700/60 cursor-pointer relative touch-none'
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
           <div
-            className='absolute h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 pointer-events-none'
+            className='absolute h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 pointer-events-none transition-all'
             style={{ width: `${progress}%` }}
           />
           <div
-            className='absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-md pointer-events-none transition-transform group-hover:scale-110'
+            className='absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-lg ring-2 ring-indigo-500/50 pointer-events-none transition-transform group-hover:scale-125'
             style={{ left: `calc(${progress}% - 7px)` }}
           />
         </div>
-        <div className='flex justify-between mt-1 text-[10px] text-gray-400 dark:text-gray-500 tabular-nums'>
+        <div className='flex justify-between mt-1.5 text-[10px] text-gray-400 dark:text-gray-500 tabular-nums font-medium'>
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>
 
       {/* 控制按钮 */}
-      <div className='flex items-center justify-center gap-2 mb-2'>
+      <div className='flex items-center justify-center gap-3 mb-3'>
         <button
           onClick={playPrev}
-          className='glass-float-btn !w-8 !h-8 !rounded-full flex items-center justify-center'
+          className='w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-500 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-95'
           title='上一首'
         >
-          <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
+          <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
             <path d='M6 6h2v12H6zm3.5 6l8.5 6V6z' />
           </svg>
         </button>
         <button
           onClick={togglePlay}
-          className='glass-float-btn !w-10 !h-10 !rounded-full flex items-center justify-center !bg-indigo-500/20 hover:!bg-indigo-500/30'
+          className='w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:scale-110 active:scale-95'
           title={isPlaying ? '暂停' : '播放'}
         >
           {isPlaying ? (
-            <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
+            <svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
               <path d='M6 5h4v14H6zm8 0h4v14h-4z' />
             </svg>
           ) : (
-            <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
+            <svg className='w-5 h-5 ml-0.5' viewBox='0 0 24 24' fill='currentColor'>
               <path d='M8 5v14l11-7z' />
             </svg>
           )}
         </button>
         <button
           onClick={playNext}
-          className='glass-float-btn !w-8 !h-8 !rounded-full flex items-center justify-center'
+          className='w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-500 hover:bg-white/60 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-95'
           title='下一首'
         >
-          <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
+          <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
             <path d='M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z' />
           </svg>
         </button>
@@ -257,18 +324,18 @@ const MusicPlayer = () => {
 
       {/* 音量 + 列表 */}
       <div className='flex items-center gap-2'>
-        <div className='flex items-center gap-1 flex-1'>
+        <div className='flex items-center gap-1.5 flex-1'>
           <button
             onClick={() => setVolume(volume > 0 ? 0 : 0.7)}
-            className='text-gray-400 hover:text-indigo-500 transition-colors'
+            className='text-gray-400 hover:text-indigo-500 transition-colors shrink-0'
             title={volume > 0 ? '静音' : '取消静音'}
           >
             {volume > 0 ? (
-              <svg className='w-3 h-3' viewBox='0 0 24 24' fill='currentColor'>
+              <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
                 <path d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z' />
               </svg>
             ) : (
-              <svg className='w-3 h-3' viewBox='0 0 24 24' fill='currentColor'>
+              <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
                 <path d='M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z' />
               </svg>
             )}
@@ -280,19 +347,19 @@ const MusicPlayer = () => {
             step='0.01'
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className='flex-1 h-1 rounded-full appearance-none bg-gray-200/50 dark:bg-gray-700/50 cursor-pointer
-                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5
-                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-500
-                       [&::-webkit-slider-thumb]:cursor-pointer'
+            className='flex-1 h-1 rounded-full appearance-none bg-gray-200/60 dark:bg-gray-700/60 cursor-pointer
+                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
+                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-indigo-500 [&::-webkit-slider-thumb]:to-purple-500
+                       [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md'
           />
         </div>
         {audioList.length > 1 && (
           <button
             onClick={() => setShowPlaylist(!showPlaylist)}
-            className={`text-gray-400 hover:text-indigo-500 transition-colors ${showPlaylist ? 'text-indigo-500' : ''}`}
+            className={`p-1.5 rounded-lg transition-all ${showPlaylist ? 'text-indigo-500 bg-indigo-500/10' : 'text-gray-400 hover:text-indigo-500 hover:bg-white/50 dark:hover:bg-white/10'}`}
             title='播放列表'
           >
-            <svg className='w-3.5 h-3.5' viewBox='0 0 24 24' fill='currentColor'>
+            <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
               <path d='M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z' />
             </svg>
           </button>
@@ -301,27 +368,29 @@ const MusicPlayer = () => {
 
       {/* 播放列表 */}
       {showPlaylist && audioList.length > 1 && (
-        <div className='mt-3 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 max-h-32 overflow-y-auto'>
+        <div className='mt-3 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 max-h-40 overflow-y-auto space-y-1'>
           {audioList.map((track, idx) => (
             <button
               key={idx}
               onClick={() => { playTrack(idx); setShowPlaylist(false) }}
-              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs transition-colors
+              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs transition-all
                           ${idx === currentIdx
-                    ? 'text-indigo-500 bg-indigo-500/10'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-white/5'
-                  }`}
+                            ? 'text-indigo-600 dark:text-indigo-300 bg-gradient-to-r from-indigo-500/10 to-purple-500/10'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-white/5'
+                          }`}
             >
-              <span className='w-4 text-center shrink-0'>
+              <span className='w-5 text-center shrink-0 font-medium'>
                 {idx === currentIdx && isPlaying ? (
-                  <svg className='w-3 h-3 inline-block animate-pulse' viewBox='0 0 24 24' fill='currentColor'>
-                    <path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z' />
-                  </svg>
+                  <div className='flex items-end justify-center gap-0.5 h-3'>
+                    <span className='w-0.5 bg-indigo-500 rounded-full animate-[bounce_1s_infinite]' style={{ height: '40%', animationDelay: '0s' }} />
+                    <span className='w-0.5 bg-indigo-500 rounded-full animate-[bounce_1s_infinite]' style={{ height: '80%', animationDelay: '0.2s' }} />
+                    <span className='w-0.5 bg-indigo-500 rounded-full animate-[bounce_1s_infinite]' style={{ height: '60%', animationDelay: '0.4s' }} />
+                  </div>
                 ) : (
                   <span className='tabular-nums'>{idx + 1}</span>
                 )}
               </span>
-              <span className='truncate flex-1'>{track.name}</span>
+              <span className='truncate flex-1 font-medium'>{track.name}</span>
               {track.artist && (
                 <span className='text-[10px] text-gray-400 truncate max-w-[60px]'>{track.artist}</span>
               )}

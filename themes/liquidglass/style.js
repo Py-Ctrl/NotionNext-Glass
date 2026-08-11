@@ -370,11 +370,24 @@ const Style = () => {
       to { transform: rotate(360deg); }
     }
 
-    /* 桌面端隐藏全局 APlayer 固定栏，使用主题内置侧边栏播放器替代 */
-    @media (min-width: 1024px) {
-      .aplayer.aplayer-fixed {
-        display: none !important;
-      }
+    /* 隐藏全局 APlayer，使用主题自研悬浮播放器替代 */
+    .aplayer.aplayer-fixed,
+    .aplayer {
+      display: none !important;
+    }
+
+    /* 紧凑模式播放器 */
+    #theme-liquidglass .glass-music-player-compact {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+    }
+
+    .dark #theme-liquidglass .glass-music-player-compact {
+      background: var(--glass-bg-dark);
+      border-color: var(--glass-border-dark);
     }
 
     /* ========== Algolia 搜索弹窗美化 ========== */

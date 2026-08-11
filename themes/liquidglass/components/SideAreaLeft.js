@@ -3,10 +3,8 @@ import LazyImage from '@/components/LazyImage'
 import CONFIG from '../config'
 import { siteConfig } from '@/lib/config'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 import DarkModeButton from './DarkModeButton'
 import SocialButton from './SocialButton'
-import MusicPlayer from './MusicPlayer'
 import RandomPostButton from './RandomPostButton'
 import dynamic from 'next/dynamic'
 
@@ -16,15 +14,6 @@ const SideAreaLeft = (props) => {
   const { locale } = useGlobal()
   const { siteInfo } = props
   const router = useRouter()
-  const musicPlayerEnabled = siteConfig('MUSIC_PLAYER')
-  const [isDesktop, setIsDesktop] = useState(false)
-
-  useEffect(() => {
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024)
-    checkDesktop()
-    window.addEventListener('resize', checkDesktop)
-    return () => window.removeEventListener('resize', checkDesktop)
-  }, [])
 
   return (
     <aside className='hidden lg:block w-56 xl:w-60 shrink-0 mr-1 xl:mr-2'>
@@ -64,13 +53,6 @@ const SideAreaLeft = (props) => {
         <div className='mt-5 pt-4 border-t border-gray-200/30 dark:border-gray-700/30'>
           <SocialButton />
         </div>
-
-        {/* 音乐播放器 — 仅桌面端渲染，避免移动端与全局 APlayer 双重播放 */}
-        {musicPlayerEnabled && isDesktop && (
-          <div className='mt-5 pt-4 border-t border-gray-200/30 dark:border-gray-700/30'>
-            <MusicPlayer />
-          </div>
-        )}
 
         {/* 宠物挂件 */}
         <div className='flex justify-center mt-4'>
