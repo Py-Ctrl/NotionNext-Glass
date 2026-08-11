@@ -303,7 +303,7 @@ const BottomTabs = (props) => {
           contentHeight={CANVAS_H}
           dpr={1.5}
           containerRef={containerRef}
-          className='fixed bottom-4 left-1/2 -translate-x-1/2 z-30'
+          className='fixed bottom-0 left-1/2 -translate-x-1/2 z-30'
           style={{
             height: `${CANVAS_H}px`,
             width: widthStyle,
