@@ -7,6 +7,7 @@ const Footer = ({ title }) => {
   const d = new Date()
   const currentYear = d.getFullYear()
   const since = siteConfig('SINCE')
+  const version = process.env.npm_package_version || '4.10.9'
 
   return (
     <footer className='glass-footer w-full py-4 sm:py-6 px-4 mt-12'>
@@ -26,7 +27,7 @@ const Footer = ({ title }) => {
           </SmartLink>
           <span className='text-gray-300 dark:text-gray-600 hidden sm:inline'>|</span>
           <span className='opacity-60 hidden md:inline'>
-            Powered by NotionNext & Liquid Glass
+            Powered by NotionNext v{version} & Liquid Glass
           </span>
         </div>
       </div>
