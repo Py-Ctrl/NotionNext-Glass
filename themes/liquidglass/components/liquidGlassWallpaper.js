@@ -48,3 +48,35 @@ const GRADIENT_LIGHT = buildGradientSVG(false)
 const GRADIENT_DARK = buildGradientSVG(true)
 
 export const getGradientWallpaper = (isDarkMode) => isDarkMode ? GRADIENT_DARK : GRADIENT_LIGHT
+
+const buildBottomBarSVG = (isDarkMode) => {
+  const base = isDarkMode
+    ? ['#0a1a1f', '#0a0f0a']
+    : ['#ecfeff', '#f0fdf4']
+
+  const spots = isDarkMode
+    ? [{ cx: '50%', cy: '60%', color: '#06b6d4', opacity: 0.08 }]
+    : [{ cx: '50%', cy: '60%', color: '#06b6d4', opacity: 0.10 }]
+
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='100'>
+<defs>
+<linearGradient id='b' x1='0' y1='0' x2='1' y2='1'>
+<stop offset='0' stop-color='${base[0]}'/>
+<stop offset='1' stop-color='${base[1]}'/>
+</linearGradient>
+${spots.map((s, i) => `<radialGradient id='s${i}' cx='${s.cx}' cy='${s.cy}' r='0.7'>
+<stop offset='0' stop-color='${s.color}' stop-opacity='${s.opacity}'/>
+<stop offset='1' stop-color='${s.color}' stop-opacity='0'/>
+</radialGradient>`).join('\n')}
+</defs>
+<rect width='400' height='100' fill='url(#b)'/>
+${spots.map((_, i) => `<rect width='400' height='100' fill='url(#s${i})'/>`).join('\n')}
+</svg>`
+
+  return 'data:image/svg+xml,' + encodeURIComponent(svg)
+}
+
+const BOTTOM_BAR_LIGHT = buildBottomBarSVG(false)
+const BOTTOM_BAR_DARK = buildBottomBarSVG(true)
+
+export const getBottomBarWallpaper = (isDarkMode) => isDarkMode ? BOTTOM_BAR_DARK : BOTTOM_BAR_LIGHT

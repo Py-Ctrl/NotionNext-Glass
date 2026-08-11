@@ -8,7 +8,7 @@ import { siteConfig } from '@/lib/config'
 import { LiquidGlassCanvas } from '../lib/context'
 import { makeGlassShape, makeText, makeTabDragInteractions } from '../lib/helpers'
 import { getPalette, DEFAULT_HIGHLIGHT, DEFAULT_SHADOW } from '../lib/types'
-import { getTransparentWallpaper } from './liquidGlassWallpaper'
+import { getBottomBarWallpaper } from './liquidGlassWallpaper'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
@@ -306,7 +306,7 @@ const BottomTabs = (props) => {
       >
         {canvasW > 10 && tabs.length > 0 && (
           <LiquidGlassCanvas
-            wallpaperSrc={getTransparentWallpaper()}
+            wallpaperSrc={getBottomBarWallpaper(isDarkMode)}
             elements={elements}
             interactions={interactions}
             tabTargets={tabTargets}
