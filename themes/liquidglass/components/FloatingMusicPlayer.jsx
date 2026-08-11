@@ -321,11 +321,14 @@ const FloatingMusicPlayer = () => {
             onClick={handleCompactClick}
           >
             <div className='flex items-center gap-2 p-2'>
-              <div className='relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-1 ring-white/10 shadow-md'>
+              <div
+                className='relative w-10 h-10 shrink-0 ring-1 ring-white/10 shadow-md'
+                style={{ clipPath: 'circle(50%)', WebkitClipPath: 'circle(50%)' }}
+              >
                 {currentTrack?.cover ? (
                   <img
                     src={currentTrack.cover}
-                    className={`w-full h-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
+                    className={`w-full h-full object-cover scale-110 ${isPlaying ? 'animate-spin-slow' : ''}`}
                     alt={currentTrack?.name}
                     draggable={false}
                   />

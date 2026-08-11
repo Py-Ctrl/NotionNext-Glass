@@ -119,12 +119,16 @@ const MusicPlayer = ({
     <div className='music-player-ui'>
       {/* 封面 + 信息 + 字幕 */}
       <div className='flex items-start gap-3 mb-3'>
-        <div className='relative w-14 h-14 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/10 shadow-md'>
+        <div
+          className='relative w-14 h-14 shrink-0 ring-1 ring-white/10 shadow-md'
+          style={{ clipPath: 'circle(50%)', WebkitClipPath: 'circle(50%)' }}
+        >
           {currentTrack?.cover ? (
             <img
               src={currentTrack.cover}
-              className={`w-full h-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
+              className={`w-full h-full object-cover scale-110 ${isPlaying ? 'animate-spin-slow' : ''}`}
               alt={currentTrack?.name}
+              draggable={false}
             />
           ) : (
             <div className='w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700'>
