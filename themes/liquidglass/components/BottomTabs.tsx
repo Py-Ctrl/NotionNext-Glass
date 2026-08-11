@@ -13,12 +13,6 @@ import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
 
-const CANVAS_H = 72
-const CONTAINER_H = 64
-const CONTAINER_Y = 4
-const GLASS_H = 56
-const GLASS_PAD = 4
-
 const BottomTabs = (props) => {
   const { isDarkMode, locale } = useGlobal()
   const { customMenu, customNav } = props
@@ -32,6 +26,25 @@ const BottomTabs = (props) => {
   const [subMenuOpen, setSubMenuOpen] = React.useState(null)
   const subMenuOpenRef = React.useRef(null)
   const subMenuRef = React.useRef(null)
+  const [isDesktop, setIsDesktop] = React.useState(false)
+
+  // 使用 UA 检测桌面端，避免 DevTools 改变窗口宽度导致误判
+  React.useEffect(() => {
+    const ua = navigator.userAgent || ''
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
+    setIsDesktop(!isMobile)
+  }, [])
+
+  // 响应式尺寸：桌面端更大
+  const CANVAS_H = isDesktop ? 84 : 72
+  const CONTAINER_H = isDesktop ? 76 : 64
+  const CONTAINER_Y = (CANVAS_H - CONTAINER_H) / 2
+  const GLASS_H = isDesktop ? 68 : 56
+  const GLASS_PAD = (CONTAINER_H - GLASS_H) / 2
+  const TAB_WIDTH = isDesktop ? 96 : 76
+  const ICON_SIZE = isDesktop ? 24 : 20
+  const ICON_LAYOUT_SIZE = isDesktop ? 28 : 24
+  const FONT_SIZE = isDesktop ? 13 : 11
 
   React.useEffect(() => { routerRef.current = router }, [router])
   React.useEffect(() => { subMenuOpenRef.current = subMenuOpen }, [subMenuOpen])
@@ -166,12 +179,12 @@ const BottomTabs = (props) => {
         tab.label,
         {
           color: palette.tabsContentColor,
-          fontSizePx: 11,
+          fontSizePx: FONT_SIZE,
           fontWeight: 400,
           align: 'center',
           paddingPx: 0,
           halo: palette.tabsTextHalo,
-          icon: { path: tab.icon, size: 20, layoutSize: 24, color: palette.tabsContentColor, viewport: 24 }
+          icon: { path: tab.icon, size: ICON_SIZE, layoutSize: ICON_LAYOUT_SIZE, color: palette.tabsContentColor, viewport: 24 }
         }
       )
       tabEl.isBottomTabContent = {
@@ -224,7 +237,7 @@ const BottomTabs = (props) => {
     els.push(indicatorEl)
 
     return { elements: els, interactions: ints }
-  }, [tabs, isDarkMode, canvasW, handleTabSelect])
+  }, [tabs, isDarkMode, canvasW, handleTabSelect, isDesktop])
 
   const tabTargets = React.useMemo(() => ({
     'tabs': { tabIndex: activeTab, tabsCount: tabs.length }
@@ -240,7 +253,7 @@ const BottomTabs = (props) => {
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
 
-  const widthStyle = `min(calc(100% - 2rem), ${tabs.length * 76}px)`
+  const widthStyle = `min(calc(100% - ${isDesktop ? '4rem' : '2rem'}), ${tabs.length * TAB_WIDTH}px)`
 
   const renderSubMenu = () => {
     if (subMenuOpen === null || !tabs[subMenuOpen]?.subMenus.length) return null
