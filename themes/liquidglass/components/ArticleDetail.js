@@ -66,7 +66,7 @@ const ArticleDetail = (props) => {
       <ArticleCopyright post={post} />
 
       {/* 分享 */}
-      <div className='mt-4 sm:mt-6'>
+      <div className='liquid-glass-share mt-4 sm:mt-6'>
         <ShareBar post={post} />
       </div>
 

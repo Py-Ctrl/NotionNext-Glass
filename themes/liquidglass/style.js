@@ -775,10 +775,15 @@ const Style = () => {
     }
 
     #theme-liquidglass .liquid-glass-btn-blue {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(139, 92, 246, 0.85));
-      color: #fff;
-      border-color: rgba(99, 102, 241, 0.4);
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(139, 92, 246, 0.35));
+      color: #4338ca;
+      border-color: rgba(99, 102, 241, 0.3);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      box-shadow:
+        0 4px 16px rgba(99, 102, 241, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
     }
 
     #theme-liquidglass .liquid-glass-btn:hover {
@@ -791,7 +796,11 @@ const Style = () => {
     }
 
     #theme-liquidglass .liquid-glass-btn-blue:hover {
-      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      box-shadow:
+        0 8px 24px rgba(99, 102, 241, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.08);
+      border-color: rgba(99, 102, 241, 0.4);
     }
 
     .dark #theme-liquidglass .liquid-glass-btn-surface {
@@ -802,13 +811,90 @@ const Style = () => {
     }
 
     .dark #theme-liquidglass .liquid-glass-btn-blue {
-      background: linear-gradient(135deg, rgba(129, 140, 248, 0.85), rgba(167, 139, 250, 0.85));
-      border-color: rgba(129, 140, 248, 0.35);
-      box-shadow: 0 4px 16px rgba(129, 140, 248, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, rgba(129, 140, 248, 0.35), rgba(167, 139, 250, 0.35));
+      color: #c7d2fe;
+      border-color: rgba(129, 140, 248, 0.25);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      box-shadow:
+        0 4px 16px rgba(129, 140, 248, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.15);
     }
 
     .dark #theme-liquidglass .liquid-glass-btn::before {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
+    }
+
+    /* ========== Liquid Glass 分享按钮 ========== */
+    #theme-liquidglass .liquid-glass-share button {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #theme-liquidglass .liquid-glass-share button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    #theme-liquidglass .liquid-glass-share button i {
+      color: #4b5563;
+      position: relative;
+      z-index: 1;
+    }
+
+    #theme-liquidglass .liquid-glass-share button > div[style*='background'] {
+      background: transparent !important;
+    }
+
+    #theme-liquidglass .liquid-glass-share button:hover {
+      transform: scale(1.12);
+      box-shadow:
+        0 4px 16px rgba(99, 102, 241, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.08);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    #theme-liquidglass .liquid-glass-share button:active {
+      transform: scale(0.95);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-share button {
+      background: rgba(30, 30, 50, 0.5);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-share button::before {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%);
+    }
+
+    .dark #theme-liquidglass .liquid-glass-share button i {
+      color: #d1d5db;
+    }
+
+    .dark #theme-liquidglass .liquid-glass-share button:hover {
+      box-shadow:
+        0 4px 16px rgba(129, 140, 248, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+      border-color: rgba(129, 140, 248, 0.25);
     }
 
     ${themeConsoleStyle('liquidglass', CONFIG)}
