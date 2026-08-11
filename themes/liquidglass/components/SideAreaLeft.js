@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import DarkModeButton from './DarkModeButton'
 import SocialButton from './SocialButton'
 import MusicPlayer from './MusicPlayer'
+import RandomPostButton from './RandomPostButton'
 import dynamic from 'next/dynamic'
 
 const Live2D = dynamic(() => import('@/components/Live2D'), { ssr: false })
@@ -52,6 +53,11 @@ const SideAreaLeft = (props) => {
         {/* 主题切换 */}
         <div className='flex justify-center mt-4'>
           <DarkModeButton />
+        </div>
+
+        {/* 随便逛逛 */}
+        <div className='mt-4'>
+          <RandomPostButton latestPosts={props?.latestPosts} />
         </div>
 
         {/* 联系方式 */}
