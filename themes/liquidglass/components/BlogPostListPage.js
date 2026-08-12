@@ -2,7 +2,7 @@ import BlogPostCard from './BlogPostCard'
 import BlogPostListEmpty from './BlogPostListEmpty'
 import PaginationNumber from './PaginationNumber'
 
-const BlogPostListPage = ({ posts = [], page, showSummary, siteInfo }) => {
+const BlogPostListPage = ({ posts = [], page, totalPage, showSummary, siteInfo }) => {
   if (!posts || posts.length === 0) {
     return <BlogPostListEmpty />
   }
@@ -18,7 +18,7 @@ const BlogPostListPage = ({ posts = [], page, showSummary, siteInfo }) => {
         />
       ))}
 
-      <PaginationNumber page={page} />
+      <PaginationNumber page={page} totalPage={totalPage} />
     </div>
   )
 }

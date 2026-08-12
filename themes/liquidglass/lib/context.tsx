@@ -246,6 +246,11 @@ function LiquidGlassCanvasImpl({
         renderer.setToggleTarget(groupId, target.tabIndex, target.tabsCount)
       }
     }
+    if (tabTargets) {
+      for (const [groupId, { tabIndex, tabsCount }] of Object.entries(tabTargets)) {
+        renderer.setTabSelected(groupId, tabIndex, tabsCount)
+      }
+    }
     renderer.loadWallpaper(wallpaperSrc).then(() => {
       // Fire onReady after wallpaper loads + one frame renders
       requestAnimationFrame(() => { onReady?.() })

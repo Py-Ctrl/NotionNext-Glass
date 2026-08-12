@@ -49,7 +49,8 @@ export async function getStaticProps({ params: { page }, locale }) {
     POSTS_PER_PAGE * (page - 1),
     POSTS_PER_PAGE * page
   )
-  props.page = page
+  props.page = parseInt(page)
+  props.totalPage = Math.ceil(allPosts.length / POSTS_PER_PAGE)
 
   // 处理预览
   if (siteConfig('POST_LIST_PREVIEW', false, props?.NOTION_CONFIG)) {
