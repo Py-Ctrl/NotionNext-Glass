@@ -52,7 +52,9 @@ export const tabsMethods = {
       tabsCount - 1 // valueRangeSpan — faithful to DampedDragAnimation valueRange 0..(tabsCount-1)
     )
     if (st.isDragging) return
-    if (st.targetFraction === tabIndex) return
+    // 初始化时 targetFraction 已经等于 tabIndex（ensureToggleState 用 initialFraction 创建），
+    // 但 targetPress 仍为 0，指示器不会激活。必须检查 targetPress，确保首次选中时也能激活。
+    if (st.targetFraction === tabIndex && st.targetPress > 0) return
     st.targetFraction = tabIndex
     // Tap (programmatic tab switch) — NO velocity tracking. Faithful to
     // DampedDragAnimation.animateToValue: for taps velocity is 0 → no stretch.
