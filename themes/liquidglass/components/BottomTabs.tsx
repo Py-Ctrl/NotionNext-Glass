@@ -176,38 +176,6 @@ const BottomTabs = (props) => {
 
     const dragInteractions = makeTabDragInteractions('tabs', tabW, tabs.length, handleTabSelect, rendererRef)
 
-    // 指示器放在 tab 内容之前渲染，让 tab 内容（图标+文字）覆盖在指示器上面，避免被遮挡
-    const indicatorEl = makeGlassShape(
-      'tabs-indicator',
-      { x: glassX, y: glassY, w: tabW, h: GLASS_H },
-      {
-        cornerRadius: glassR,
-        refractionHeight: 10,
-        refractionAmount: -14,
-        blurRadius: 0,
-        saturation: 1.0,
-        tintColor: [0, 0, 0, 0],
-        surfaceColor: [0, 0, 0, 0],
-        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.3 },
-        outerShadow: null,
-        chromaticAberration: false,
-      }
-    )
-    indicatorEl.independentBackdrop = false
-    indicatorEl.isBottomTabIndicator = {
-      groupId: 'tabs',
-      dragWidth: tabW,
-      dimColor: palette.backIconColor,
-      accentColor: [...palette.tabsAccent],
-      containerRect: { x: glassX - GLASS_PAD, y: glassY, w: glassW + 2 * GLASS_PAD, h: GLASS_H },
-      containerCenterX: containerX + containerW / 2,
-      containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
-      containerWidth: containerW,
-      tabContentIds: tabs.map((_, i) => `tab-${i}`),
-      tabContentRects: tabs.map((_, i) => ({ x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H })),
-    }
-    els.push(indicatorEl)
-
     for (let i = 0; i < tabs.length; i++) {
       const tab = tabs[i]
       const tabEl = makeText(
@@ -240,6 +208,39 @@ const BottomTabs = (props) => {
     }
 
     ints['tabs-container'] = dragInteractions
+
+    // 指示器放在 tab 内容之后渲染：蓝色 accent mask 覆盖在白色文字上，选中的 tab 文字变蓝。
+    // 指示器采样 uTabsGlassLayer（不含 tab text 的快照），折射不会扭曲已渲染的白色文字。
+    const indicatorEl = makeGlassShape(
+      'tabs-indicator',
+      { x: glassX, y: glassY, w: tabW, h: GLASS_H },
+      {
+        cornerRadius: glassR,
+        refractionHeight: 10,
+        refractionAmount: -14,
+        blurRadius: 0,
+        saturation: 1.0,
+        tintColor: [0, 0, 0, 0],
+        surfaceColor: [0, 0, 0, 0],
+        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.3 },
+        outerShadow: null,
+        chromaticAberration: false,
+      }
+    )
+    indicatorEl.independentBackdrop = false
+    indicatorEl.isBottomTabIndicator = {
+      groupId: 'tabs',
+      dragWidth: tabW,
+      dimColor: palette.backIconColor,
+      accentColor: [...palette.tabsAccent],
+      containerRect: { x: glassX - GLASS_PAD, y: glassY, w: glassW + 2 * GLASS_PAD, h: GLASS_H },
+      containerCenterX: containerX + containerW / 2,
+      containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
+      containerWidth: containerW,
+      tabContentIds: tabs.map((_, i) => `tab-${i}`),
+      tabContentRects: tabs.map((_, i) => ({ x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H })),
+    }
+    els.push(indicatorEl)
 
     return { elements: els, interactions: ints }
   }, [tabs, isDarkMode, canvasW, handleTabSelect, isDesktop])
