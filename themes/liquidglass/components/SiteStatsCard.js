@@ -122,7 +122,7 @@ function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
         </div>
 
         {/* 访问量 */}
-        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center busuanzi_container_site_pv'>
+        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
           <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
             <span className='busuanzi_value_site_pv'>--</span>
           </div>
@@ -133,7 +133,7 @@ function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
         </div>
 
         {/* 访客数 */}
-        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center busuanzi_container_site_uv'>
+        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
           <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
             <span className='busuanzi_value_site_uv'>--</span>
           </div>
