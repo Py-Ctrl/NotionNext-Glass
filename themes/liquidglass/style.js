@@ -51,44 +51,47 @@ const Style = () => {
       transition: all 0.3s ease;
     }
 
-    /* 边框流光效果 */
-    #theme-liquidglass .glass-card::before {
+    /* ========== 卡片交互光晕（Win10 21H2 任务栏风格） ========== */
+    /* 边框光晕：跟随鼠标，只在边框区域显示 */
+    #theme-liquidglass .glass-card::before,
+    #theme-liquidglass .glass-post-item::before,
+    #theme-liquidglass .glass-sidebar::before {
       content: '';
       position: absolute;
       inset: 0;
       padding: 1px;
       border-radius: inherit;
-      background: linear-gradient(
-        135deg,
-        rgba(99, 102, 241, 0.5),
+      background: radial-gradient(
+        200px circle at var(--glow-x, -1000px) var(--glow-y, -1000px),
+        rgba(99, 102, 241, 0.9),
         rgba(139, 92, 246, 0.5),
-        rgba(6, 182, 212, 0.5),
-        rgba(99, 102, 241, 0.5)
+        transparent 60%
       );
-      background-size: 300% 300%;
-      animation: glass-border-flow 8s ease infinite;
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
       pointer-events: none;
       z-index: 1;
-      opacity: 0.4;
-      transition: opacity 0.3s ease, animation-duration 0.3s ease;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
 
-    #theme-liquidglass .glass-card:hover::before {
+    #theme-liquidglass .glass-card:hover::before,
+    #theme-liquidglass .glass-post-item:hover::before,
+    #theme-liquidglass .glass-sidebar:hover::before {
       opacity: 1;
-      animation-duration: 3s;
     }
 
-    /* 鼠标聚光效果 */
-    #theme-liquidglass .glass-card::after {
+    /* 内部聚光：跟随鼠标，卡片内部淡光 */
+    #theme-liquidglass .glass-card::after,
+    #theme-liquidglass .glass-post-item::after,
+    #theme-liquidglass .glass-sidebar::after {
       content: '';
       position: absolute;
       inset: 0;
       background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(99, 102, 241, 0.12),
+        rgba(99, 102, 241, 0.1),
         transparent 40%
       );
       opacity: 0;
@@ -98,38 +101,38 @@ const Style = () => {
       border-radius: inherit;
     }
 
-    #theme-liquidglass .glass-card:hover::after {
+    #theme-liquidglass .glass-card:hover::after,
+    #theme-liquidglass .glass-post-item:hover::after,
+    #theme-liquidglass .glass-sidebar:hover::after {
       opacity: 1;
     }
 
-    @keyframes glass-border-flow {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* 暗色模式 */
+    .dark #theme-liquidglass .glass-card::before,
+    .dark #theme-liquidglass .glass-post-item::before,
+    .dark #theme-liquidglass .glass-sidebar::before {
+      background: radial-gradient(
+        200px circle at var(--glow-x, -1000px) var(--glow-y, -1000px),
+        rgba(129, 140, 248, 0.9),
+        rgba(167, 139, 250, 0.5),
+        transparent 60%
+      );
+    }
+
+    .dark #theme-liquidglass .glass-card::after,
+    .dark #theme-liquidglass .glass-post-item::after,
+    .dark #theme-liquidglass .glass-sidebar::after {
+      background: radial-gradient(
+        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(129, 140, 248, 0.12),
+        transparent 40%
+      );
     }
 
     .dark #theme-liquidglass .glass-card {
       background: var(--glass-bg-dark);
       border-color: var(--glass-border-dark);
       box-shadow: var(--glass-shadow-dark);
-    }
-
-    .dark #theme-liquidglass .glass-card::before {
-      background: linear-gradient(
-        135deg,
-        rgba(129, 140, 248, 0.6),
-        rgba(167, 139, 250, 0.6),
-        rgba(34, 211, 238, 0.6),
-        rgba(129, 140, 248, 0.6)
-      );
-    }
-
-    .dark #theme-liquidglass .glass-card::after {
-      background: radial-gradient(
-        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(129, 140, 248, 0.15),
-        transparent 40%
-      );
     }
 
     #theme-liquidglass .glass-card:hover {
@@ -223,6 +226,7 @@ const Style = () => {
 
     /* ========== 文章列表项玻璃效果 ========== */
     #theme-liquidglass .glass-post-item {
+      position: relative;
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -252,6 +256,8 @@ const Style = () => {
 
     /* ========== 侧边栏玻璃 ========== */
     #theme-liquidglass .glass-sidebar {
+      position: relative;
+      overflow: hidden;
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);

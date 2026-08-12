@@ -104,7 +104,7 @@ const LayoutBase = props => {
     }
   }, [scrollListener])
 
-  // 卡片鼠标聚光效果：监听鼠标移动，动态设置 --mouse-x / --mouse-y
+  // 卡片交互光晕：监听鼠标移动，动态设置 --glow-x/--glow-y（边框光晕）和 --mouse-x/--mouse-y（内部聚光）
   useEffect(() => {
     if (!isBrowser) return
     let rafId = null
@@ -115,13 +115,17 @@ const LayoutBase = props => {
       rafId = null
       const el = document.elementFromPoint(lastX, lastY)
       if (!el) return
-      const card = el.closest('.glass-card')
+      const card = el.closest('.glass-card, .glass-post-item, .glass-sidebar')
       if (!card) return
       const rect = card.getBoundingClientRect()
-      const x = ((lastX - rect.left) / rect.width) * 100
-      const y = ((lastY - rect.top) / rect.height) * 100
-      card.style.setProperty('--mouse-x', `${x}%`)
-      card.style.setProperty('--mouse-y', `${y}%`)
+      const glowX = lastX - rect.left
+      const glowY = lastY - rect.top
+      const mouseX = (glowX / rect.width) * 100
+      const mouseY = (glowY / rect.height) * 100
+      card.style.setProperty('--glow-x', `${glowX}px`)
+      card.style.setProperty('--glow-y', `${glowY}px`)
+      card.style.setProperty('--mouse-x', `${mouseX}%`)
+      card.style.setProperty('--mouse-y', `${mouseY}%`)
     }
 
     const handleMouseMove = (e) => {
