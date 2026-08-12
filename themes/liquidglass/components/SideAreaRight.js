@@ -7,9 +7,10 @@ import TagGroups from './TagGroups'
 import CategoryGroup from './CategoryGroup'
 import SmartLink from '@/components/SmartLink'
 import Announcement from './Announcement'
+import SiteStatsCard from './SiteStatsCard'
 
 const SideAreaRight = (props) => {
-  const { tags, currentTag, categories, currentCategory, slot, notice } = props
+  const { tags, currentTag, categories, currentCategory, slot, notice, latestPosts, allPosts } = props
   const { locale } = useGlobal()
   const router = useRouter()
 
@@ -33,6 +34,9 @@ const SideAreaRight = (props) => {
             <Announcement post={notice} />
           </div>
         )}
+
+        {/* 站点统计：最新发布、文章数、建站天数、访问量、访客数 */}
+        <SiteStatsCard latestPosts={latestPosts} allPosts={allPosts} />
 
         {/* 自定义 slot */}
         {slot}
