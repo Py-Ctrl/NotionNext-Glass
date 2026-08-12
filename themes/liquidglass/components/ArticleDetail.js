@@ -7,6 +7,7 @@ import RecommendPosts from './RecommendPosts'
 import BlogAround from './BlogAround'
 import Comment from '@/components/Comment'
 import ShareBar from '@/components/ShareBar'
+import LiquidGlassScrollContainer from './LiquidGlassScrollContainer'
 
 const ArticleDetail = (props) => {
   const { post, prev, next, recommendPosts } = props
@@ -57,10 +58,16 @@ const ArticleDetail = (props) => {
       {/* 广告 */}
       <WWAds orientation='horizontal' className='w-full mb-4 sm:mb-6' />
 
-      {/* 文章内容 */}
-      <div id='article-wrapper' className='glass-card p-3 sm:p-4 md:p-8'>
-        <NotionPage post={post} />
-      </div>
+      {/* 文章内容 - 液态玻璃滚动容器 */}
+      <LiquidGlassScrollContainer
+        height='80vh'
+        className='mb-4 sm:mb-6'
+        borderRadius={24}
+      >
+        <div className='p-3 sm:p-4 md:p-8'>
+          <NotionPage post={post} />
+        </div>
+      </LiquidGlassScrollContainer>
 
       {/* 版权声明 */}
       <ArticleCopyright post={post} />
