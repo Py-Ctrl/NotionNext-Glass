@@ -1,6 +1,6 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /* ------------------------------------------------------------------ *
- * Element shader utilities — GLSL helper functions used by the element
+ * Element shader utilities -- GLSL helper functions used by the element
  * fragment shader: backdrop sampling (Gaussian disc), color
  * controls (saturation/brightness/contrast), HSV conversion + Hue blend.
  *
@@ -72,7 +72,7 @@ export function generateElementUtilsGLSL(tapCount: number = DEFAULT_BLUR_TAPS): 
   const wallpaperBlurCode = generateBlurGLSL(taps, 'uWallpaperSampler', 'uv', 'pxToUv')
 
   return /* glsl */ `
-// Forward declarations — blendHue/rgb2hsv/hsv2rgb are defined later but used
+// Forward declarations -- blendHue/rgb2hsv/hsv2rgb are defined later but used
 // by sampleIndicatorBackdrop (which must come before sampleToggleBackdrop in
 // the file for readability). GLSL ES 1.00 requires declaration before use.
 vec3 rgb2hsv(vec3 c);
@@ -114,13 +114,13 @@ vec4 sampleSdfTexture(vec2 localPx) {
 // only PEF-specific work happens in element.ts's main(), where screenCoord
 // is reconstructed from gl_FragCoord via uSceneRectOffset/uElFboSize. Once
 // screenCoord is in canvas-px space, this function maps it to UV identically
-// for both paths — keeping the shader's non-local reads (refraction offset,
+// for both paths -- keeping the shader's non-local reads (refraction offset,
 // chromatic 7-tap spread, blur kernel) hitting real neighbor content.
 vec2 sceneUv(vec2 canvasPx) {
     return vec2(canvasPx.x / uCanvasSize.x, 1.0 - canvasPx.y / uCanvasSize.y);
 }
 
-// Gaussian disc blur — ${tapCount} taps, dynamically generated in JS.
+// Gaussian disc blur -- ${tapCount} taps, dynamically generated in JS.
 // Offsets are in units of radius (sigma = radius), scaled at runtime.
 // radius < 0.5 falls back to single tap (no visible blur).
 //
@@ -128,8 +128,8 @@ vec2 sceneUv(vec2 canvasPx) {
 // via coverUv) instead of the scene FBO (uBackdrop via sceneUv), AND applies
 // the scrim (uScrimColor) to replicate the original's wallpaper+scrim composited
 // LayerBackdrop. The scrim is applied INSIDE sampleBackdrop so EVERY sampling
-// site — the initial backdrop sample, the refraction re-sample, and each
-// chromatic-aberration channel — gets the same wallpaper+scrim composite.
+// site -- the initial backdrop sample, the refraction re-sample, and each
+// chromatic-aberration channel -- gets the same wallpaper+scrim composite.
 // This fixes the "scrim not applied at edges" bug where the refraction band
 // re-sampled the clean wallpaper (without scrim), making the edge brighter
 // than the interior.
@@ -163,7 +163,7 @@ ${backdropBlurCode}    return sum;
 }
 
 // Gaussian disc blur of the WALLPAPER (uWallpaperSampler via coverUv).
-// Used by the SDF-texture glass path (LockScreen) — faithful to the original's
+// Used by the SDF-texture glass path (LockScreen) -- faithful to the original's
 // blur(2dp) effect applied before the SDF shader.
 vec4 sampleWallpaperBlurred(vec2 canvasPx, float radius) {
     vec2 uv = coverUv(canvasPx);
@@ -178,8 +178,8 @@ ${wallpaperBlurCode}    return sum;
 // --- Toggle knob CombinedBackdrop sampling (faithful to LiquidToggle.kt) ---
 // The knob's backdrop is a CombinedBackdrop of:
 //   1. Outer backdrop:
-//      - LayerBackdrop (wallpaper) for t1 → sample uWallpaperSampler
-//      - CanvasBackdrop (solid color) for t2 → use uSolidBackdropColor
+//      - LayerBackdrop (wallpaper) for t1 -> sample uWallpaperSampler
+//      - CanvasBackdrop (solid color) for t2 -> use uSolidBackdropColor
 //   2. Scaled trackBackdrop (track color rect, clipped to Capsule, scaled
 //      by lerp(2/3, 0.75, pressProgress) x lerp(0, 0.75, pressProgress)
 //      around the knob's center)
@@ -189,7 +189,7 @@ ${wallpaperBlurCode}    return sum;
 // at the uTrackRect position (center + half-size + corner radius).
 //
 // The track color SDF is also blurred by approximating the blur as a
-// smoothstep over uBlurRadius — this matches the original where the blur
+// smoothstep over uBlurRadius -- this matches the original where the blur
 // effect is applied to the CombinedBackdrop (outer + track color).
 vec4 sampleToggleBackdrop(vec2 canvasPx, float radius) {
     // 1. Sample outer backdrop with blur.
@@ -205,7 +205,7 @@ vec4 sampleToggleBackdrop(vec2 canvasPx, float radius) {
         // IMPORTANT: use coverUv (cover-fit) to match the wallpaper background
         // pass (WALLPAPER_FRAGMENT_SHADER). Using sceneUv (raw normalization)
         // here would sample the wrong texel when the wallpaper aspect ratio
-        // differs from the canvas — causing the knob to see a shifted/misaligned
+        // differs from the canvas -- causing the knob to see a shifted/misaligned
         // wallpaper that doesn't match what's displayed behind it.
         vec2 uv = coverUv(canvasPx);
         wp = texture2D(uWallpaperSampler, uv);
@@ -248,9 +248,9 @@ vec4 sampleToggleBackdrop(vec2 canvasPx, float radius) {
         vec2 q = abs(trackLocal) - trackHalf + vec2(tr);
         float trackSd = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - tr;
         // Blur the edge by uBlurRadius (approximate Gaussian edge feather).
-        // Inside (trackSd < -radius) → mask=1; outside (trackSd > radius) → mask=0.
+        // Inside (trackSd < -radius) -> mask=1; outside (trackSd > radius) -> mask=0.
         // Use max(radius, 1.0) to guarantee at least 1px smoothstep for AA
-        // — when fully pressed, blurRadius=0, but edges must still be smooth.
+        // -- when fully pressed, blurRadius=0, but edges must still be smooth.
         float aaRadius = max(radius, 1.0);
         float mask = 1.0 - smoothstep(-aaRadius, aaRadius, trackSd);
         // Composite: srcOver (track color over outer backdrop).
@@ -261,14 +261,14 @@ vec4 sampleToggleBackdrop(vec2 canvasPx, float radius) {
     return wp;
 }
 
-// sampleIndicatorBackdrop — faithful to LiquidBottomTabs.kt indicator.
+// sampleIndicatorBackdrop -- faithful to LiquidBottomTabs.kt indicator.
 //
 // Naming convention (used throughout the bottom-tabs code):
-//   - 容器 (Container)  = outer visible glass bar (64dp), Container Row in Kotlin
-//   - 指示器 (Indicator) = selected sliding glass capsule (56dp), Indicator Box in Kotlin
-//   - 内层背景板 (Inner backdrop) = hidden 56dp glass captured by tabsBackdrop,
+//   - Container = outer visible glass bar (64dp), Container Row in Kotlin
+//   - Indicator = selected sliding glass capsule (56dp), Indicator Box in Kotlin
+//   - Inner backdrop = hidden 56dp glass captured by tabsBackdrop,
 //     tinted blue by ColorFilter.tint(accentColor), sampled by the indicator
-//   - 标签内容 (Tab content) = icon + label inside each tab slot
+//   - Tab content = icon + label inside each tab slot
 //
 // Original: indicator.drawBackdrop(backdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop))
 //   - backdrop (outer) = LayerBackdrop = wallpaper (sampled via coverUv)
@@ -276,7 +276,7 @@ vec4 sampleToggleBackdrop(vec2 canvasPx, float radius) {
 //     indicator's draw area on all sides.
 //
 // Implementation (mirrors sampleToggleBackdrop):
-//   1. Sample wallpaper (outer backdrop) with blur — same as toggle's outer.
+//   1. Sample wallpaper (outer backdrop) with blur -- same as toggle's outer.
 //   2. Composite the scene FBO (uBackdrop = container glass + content)
 //      inside an INSET capsule SDF (containerRect shrunk 4dp each side).
 //      This is the "smaller background plate" refracted inside the indicator.
@@ -303,7 +303,7 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
         wp = sum / total;
     }
 
-    // 2. 内层背景板 (Inner backdrop) SDF — the hidden Row's 56dp glass capsule.
+    // 2. Inner backdrop SDF -- the hidden Row's 56dp glass capsule.
     //    Faithful to LiquidBottomTabs.kt: the hidden Row has NO layerBlock,
     //    so its glass does NOT scale with the container. Only panelOffset
     //    shifts it (translationX = panelOffset).
@@ -315,12 +315,12 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
     vec2 cq = abs(capsuleLocal) - capsuleHalf + vec2(cr);
     float capsuleSd = length(max(cq, vec2(0.0))) + min(max(cq.x, cq.y), 0.0) - cr;
     // Mask: interpolate between 1.0 (at rest) and smoothstep (when pressed).
-    // At rest (progress=0): mask=1.0 — no separate smoothstep transition at
+    // At rest (progress=0): mask=1.0 -- no separate smoothstep transition at
     // the containerRect boundary, because it overlaps with the indicator's own
     // edge (both 56dp capsules). A second smoothstep here would reveal raw
     // wallpaper at the indicator edge, causing jagged aliasing. With mask=1.0,
     // the indicator always shows the glass scene inside its shape, and edgeAlpha
-    // smoothly fades to transparent — matching the container glass behind it.
+    // smoothly fades to transparent -- matching the container glass behind it.
     // When pressed (progress=1): restore the original smoothstep mask for the
     // CombinedBackdrop clipping. Refraction displaces samples away from the
     // shared edge, so the smoothstep no longer causes jaggies; and the inner
@@ -330,19 +330,19 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
     float smoothstepMask = 1.0 - smoothstep(-indicatorAaRadius, indicatorAaRadius, capsuleSd);
     float mask = mix(1.0, smoothstepMask, uIndicatorPressProgress);
 
-    // 2b. 内层背景板 shadow (Shadow.Default) — faithful to LiquidBottomTabs.kt
+    // 2b. Inner backdrop shadow (Shadow.Default) -- faithful to LiquidBottomTabs.kt
     //     hidden Row's drawBackdrop: shadow defaults to Shadow.Default when not specified.
     //     Shadow.Default: radius=24dp, offset=DpOffset(0, radius/6=4dp), color=Black@0.1, alpha=1.
     //     In the CombinedBackdrop, the shadow is composited between wallpaper (outer)
     //     and glass body (inner). Through the semi-transparent glass body, this shadow
-    //     bleeds through near the capsule edges — most visible near the top edge where
+    //     bleeds through near the capsule edges -- most visible near the top edge where
     //     the shadow offset (0, +4dp) makes those pixels "outside" the shadow capsule
     //     (shadow capsule top = original top + 4dp, so original top is outside it).
     //     Implementation mirrors ShadowModifier.kt:
-    //       1. Shift capsule by shadow offset → shadow shape SDF
+    //       1. Shift capsule by shadow offset -> shadow shape SDF
     //       2. Gaussian falloff (MaskFilter.makeBlur sigma = radius directly)
     //       3. Mask inside original capsule (ShadowMaskPaint BlendMode.Clear)
-    //       4. Darken wallpaper by Black@0.1 × shadowIntensity
+    //       4. Darken wallpaper by Black@0.1 x shadowIntensity
     float shadowOffsetYpx = (24.0 / 6.0) * uDpr; // DpOffset(0, radius/6) in device px
     vec2 shadowLocal = capsuleLocal - vec2(0.0, shadowOffsetYpx);
     vec2 shadowCq2 = abs(shadowLocal) - capsuleHalf + vec2(cr);
@@ -354,23 +354,23 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
     // Mask shadow inside the original capsule (ShadowMaskPaint BlendMode.Clear
     // removes shadow where the shape itself is drawn, so shadow only appears outside).
     shadowIntensity *= smoothstep(-1.0, 1.0, capsuleSd);
-    // Darken wallpaper by Black@0.1 × shadowIntensity (SrcOver compositing).
+    // Darken wallpaper by Black@0.1 x shadowIntensity (SrcOver compositing).
     wp.rgb *= (1.0 - shadowIntensity * 0.1);
 
     // 3. Sample the GLASS LAYER FBO (wallpaper + container glass, NO tab text).
     //    This is a snapshot taken after the container glass is rendered but
-    //    before tab-content is drawn — so it has no white/black text to bleed
+    //    before tab-content is drawn -- so it has no white/black text to bleed
     //    through. The blue tab text is drawn on top via fgTexture (step 4).
     vec2 sceneUv2 = sceneUv(canvasPx - vec2(uIndicatorPanelOffset, 0.0));
     vec4 scene = texture2D(uTabsGlassLayer, sceneUv2);
 
-    // 4. Draw blue 标签内容 (tab content: icons/labels) on top of the glass layer.
-    //    Use each tab's fgTexture alpha as a hard mask (step) — pixels inside
+    // 4. Draw blue tab content (icons/labels) on top of the glass layer.
+    //    Use each tab's fgTexture alpha as a hard mask (step) -- pixels inside
     //    the icon/label shape become blue, everything else stays the glass
     //    layer's natural color. No white edges (hard replace, no mix).
     //    Faithful to LiquidBottomTabs.kt: the hidden Row's tab content gets
     //    LocalLiquidBottomTabScale = lerp(1, 1.2, pressProgress) + panelOffset
-    //    (NOT the container scale — the hidden Row is a sibling of the
+    //    (NOT the container scale -- the hidden Row is a sibling of the
     //    container, not a child, so the container layerBlock doesn't apply).
     float contentScale = 1.0 + 0.2 * uIndicatorPressProgress;
     float tabMask = 0.0;
@@ -399,17 +399,17 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
         }
     }
     // Use fgTexture alpha directly as the blue compositing factor. fgTexture
-    // is LINEAR-filtered so its alpha has smooth AA edges — no smoothstep
+    // is LINEAR-filtered so its alpha has smooth AA edges -- no smoothstep
     // threshold needed (which caused jaggies by hard-clipping the AA gradient).
     vec3 sceneColor = mix(scene.rgb, uIndicatorAccent.rgb, tabMask);
 
     // 5. Composite scene over wallpaper (SrcOver).
-    //    At rest (mask≈1.0): a ≈ scene.a — glass scene composited at natural opacity.
-    //    When pressed (mask=smoothstep): a = scene.a * mask — CombinedBackdrop clip.
+    //    At rest (mask~=1.0): a ~= scene.a -- glass scene composited at natural opacity.
+    //    When pressed (mask=smoothstep): a = scene.a * mask -- CombinedBackdrop clip.
     float a = scene.a * mask;
     vec3 resultRgb = mix(wp.rgb, sceneColor, a);
 
-    // 6. 内层背景板 rim highlight — faithful to LiquidBottomTabs.kt hidden Row:
+    // 6. Inner backdrop rim highlight -- faithful to LiquidBottomTabs.kt hidden Row:
     //    highlight = { Highlight.Default.copy(alpha = progress) }
     //    The HighlightModifier draws a STROKE (width=0.5dp, strokeWidth=2px)
     //    blurred by 0.25dp, clipped inside the capsule, colored by the
@@ -419,42 +419,42 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
     //      float d = dot(grad, normal);
     //      float intensity = pow(abs(d), falloff);
     //      return color * intensity;   // color = White(1.0), alpha=1*progress
-    //    with angle=45°, falloff=1, gradRadius = min(radius*1.5, min(halfW, halfH)).
+    //    with angle=45deg, falloff=1, gradRadius = min(radius*1.5, min(halfW, halfH)).
     //    The stroke's outward half (capsuleSd > 0) is clipped, leaving the inner
     //    half. Final contribution = White(1.0) * intensity * strokeMask * progress,
     //    added with Plus blend (additive).
-    //    NOTE: this is the SAME as the 指示器's own rim highlight (step 2f in
-    //    post-passes) — both use Highlight.Default. The only difference is the
-    //    SDF: here it's the 内层背景板 capsule (inset 4dp), there it's the
-    //    指示器's own capsule. The shader math is identical.
+    //    NOTE: this is the SAME as the indicator's own rim highlight (step 2f in
+    //    post-passes) -- both use Highlight.Default. The only difference is the
+    //    SDF: here it's the inner backdrop capsule (inset 4dp), there it's the
+    //    indicator's own capsule. The shader math is identical.
     //
     //    The stroke mask is now sampled from a pre-rasterized Canvas2D texture
     //    (uInnerStrokeMask) instead of computed analytically (65-tap Gaussian
     //    convolution of a hard-edge stroke band). This gives browser-native Skia
-    //    hardware coverage AA — identical quality to the outer indicator rim
-    //    highlight. The Canvas2D pipeline does ctx.clip(path) → ctx.stroke(path)
-    //    → ctx.filter=blur, which naturally removes the outer half and provides
+    //    hardware coverage AA -- identical quality to the outer indicator rim
+    //    highlight. The Canvas2D pipeline does ctx.clip(path) -> ctx.stroke(path)
+    //    -> ctx.filter=blur, which naturally removes the outer half and provides
     //    sub-pixel AA. No per-pixel SDF loops, no smoothstep clipAA needed.
     float highlightAlpha = uIndicatorPressProgress;
     if (highlightAlpha > 0.001) {
-        // SDF gradient + Default highlight intensity (angle=45°, falloff=1).
+        // SDF gradient + Default highlight intensity (angle=45deg, falloff=1).
         // This part is identical to the AGSL DefaultHighlightShaderString.
         float indRadius = max(cr, 0.0);
         float indHalfMin = min(capsuleHalf.x, capsuleHalf.y);
         float gradRadius = min(indRadius * 1.5, indHalfMin);
         vec2 grad = gradSdRoundedRect(capsuleLocal, capsuleHalf, gradRadius);
-        vec2 normal = vec2(0.70710678, 0.70710678); // cos(45°), sin(45°)
+        vec2 normal = vec2(0.70710678, 0.70710678); // cos(45deg), sin(45deg)
         float d = dot(grad, normal);
         float intensity = pow(abs(d), 1.0);
 
         // Sample the pre-rasterized Canvas2D stroke mask texture.
-        // UV mapping: capsuleLocal (centered, -halfW..+halfW) → element-local
-        // (0..2*halfW) by adding capsuleHalf → add margin offset → divide
+        // UV mapping: capsuleLocal (centered, -halfW..+halfW) -> element-local
+        // (0..2*halfW) by adding capsuleHalf -> add margin offset -> divide
         // by maskSize. This is the same convention as the outer indicator
         // stroke mask (STROKE_MASK_COMPOSITE_FRAGMENT_SHADER).
         vec2 innerLocal = capsuleLocal + capsuleHalf;
         vec2 innerMaskUv = (innerLocal + uInnerStrokeMaskOffset) / uInnerStrokeMaskSize;
-        // Bounds check — discard samples outside the mask texture.
+        // Bounds check -- discard samples outside the mask texture.
         float innerMask = 0.0;
         if (innerMaskUv.x >= 0.0 && innerMaskUv.x <= 1.0 &&
             innerMaskUv.y >= 0.0 && innerMaskUv.y <= 1.0) {
@@ -465,7 +465,7 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
         // Faithful to HighlightStyle.Default: color = White.copy(alpha=0.5f).
         // The AGSL shader uses this 0.5 alpha, NOT color.copy(alpha=1f).
         // Same fix as DEFAULT_HIGHLIGHT.alpha = 0.5 (was previously 1.0).
-        // No clipAA needed — the Canvas2D clip(path) before stroke already removes
+        // No clipAA needed -- the Canvas2D clip(path) before stroke already removes
         // the outer half, and Skia hardware coverage provides AA.
         resultRgb += vec3(0.5) * intensity * innerMask * highlightAlpha;
     }
@@ -473,7 +473,7 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
     return vec4(resultRgb, 1.0);
 }
 
-// Magnifier backdrop sampling — faithful to MagnifierContent.kt's
+// Magnifier backdrop sampling -- faithful to MagnifierContent.kt's
 // onDrawBackdrop: withTransform({ scale(1.5); translate(top=-80dp) }, drawBackdrop).
 // Zoom around the magnifier center, then offset Y toward cursor.
 vec4 sampleMagnifier(vec2 canvasPx, float radius) {
@@ -483,7 +483,7 @@ vec4 sampleMagnifier(vec2 canvasPx, float radius) {
     return sampleBackdrop(cursorCoord, radius);
 }
 
-// colorControls — exact port of ColorFilter.kt colorControlsColorFilter.
+// colorControls -- exact port of ColorFilter.kt colorControlsColorFilter.
 // saturation 1.5, brightness 0, contrast 1 -> pure saturation boost.
 vec3 applyColorControls(vec3 c, float brightness, float contrast, float saturation) {
     float invSat = 1.0 - saturation;

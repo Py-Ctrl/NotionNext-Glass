@@ -1,6 +1,6 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /* ------------------------------------------------------------------ *
- * SDF helpers — shared by refraction + highlight shaders.
+ * SDF helpers -- shared by refraction + highlight shaders.
  * Ported from the RoundedRectSDF block in Shaders.kt.
  * ------------------------------------------------------------------ */
 export const SDF_GLSL = /* glsl */ `
@@ -13,14 +13,14 @@ uniform float uCornerStyle;
 // When uUseContinuousSdf > 0.5, sdShape() dispatches to sdContinuousCurvature
 // which samples a precomputed SDF texture (generated from the G2-continuous
 // Bezier path in continuous-curve.ts). Only the dialog card sets this to 1;
-// other shaders that include SDF_GLSL leave it at the default 0 — sdShape
+// other shaders that include SDF_GLSL leave it at the default 0 -- sdShape
 // falls through to the analytic sdRoundedRect / sdContinuousRoundedRect path.
 uniform sampler2D uContinuousSdf;
 uniform float uUseContinuousSdf;        // 0 or 1
 uniform vec2  uContinuousSdfTexSize;    // SDF texture size in px (256, 256)
 uniform vec2  uContinuousSdfElementSize; // element's original w,h in px
 
-// radiusAt — picks the corner radius from cornerRadii based on which
+// radiusAt -- picks the corner radius from cornerRadii based on which
 // quadrant 'coord' is in. For uniform radii (the catalog case) this
 // always returns the same value.
 float radiusAt(vec2 coord, vec4 radii) {
@@ -33,7 +33,7 @@ float radiusAt(vec2 coord, vec4 radii) {
     }
 }
 
-// sdRoundedRect — signed distance to a rounded-rect boundary.
+// sdRoundedRect -- signed distance to a rounded-rect boundary.
 // Negative inside, positive outside, zero on the edge.
 // Uses standard circular arcs for the corners.
 float sdRoundedRect(vec2 coord, vec2 halfSize, float radius) {
@@ -43,11 +43,11 @@ float sdRoundedRect(vec2 coord, vec2 halfSize, float radius) {
     return outside + inside;
 }
 
-// sdContinuousRoundedRect — continuous-curvature rounded rect.
+// sdContinuousRoundedRect -- continuous-curvature rounded rect.
 // The original uses G2-continuous Bezier corners (ContinuousCurvatureRoundedRectangleCornerBuilder).
 // The visual difference between Continuous and Circular is very subtle (only
 // curvature continuity at the tangent points). For the SDF-based renderer,
-// the circular arc SDF (sdRoundedRect) is a close enough approximation — the
+// the circular arc SDF (sdRoundedRect) is a close enough approximation -- the
 // Bezier corners deviate from the arc by <0.5% of the radius, which is
 // sub-pixel at typical element sizes.
 //
@@ -58,7 +58,7 @@ float sdContinuousRoundedRect(vec2 coord, vec2 halfSize, float radius) {
     return sdRoundedRect(coord, halfSize, radius);
 }
 
-// sampleClipMask — sample R channel (coverage) from the mask texture.
+// sampleClipMask -- sample R channel (coverage) from the mask texture.
 // Returns browser-native AA coverage [0,1] for clip + edgeAlpha.
 float sampleClipMask(vec2 coord, vec2 halfSize, float radius) {
     float maxDim = max(max(uContinuousSdfElementSize.x, uContinuousSdfElementSize.y), 1e-4);
@@ -71,7 +71,7 @@ float sampleClipMask(vec2 coord, vec2 halfSize, float radius) {
     return texture2D(uContinuousSdf, uv).r;  // R = coverage [0,1]
 }
 
-// sampleClipSdf — sample G channel (SDF) from the mask texture.
+// sampleClipSdf -- sample G channel (SDF) from the mask texture.
 // Returns signed distance: negative inside, positive outside, 0 at edge.
 // Same shape as sampleClipMask (both from the same Bezier path), so clip
 // and stroke shapes are always identical.
@@ -87,12 +87,12 @@ float sampleClipSdf(vec2 coord, vec2 halfSize, float radius) {
     return (g * 2.0 - 1.0) * radius;  // decode to element-space distance
 }
 
-// sdClipShape — SDF for clip/discard when uUseContinuousSdf is OFF.
+// sdClipShape -- SDF for clip/discard when uUseContinuousSdf is OFF.
 float sdClipShape(vec2 coord, vec2 halfSize, float radius) {
     return sdRoundedRect(coord, halfSize, radius);
 }
 
-// sdShape — SDF for refraction/highlight internal calculations.
+// sdShape -- SDF for refraction/highlight internal calculations.
 // When uUseContinuousSdf=1, uses sampleClipSdf (same shape as clip mask).
 // Otherwise uses sdRoundedRect.
 float sdShape(vec2 coord, vec2 halfSize, float radius) {
@@ -102,7 +102,7 @@ float sdShape(vec2 coord, vec2 halfSize, float radius) {
     return sdRoundedRect(coord, halfSize, radius);
 }
 
-// gradSdRoundedRect — gradient of the SDF (points outward from edge).
+// gradSdRoundedRect -- gradient of the SDF (points outward from edge).
 // Used both for refraction direction and highlight specular.
 vec2 gradSdRoundedRect(vec2 coord, vec2 halfSize, float radius) {
     vec2 cornerCoord = abs(coord) - (halfSize - vec2(radius));
@@ -118,7 +118,7 @@ vec2 gradSdRoundedRect(vec2 coord, vec2 halfSize, float radius) {
     }
 }
 
-// rotateBy — rotate a 2D vector by angle (radians). Used to un-rotate the
+// rotateBy -- rotate a 2D vector by angle (radians). Used to un-rotate the
 // sample coord into the element's local space (so the SDF shape appears
 // rotated by +uElementRotation), and to rotate refraction offsets back to
 // screen space.
@@ -128,9 +128,9 @@ vec2 rotateBy(vec2 v, float angle) {
     return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
 }
 
-// erfApprox — error function approximation (Abramowitz & Stegun 7.1.26).
+// erfApprox -- error function approximation (Abramowitz & Stegun 7.1.26).
 // Max error < 2.5e-5. Used by inner shadow to model BlurMaskFilter's
-// Gaussian convolution of a ring shape. erf(x) ∈ [-1, 1].
+// Gaussian convolution of a ring shape. erf(x) in [-1, 1].
 float erfApprox(float x) {
     float a = abs(x);
     float t = 1.0 / (1.0 + 0.47047 * a);
@@ -144,7 +144,7 @@ float erfApprox(float x) {
  *
  * Maps canvas pixel coordinates to wallpaper texture UV using the same
  * "cover" fit as CSS `background-size: cover; background-position:
- * center` — i.e. the wallpaper is scaled to fully cover the canvas,
+ * center` -- i.e. the wallpaper is scaled to fully cover the canvas,
  * centered, and any overflow is cropped. This MUST match the wallpaper
  * background pass exactly, so the glass shader samples the same texel
  * that is visually displayed at a given canvas pixel.
@@ -156,11 +156,11 @@ vec2 coverUv(vec2 canvasPx) {
     float wpAspect = uWallpaperSize.x / uWallpaperSize.y;
     vec2 uv = canvasPx / uCanvasSize;
     if (wpAspect > canvasAspect) {
-        // Wallpaper is wider than canvas — crop horizontally.
+        // Wallpaper is wider than canvas -- crop horizontally.
         float s = canvasAspect / wpAspect;
         uv.x = (uv.x - 0.5) * s + 0.5;
     } else {
-        // Wallpaper is taller than canvas — crop vertically.
+        // Wallpaper is taller than canvas -- crop vertically.
         float s = wpAspect / canvasAspect;
         uv.y = (uv.y - 0.5) * s + 0.5;
     }

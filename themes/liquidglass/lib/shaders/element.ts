@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { SDF_GLSL, COVER_GLSL } from './sdf'
 import { ELEMENT_UNIFORMS_GLSL } from './element-uniforms'
 import { generateElementUtilsGLSL, DEFAULT_BLUR_TAPS } from './element-utils'
@@ -9,7 +9,7 @@ import { generateElementUtilsGLSL, DEFAULT_BLUR_TAPS } from './element-utils'
  * Order of operations (mirrors DrawBackdropNode.draw + effects chain):
  *   1. Discard pixels outside the rounded-rect shape.
  *   2. Sample backdrop (wallpaper) at the current pixel, with blur.
- *   3. Apply vibrancy (saturation 1.5 color matrix) — ported from
+ *   3. Apply vibrancy (saturation 1.5 color matrix) -- ported from
  *      ColorFilter.kt `colorControlsColorFilter`.
  *   4. Apply lens refraction (SDF + circleMap displacement), with
  *      optional 7-channel chromatic dispersion.
@@ -56,7 +56,7 @@ void main() {
     // Content scale (non-uniform): when < 1.0, compress the backdrop UV toward
     // the element center. Faithful to LiquidToggle.kt / LiquidSlider.kt:
     //   scale(scaleX, scaleY) { drawBackdrop() }
-    // At rest (progress=0), Y scale = 0 → degenerate (single horizontal line),
+    // At rest (progress=0), Y scale = 0 -> degenerate (single horizontal line),
     // but the white overlay hides it. When pressed, scales to full.
     vec2 contentScale = vec2(uContentScaleX, uContentScaleY);
     vec2 sampleCoord = screenCoord;
@@ -102,7 +102,7 @@ void main() {
         float sdfMask = sdfData.y;
         vec2 normal = sdfData.zw;
 
-        // Sample the WALLPAPER directly (not the scene FBO) — faithful to
+        // Sample the WALLPAPER directly (not the scene FBO) -- faithful to
         // LockScreenContent.kt's drawPlainBackdrop which uses the LayerBackdrop
         // (raw wallpaper, before the dark scrim is drawn).
         // The original applies blur(2dp) BEFORE the SDF shader (in the effects
@@ -121,7 +121,7 @@ void main() {
         // overlay is PART of the SDF shader content input, and colorControls
         // is applied to the COMBINED (wallpaper + white) buffer.
         // We replicate: mix white into raw wallpaper FIRST, then apply
-        // colorControls — so colorControls darkens the white too (matching
+        // colorControls -- so colorControls darkens the white too (matching
         // the original where contrast=0.75, brightness=-0.1 dims the white).
         vec4 content = sampleWallpaperBlurred(refractedScreen, uBlurRadius);
         vec3 rawContent = content.rgb;
@@ -131,7 +131,7 @@ void main() {
         }
         // THEN apply colorControls to the combined buffer.
         vec3 contentColor = applyColorControls(rawContent, uBrightness, uContrast, uSaturation);
-        // Multiply by sdfMask (v.a) — faithful to content * v.a.
+        // Multiply by sdfMask (v.a) -- faithful to content * v.a.
         vec3 color = contentColor * sdfMask;
 
         // Bevel lighting
@@ -146,7 +146,7 @@ void main() {
         return;
     }
 
-    // SDF for refraction/highlight — always analytic sdRoundedRect.
+    // SDF for refraction/highlight -- always analytic sdRoundedRect.
     float sd = sdShape(centeredOrigRot, origHalfSize, origRadius);
     // Clip + edgeAA: alpha mask (browser-native AA) when capsule enabled.
     float edgeAlpha;
@@ -174,10 +174,10 @@ void main() {
     }
     // colorControls: for backdropFbo+useSeparableBlur elements, cc was already
     // applied as a fullscreen pass BEFORE the 2-pass blur (uSkipColorControls=1),
-    // matching the original's colorControls→blur order. Skip here to avoid
+    // matching the original's colorControls->blur order. Skip here to avoid
     // double-applying. For inline-blur elements, apply here.
     vec3 color = (uSkipColorControls > 0.5) ? backdrop.rgb : applyColorControls(backdrop.rgb, uBrightness, uContrast, uSaturation);
-    // Magnifier glass is always OPAQUE — faithful to the original which
+    // Magnifier glass is always OPAQUE -- faithful to the original which
     // samples rememberCombinedBackdrop (wallpaper + content + cursor all
     // composited onto the opaque wallpaper). The port's scene texture may
     // carry partial alpha (e.g. card 0.9), which would make the glass
@@ -187,7 +187,7 @@ void main() {
     // --- 2. Lens refraction (SDF + circleMap) ---------------------
     // Faithful port of RoundedRectRefractionWithDispersionShaderString.
     // SDF/grad computed in ORIGINAL space; uRefractionHeight/Amount are in
-    // original px (NOT scaled by layerScale — the original AGSL shader receives
+    // original px (NOT scaled by layerScale -- the original AGSL shader receives
     // the original size and the graphicsLayer scales the OUTPUT, not the params).
     // Early-out: if we're deeper than refractionHeight from the edge,
     // skip refraction entirely (the lens doesn't reach here).
@@ -211,7 +211,7 @@ void main() {
         //   offset_orig = d * grad          (original px)
         //   offset_screen = offset_orig * layerScale  (screen px, for sampling)
         // Faithful to: AGSL computes offset in original space, then graphicsLayer
-        // scales the rendered output — so a pixel at original position p samples
+        // scales the rendered output -- so a pixel at original position p samples
         // the backdrop at p + offset_orig, and the result appears at screen
         // position center + p*layerScale. The backdrop sample position in screen
         // space is therefore center + (p + offset_orig)*layerScale
@@ -238,7 +238,7 @@ void main() {
             vec2 dispersedOffsetOrig = refractedOffsetOrig * dispersionIntensity;
             vec2 dispersedOffsetScreen = rotateBy(dispersedOffsetOrig, rot) * layerScale;
 
-            // Sample helper — pick the right backdrop sampler.
+            // Sample helper -- pick the right backdrop sampler.
             #define SAMPLE_DISPERSED(offset) \
                 (uIndicatorBackdrop > 0.5 ? sampleIndicatorBackdrop(refractedScreen + (offset), uBlurRadius) : \
                  uUseToggleBackdrop > 0.5 ? sampleToggleBackdrop(refractedScreen + (offset), uBlurRadius) : \
@@ -326,7 +326,7 @@ void main() {
     // RIM_HIGHLIGHT_FRAGMENT_SHADER) with true Plus/SrcOver blend,
     // matching the original HighlightModifier.kt which records a separate
     // graphics layer. Doing it inline here would dim the highlight via the
-    // element's edge AA, which is wrong — the highlight layer is composited
+    // element's edge AA, which is wrong -- the highlight layer is composited
     // on top with its own blend mode.
 
     // --- 7. Edge anti-aliasing -----------------------------------

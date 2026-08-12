@@ -2,7 +2,7 @@
 import { COVER_GLSL } from './sdf'
 
 /* ------------------------------------------------------------------ *
- * Vertex shader — draws a fullscreen quad. Per-element scissor is
+ * Vertex shader -- draws a fullscreen quad. Per-element scissor is
  * done in the fragment shader via discard.
  * ------------------------------------------------------------------ */
 export const VERTEX_SHADER = /* glsl */ `
@@ -13,7 +13,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * Wallpaper background pass — draws the wallpaper texture to the
+ * Wallpaper background pass -- draws the wallpaper texture to the
  * canvas with CSS \`cover\` fit. Drawn first in the render pipeline so
  * the canvas owns the wallpaper (no DOM <img> behind it). This makes
  * the glass shader's backdrop sampling visually consistent with what
@@ -36,7 +36,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * COPY_FRAGMENT_SHADER — fullscreen texture copy. Used by the renderer
+ * COPY_FRAGMENT_SHADER -- fullscreen texture copy. Used by the renderer
  * to blit one FBO to another (ping-pong for glass-on-glass sampling),
  * and to blit the final composed scene FBO to the default framebuffer.
  *
@@ -64,7 +64,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * SOLID_FILL_FRAGMENT_SHADER — fill the entire canvas with a solid color.
+ * SOLID_FILL_FRAGMENT_SHADER -- fill the entire canvas with a solid color.
  * Used as the first pass when a backgroundColor is set (e.g. black for
  * the Home page). Replaces the wallpaper pass in that case.
  * ------------------------------------------------------------------ */
@@ -79,7 +79,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * EL_FBO_CROP_FRAGMENT_SHADER — copy a rectangular region of a fullscreen
+ * EL_FBO_CROP_FRAGMENT_SHADER -- copy a rectangular region of a fullscreen
  * source texture into a small destination FBO (same size as the region).
  * Used by cropAndBlurBackdrop: the caller binds the small backdropCropFbo,
  * sets scissor to the region, then this shader samples the corresponding
@@ -113,7 +113,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * EL_FBO_COMPOSITE_FRAGMENT_SHADER — draw a small per-element FBO texture
+ * EL_FBO_COMPOSITE_FRAGMENT_SHADER -- draw a small per-element FBO texture
  * into a rectangular region of the (fullscreen) scene FBO. Used by the
  * per-element FBO optimization to composite an element's rendered glass body
  * back onto the accumulation target (curFbo) at the element's bbox position.
@@ -128,9 +128,9 @@ void main() {
  *   - Otherwise map to source UV: (gl_FragCoord - dstOrigin) / uSrcSize,
  *     with Y flipped because WebGL framebuffer origin is bottom-left while
  *     the element FBO was rendered in the same bottom-left convention, so
- *     no flip is needed — the source texel row aligns directly. Actually
+ *     no flip is needed -- the source texel row aligns directly. Actually
  *     both FBOs use gl_FragCoord bottom-left origin, so the source row y
- *     maps as (dstTopInBl - gl_FragCoord.y ... ) — handled below.
+ *     maps as (dstTopInBl - gl_FragCoord.y ... ) -- handled below.
  * ------------------------------------------------------------------ */
 export const EL_FBO_COMPOSITE_FRAGMENT_SHADER = /* glsl */ `
 precision highp float;
@@ -159,9 +159,9 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * COLOR_CONTROLS_FRAGMENT_SHADER — fullscreen colorControls (brightness/
+ * COLOR_CONTROLS_FRAGMENT_SHADER -- fullscreen colorControls (brightness/
  * contrast/saturation) pass. Used to apply colorControls to a backdrop FBO
- * BEFORE the 2-pass blur, matching the original's colorControls→blur→lens
+ * BEFORE the 2-pass blur, matching the original's colorControls->blur->lens
  * order. Same matrix as applyColorControls in element-utils.ts.
  * ------------------------------------------------------------------ */
 export const COLOR_CONTROLS_FRAGMENT_SHADER = /* glsl */ `
@@ -194,9 +194,9 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * TINT_FRAGMENT_SHADER — fullscreen texture copy with ColorFilter.tint.
- * Used by the bottom-tabs 指示器's 内层背景板 (tabsBackdrop) FBO pass: the current
- * scene (容器 glass + 标签内容) is copied into the tabsBackdrop FBO
+ * TINT_FRAGMENT_SHADER -- fullscreen texture copy with ColorFilter.tint.
+ * Used by the bottom-tabs indicator's inner backdrop (tabsBackdrop) FBO pass: the current
+ * scene (container glass + tab content) is copied into the tabsBackdrop FBO
  * with a blue tint applied, faithful to LiquidBottomTabs.kt's hidden Row
  * which has ColorFilter.tint(accentColor).
  *
@@ -215,7 +215,7 @@ uniform vec3 uTintColor;   // rgb 0..1 (accentColor)
 //   result.rgb = src.rgb (the tint color)
 //   result.a   = dst.a * src.a
 // SrcIn replaces the destination's RGB with the tint color while
-// preserving its alpha — opaque content becomes solid tint, transparent
+// preserving its alpha -- opaque content becomes solid tint, transparent
 // areas stay transparent. This matches Compose's ColorFilter.tint default.
 void main() {
     vec2 uv = vec2(gl_FragCoord.x / uCanvasSize.x, gl_FragCoord.y / uCanvasSize.y);

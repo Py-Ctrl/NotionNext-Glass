@@ -1,8 +1,8 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { SDF_GLSL } from './sdf'
 
 /* ------------------------------------------------------------------ *
- * Outer drop-shadow pass — draws a blurred dark shape behind the
+ * Outer drop-shadow pass -- draws a blurred dark shape behind the
  * element. Renders an expanded quad with the same SDF, computes
  * distance, and applies Gaussian falloff.
  * ------------------------------------------------------------------ */
@@ -13,7 +13,7 @@ uniform vec2  uCanvasSize;
 uniform vec2  uElementOffset;   // SCALED rect top-left (where the quad is drawn)
 uniform vec2  uElementSize;     // SCALED size (includes graphicsLayer scale)
 uniform vec4  uCornerRadii;     // SCALED corner radii
-uniform float uShadowRadius;    // ORIGINAL px (NOT scaled — faithful to BlurMaskFilter at original size)
+uniform float uShadowRadius;    // ORIGINAL px (NOT scaled -- faithful to BlurMaskFilter at original size)
 uniform vec2  uShadowOffset;    // ORIGINAL px (offsetX, offsetY; +Y = downward)
 uniform vec4  uShadowColor;     // rgba
 // --- ORIGINAL-SPACE SDF (faithful to graphicsLayer { scaleX, scaleY }) ---
@@ -23,7 +23,7 @@ uniform vec4  uShadowColor;     // rgba
 // in ORIGINAL px; we multiply by uLayerScale to map it to screen space for
 // the SDF evaluation (offset_screen = offset_orig * layerScale). The shadow
 // radius (blur sigma) stays in ORIGINAL px because the Gaussian falloff is
-// computed in original space — the graphicsLayer then stretches the blurred
+// computed in original space -- the graphicsLayer then stretches the blurred
 // result, which is the faithful behavior (BlurMaskFilter blurs at original
 // resolution, then graphicsLayer scales the blurred pixels).
 uniform vec2  uOriginalSize;        // element size in px (ORIGINAL, unscaled)
@@ -35,7 +35,7 @@ ${SDF_GLSL}
 
 void main() {
     // Flip gl_FragCoord (bottom-left origin) to top-left origin, so +Y
-    // points downward — matching CSS convention.
+    // points downward -- matching CSS convention.
     vec2 screenCoord = vec2(gl_FragCoord.x, uCanvasSize.y - gl_FragCoord.y);
     // elementCenter is the SAME for scaled and original rects (scaling is
     // around the center), so uElementOffset + uElementSize*0.5 gives the
@@ -55,13 +55,13 @@ void main() {
 
     // Shadow offset: defined in ORIGINAL px, applied in screen space.
     // The original draws the shadow at original size with this offset, then
-    // graphicsLayer scales the whole layer — so the offset effectively
+    // graphicsLayer scales the whole layer -- so the offset effectively
     // becomes offset_orig * layerScale in screen space. We map it back to
     // original space for the SDF: offset_orig = offset_screen / layerScale,
-    // which cancels — so we use uShadowOffset directly in original space.
+    // which cancels -- so we use uShadowOffset directly in original space.
     vec2 shadowCenteredOrig = centeredOrigRot - shadowOffsetRot;
     float sd = sdShape(shadowCenteredOrig, origHalfSize, origRadius);
-    // SDF of the element itself (not offset) — used to mask the shadow
+    // SDF of the element itself (not offset) -- used to mask the shadow
     // inside the element so it doesn't bleed through the AA edge.
     float elementSd = sdShape(centeredOrigRot, origHalfSize, origRadius);
 
@@ -78,7 +78,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * Inner shadow pass — draws a blurred dark band just inside the
+ * Inner shadow pass -- draws a blurred dark band just inside the
  * element edge, giving a recessed / pressed-in look.
  *
  * Used by toggle/slider knobs (LiquidToggle.kt / LiquidSlider.kt

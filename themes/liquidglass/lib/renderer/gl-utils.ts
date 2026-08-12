@@ -9,13 +9,25 @@ export function compileShader(
   type: number,
   src: string
 ): WebGLShader {
+  if (gl.isContextLost()) {
+    throw new Error('WebGL context lost before shader compile')
+  }
+  if (!src || typeof src !== 'string' || src.length < 10) {
+    throw new Error('Invalid shader source: length=' + (src ? src.length : 'null/undefined') + ', preview=' + JSON.stringify(src?.slice?.(0, 100)))
+  }
   const sh = gl.createShader(type)!
+  if (!sh) {
+    throw new Error('createShader returned null (context lost?)')
+  }
   gl.shaderSource(sh, src)
   gl.compileShader(sh)
   if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
     const log = gl.getShaderInfoLog(sh)
+    const typeName = type === gl.VERTEX_SHADER ? 'VERTEX' : 'FRAGMENT'
     gl.deleteShader(sh)
-    throw new Error('Shader compile error: ' + log)
+    throw new Error(
+      `Shader compile error [${typeName}, srcLen=${src.length}]: ${log || '(empty log)'}\n--- src preview ---\n${src.slice(0, 200)}\n--- end preview ---`
+    )
   }
   return sh
 }

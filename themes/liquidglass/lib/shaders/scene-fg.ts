@@ -1,8 +1,8 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { SDF_GLSL, COVER_GLSL } from './sdf'
 
 /* ------------------------------------------------------------------ *
- * Foreground (text/icon) pass — composites a pre-rendered RGBA texture
+ * Foreground (text/icon) pass -- composites a pre-rendered RGBA texture
  * (containing the button label and chevron) on top of the glass.
  *
  * The texture is produced by an offscreen 2D canvas in renderer.ts; we
@@ -13,9 +13,9 @@ precision highp float;
 
 uniform sampler2D uTexture;
 uniform vec2 uCanvasSize;
-uniform vec2 uOffset;   // foreground texture top-left in canvas px (top-left origin) — SCALED rect
-uniform vec2 uSize;     // foreground texture size in canvas px — SCALED
-uniform vec4 uCornerRadii;  // capsule radii (topLeft, topRight, bottomRight, bottomLeft) in px — SCALED
+uniform vec2 uOffset;   // foreground texture top-left in canvas px (top-left origin) -- SCALED rect
+uniform vec2 uSize;     // foreground texture size in canvas px -- SCALED
+uniform vec4 uCornerRadii;  // capsule radii (topLeft, topRight, bottomRight, bottomLeft) in px -- SCALED
 uniform float uAlpha;   // global alpha multiplier (used for press fade)
 // --- ORIGINAL-SPACE SDF clip (faithful to graphicsLayer { scaleX, scaleY }) ---
 // The original wraps everything (text included) in a graphicsLayer clipped to
@@ -43,7 +43,7 @@ void main() {
 
     // --- Capsule clip in ORIGINAL space (faithful to graphicsLayer clip) ---
     // elementCenter is the SAME for scaled and original rects (scaling is
-    // around the center). Map screen coord → original space for the SDF so
+    // around the center). Map screen coord -> original space for the SDF so
     // the clip shape is the original capsule, not the stretched one.
     vec2 elementCenter = uOffset + uSize * 0.5;
     vec2 centeredScreen = screenCoord - elementCenter;
@@ -64,7 +64,7 @@ void main() {
     // The texture is uploaded from a 2D canvas with UNPACK_FLIP_Y_WEBGL=false,
     // so texture row 0 (= v=0) is the TOP row of the source canvas. Combined
     // with the Y flip above, uv.y=0 corresponds to the top of the button rect
-    // (which is what we want — text drawn at the middle of the source canvas
+    // (which is what we want -- text drawn at the middle of the source canvas
     // appears at the middle of the button).
     //
     // The texture is uploaded with UNPACK_PREMULTIPLY_ALPHA_WEBGL=true, so
@@ -79,7 +79,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * Plain-rect pass — a solid colored rounded rectangle, alpha-blended.
+ * Plain-rect pass -- a solid colored rounded rectangle, alpha-blended.
  *
  * Used for non-glass UI surfaces:
  *   - Toggle / slider tracks (solid color, full alpha)
@@ -122,7 +122,7 @@ void main() {
 `
 
 /* ------------------------------------------------------------------ *
- * Progressive-blur pass — alpha-masked backdrop blur, faithful to
+ * Progressive-blur pass -- alpha-masked backdrop blur, faithful to
  * ProgressiveBlurContent.kt's AlphaMask shader:
  *
  *   half4 main(float2 coord) {
@@ -153,7 +153,7 @@ uniform float uTintIntensity;   // 0..1
 
 ${COVER_GLSL}
 
-// 9-tap poisson disc — offsets are inlined because GLSL ES 1.00 (WebGL 1)
+// 9-tap poisson disc -- offsets are inlined because GLSL ES 1.00 (WebGL 1)
 // does not support array constructors or const-array initializers.
 // The offsets are normalized (unit disc), multiplied by step (radius in UV).
 vec4 sampleBackdrop(vec2 canvasPx, float radius) {
@@ -176,7 +176,7 @@ vec4 sampleBackdrop(vec2 canvasPx, float radius) {
 void main() {
     vec2 screenCoord = vec2(gl_FragCoord.x, uCanvasSize.y - gl_FragCoord.y);
     vec2 localCoord = screenCoord - uOffset;
-    // Outside the band — nothing to draw.
+    // Outside the band -- nothing to draw.
     if (localCoord.x < 0.0 || localCoord.x > uSize.x ||
         localCoord.y < 0.0 || localCoord.y > uSize.y) {
         discard;

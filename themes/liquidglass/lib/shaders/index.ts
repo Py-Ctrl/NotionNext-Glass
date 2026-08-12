@@ -1,6 +1,6 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /**
- * Shaders barrel — re-exports all shader constants so callers can
+ * Shaders barrel -- re-exports all shader constants so callers can
  * `import { ELEMENT_FRAGMENT_SHADER, ... } from './shaders'` without
  * knowing the internal file structure.
  *
