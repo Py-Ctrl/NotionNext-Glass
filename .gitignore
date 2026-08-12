@@ -71,3 +71,6 @@ webpack-internal:/
 
 # Temp source from liquid-glass-webgl migration
 temp-liquid-glass-src/
+
+# Local Cloudflare Worker route configuration
+/cloudflare/notion-image-proxy/wrangler.toml
