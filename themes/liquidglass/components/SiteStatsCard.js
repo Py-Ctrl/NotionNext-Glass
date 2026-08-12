@@ -65,7 +65,7 @@ function LatestPostsCard ({ latestPosts, allPosts }) {
 /**
  * 站点统计卡片：文章数、建站天数、访问量、访客数
  */
-function SiteStatsCardInner ({ postCount, allPosts }) {
+function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
   // 建站天数
   const since = siteConfig('SINCE')
   const sinceDate = parseSinceDate(since)
@@ -73,8 +73,24 @@ function SiteStatsCardInner ({ postCount, allPosts }) {
     ? Math.max(0, Math.ceil((new Date().getTime() - sinceDate.getTime()) / (1000 * 60 * 60 * 24)))
     : 0
 
-  // 文章数：优先用 postCount，其次用 allPosts.length
-  const count = postCount ?? allPosts?.length ?? 0
+  // 文章数：多级兜底
+  // 1. 优先用 postCount（NotionNext 内置）
+  // 2. 用 categoryOptions 中所有分类的文章数之和（一篇文章可能属于多个分类，可能偏大）
+  // 3. 用首页的 posts 数组长度
+  // 4. 用 allPosts 数组长度
+  // 5. 最后用 latestPosts 长度（不准确，只作为兜底）
+  let count = postCount
+  if (!count || count <= 1) {
+    const categorySum = (categoryOptions || []).reduce((sum, c) => sum + (c.count || 0), 0)
+    if (categorySum > 0) {
+      count = categorySum
+    } else if (posts && posts.length > 0) {
+      count = posts.length
+    } else if (allPosts && allPosts.length > 0) {
+      count = allPosts.length
+    }
+  }
+  count = count || 0
 
   return (
     <div className='glass-card p-4'>
@@ -135,11 +151,16 @@ function SiteStatsCardInner ({ postCount, allPosts }) {
  * 站点统计：最新发布 + 统计数据（两个独立卡片）
  */
 export default function SiteStatsCard (props) {
-  const { latestPosts, allPosts, postCount } = props
+  const { latestPosts, allPosts, postCount, categoryOptions, posts } = props
   return (
     <section className='mb-5'>
       <LatestPostsCard latestPosts={latestPosts} allPosts={allPosts} />
-      <SiteStatsCardInner postCount={postCount} allPosts={allPosts} />
+      <SiteStatsCardInner
+        postCount={postCount}
+        allPosts={allPosts}
+        categoryOptions={categoryOptions}
+        posts={posts}
+      />
     </section>
   )
 }
