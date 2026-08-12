@@ -1242,13 +1242,11 @@ export class LiquidGlassRenderer {
     gl.deleteProgram(this.elFboCompositeProgram)
     gl.deleteProgram(this.elFboCropProgram)
     gl.deleteBuffer(this.quadBuffer)
-    // 真正释放 WebGL context，避免 context 泄漏
-    try {
-      const loseContextExt = gl.getExtension('WEBGL_lose_context')
-      if (loseContextExt) loseContextExt.loseContext()
-    } catch (e) {
-      // ignore
-    }
+    // 注意：不调用 WEBGL_lose_context.loseContext()。
+    // React 可能在 hydration 失败/重新渲染时复用同一个 canvas DOM 节点，
+    // 一旦调用 loseContext()，该 canvas 的 WebGL 上下文会永久标记为丢失，
+    // 后续 getContext('webgl') 仍返回同一个已丢失的上下文，导致初始化失败。
+    // 浏览器会在 canvas 元素被垃圾回收时自动回收上下文，无需手动释放。
   }
 }
 
