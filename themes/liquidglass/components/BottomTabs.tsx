@@ -168,7 +168,6 @@ const BottomTabs = (props) => {
         saturation: 1.5,
         surfaceColor: palette.tabsContainer,
         highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-        depthEffect: true,
       }
     )
     containerEl.isBottomTabContainer = { groupId: 'tabs', tabsCount: tabs.length }
@@ -189,9 +188,9 @@ const BottomTabs = (props) => {
         saturation: 1.0,
         tintColor: [0, 0, 0, 0],
         surfaceColor: [0, 0, 0, 0],
-        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-        outerShadow: { ...DEFAULT_SHADOW },
-        chromaticAberration: true,
+        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.3 },
+        outerShadow: null,
+        chromaticAberration: false,
       }
     )
     indicatorEl.independentBackdrop = false
