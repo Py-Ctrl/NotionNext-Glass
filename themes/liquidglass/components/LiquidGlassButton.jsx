@@ -26,6 +26,28 @@ function parseSize (size, defaultValue = 48) {
  * 使用项目自带的 LiquidGlassRenderer 渲染真正的液态玻璃效果
  * 接口与 GlassButton 兼容，可直接替换
  */
+// 全局缓存 WebGL 检测结果，避免每个按钮实例都创建临时上下文
+let webglSupportedCache = null
+function detectWebGL () {
+  if (webglSupportedCache !== null) return webglSupportedCache
+  try {
+    const canvas = document.createElement('canvas')
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    if (!gl) {
+      webglSupportedCache = false
+      return false
+    }
+    // 释放临时上下文，避免占用浏览器 WebGL 上下文配额
+    const ext = gl.getExtension('WEBGL_lose_context')
+    if (ext) ext.loseContext()
+    webglSupportedCache = true
+    return true
+  } catch (e) {
+    webglSupportedCache = false
+    return false
+  }
+}
+
 const LiquidGlassButton = ({
   label = '',
   btnStyle = 'blue',
@@ -43,15 +65,9 @@ const LiquidGlassButton = ({
   const [useWebGL, setUseWebGL] = React.useState(true)
   const buttonId = React.useMemo(() => id || `lg-btn-${Math.random().toString(36).slice(2, 9)}`, [id])
 
-  // 检测 WebGL 支持
+  // 检测 WebGL 支持（使用全局缓存，避免重复创建临时上下文）
   React.useEffect(() => {
-    try {
-      const canvas = document.createElement('canvas')
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
-      if (!gl) setUseWebGL(false)
-    } catch (e) {
-      setUseWebGL(false)
-    }
+    if (!detectWebGL()) setUseWebGL(false)
   }, [])
 
   // 监听容器尺寸变化

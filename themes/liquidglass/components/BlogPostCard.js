@@ -9,7 +9,7 @@ import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
 import CONFIG from '../config'
 import TagItemMini from './TagItemMini'
-import LiquidGlassButton from './LiquidGlassButton'
+import GlassButton from './GlassButton'
 
 const BlogPostCard = ({ post, index, showSummary }) => {
   const { locale } = useGlobal()
@@ -95,7 +95,7 @@ const BlogPostCard = ({ post, index, showSummary }) => {
 
           {/* 阅读更多 */}
           <div className='flex justify-end border-t pt-4 sm:pt-6 border-gray-200/50 dark:border-gray-700/50'>
-            <LiquidGlassButton
+            <GlassButton
               label={locale.COMMON.ARTICLE_DETAIL || '阅读更多'}
               btnStyle='blue'
               onTap={() => router.push(post?.href)}
