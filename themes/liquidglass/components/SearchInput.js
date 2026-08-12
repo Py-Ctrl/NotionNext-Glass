@@ -63,20 +63,28 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false, searchMod
 
     const height = getSearchHeight()
 
-    const el = document.createElement('liquid-glass-search')
-    el.style.cssText = `display:block;width:100%;height:${height}px`
-    wrapper.appendChild(el)
+    let el
+    try {
+      el = document.createElement('liquid-glass-search')
+      el.style.cssText = `display:block;width:100%;height:${height}px`
+      wrapper.appendChild(el)
 
-    el.setAttribute('wallpaper', 'gradient')
-    if (isDarkMode) el.setAttribute('dark', '')
+      el.setAttribute('wallpaper', 'gradient')
+      if (isDarkMode) el.setAttribute('dark', '')
 
-    webglRef.current = el
+      webglRef.current = el
 
-    const placeholder = currentTag
-      ? `${locale.SEARCH.TAGS} #${currentTag}`
-      : `${locale.SEARCH.ARTICLES}`
-    el.setAttribute('placeholder', placeholder)
-    el.setAttribute('hint', '')
+      const placeholder = currentTag
+        ? `${locale.SEARCH.TAGS} #${currentTag}`
+        : `${locale.SEARCH.ARTICLES}`
+      el.setAttribute('placeholder', placeholder)
+      el.setAttribute('hint', '')
+    } catch (e) {
+      // WebGL 搜索框初始化失败，降级为普通搜索框
+      console.warn('[SearchInput] liquid-glass-search init failed, fallback:', e)
+      setUseWebGL(false)
+      return
+    }
 
     const handleSubmit = (e) => {
       const text = e.detail?.text || el.getValue?.() || ''
