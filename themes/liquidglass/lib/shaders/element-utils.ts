@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 /* ------------------------------------------------------------------ *
  * Element shader utilities -- GLSL helper functions used by the element
  * fragment shader: backdrop sampling (Gaussian disc), color
@@ -372,7 +372,11 @@ vec4 sampleIndicatorBackdrop(vec2 canvasPx, float radius) {
     //    LocalLiquidBottomTabScale = lerp(1, 1.2, pressProgress) + panelOffset
     //    (NOT the container scale -- the hidden Row is a sibling of the
     //    container, not a child, so the container layerBlock doesn't apply).
-    float contentScale = 1.0 + 0.2 * uIndicatorPressProgress;
+    // Tab content scale: fixed at 1.0 to avoid blue/white overlap.
+    // Previously 1.0 + 0.2 * pressProgress caused the indicator's blue
+    // tab-content mask to be 20% larger than the actual white tab content,
+    // making blue bleed out from the icon/label edges.
+    float contentScale = 1.0;
     float tabMask = 0.0;
     for (int i = 0; i < 8; i++) {
         if (float(i) >= uTabContentCount) break;
