@@ -115,7 +115,7 @@ const LayoutBase = props => {
       rafId = null
       const el = document.elementFromPoint(lastX, lastY)
       if (!el) return
-      const card = el.closest('.glass-card, .glass-post-item, .glass-sidebar')
+      const card = el.closest('.glass-card, .glass-post-item, .glass-sidebar, .algolia-glass-card')
       if (!card) return
       const rect = card.getBoundingClientRect()
       const glowX = lastX - rect.left

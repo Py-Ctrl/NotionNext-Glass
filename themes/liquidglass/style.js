@@ -52,10 +52,17 @@ const Style = () => {
     }
 
     /* ========== 卡片交互光晕（Win10 21H2 任务栏风格） ========== */
+    /* Algolia 搜索弹窗 */
+    #theme-liquidglass .algolia-glass-card {
+      position: relative;
+      overflow: hidden;
+    }
+
     /* 边框光晕：跟随鼠标，只在边框区域显示 */
     #theme-liquidglass .glass-card::before,
     #theme-liquidglass .glass-post-item::before,
-    #theme-liquidglass .glass-sidebar::before {
+    #theme-liquidglass .glass-sidebar::before,
+    #theme-liquidglass .algolia-glass-card::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -78,14 +85,16 @@ const Style = () => {
 
     #theme-liquidglass .glass-card:hover::before,
     #theme-liquidglass .glass-post-item:hover::before,
-    #theme-liquidglass .glass-sidebar:hover::before {
+    #theme-liquidglass .glass-sidebar:hover::before,
+    #theme-liquidglass .algolia-glass-card:hover::before {
       opacity: 1;
     }
 
     /* 内部聚光：跟随鼠标，卡片内部淡光 */
     #theme-liquidglass .glass-card::after,
     #theme-liquidglass .glass-post-item::after,
-    #theme-liquidglass .glass-sidebar::after {
+    #theme-liquidglass .glass-sidebar::after,
+    #theme-liquidglass .algolia-glass-card::after {
       content: '';
       position: absolute;
       inset: 0;
@@ -103,14 +112,16 @@ const Style = () => {
 
     #theme-liquidglass .glass-card:hover::after,
     #theme-liquidglass .glass-post-item:hover::after,
-    #theme-liquidglass .glass-sidebar:hover::after {
+    #theme-liquidglass .glass-sidebar:hover::after,
+    #theme-liquidglass .algolia-glass-card:hover::after {
       opacity: 1;
     }
 
     /* 暗色模式 */
     .dark #theme-liquidglass .glass-card::before,
     .dark #theme-liquidglass .glass-post-item::before,
-    .dark #theme-liquidglass .glass-sidebar::before {
+    .dark #theme-liquidglass .glass-sidebar::before,
+    .dark #theme-liquidglass .algolia-glass-card::before {
       background: radial-gradient(
         200px circle at var(--glow-x, -1000px) var(--glow-y, -1000px),
         rgba(129, 140, 248, 0.9),
@@ -121,7 +132,8 @@ const Style = () => {
 
     .dark #theme-liquidglass .glass-card::after,
     .dark #theme-liquidglass .glass-post-item::after,
-    .dark #theme-liquidglass .glass-sidebar::after {
+    .dark #theme-liquidglass .glass-sidebar::after,
+    .dark #theme-liquidglass .algolia-glass-card::after {
       background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         rgba(129, 140, 248, 0.12),
