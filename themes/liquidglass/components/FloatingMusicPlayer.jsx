@@ -55,6 +55,35 @@ const FloatingMusicPlayer = () => {
     }
   }, [musicPlayerEnabled])
 
+  // 组件挂载时暂停所有音频，避免刷新后浏览器自动恢复音频导致双重播放
+  useEffect(() => {
+    if (!musicPlayerEnabled) return
+    const audio = audioRef.current
+    if (audio) {
+      audio.pause()
+      audio.removeAttribute('src')
+      audio.load()
+    }
+    // 同时暂停页面上可能存在的其他音频元素
+    document.querySelectorAll('audio').forEach(a => {
+      if (a !== audioRef.current) {
+        a.pause()
+      }
+    })
+  }, [musicPlayerEnabled])
+
+  // 组件卸载时暂停音频，避免 SPA 路由切换后音频继续播放
+  useEffect(() => {
+    return () => {
+      const audio = audioRef.current
+      if (audio) {
+        audio.pause()
+        audio.removeAttribute('src')
+        audio.load()
+      }
+    }
+  }, [])
+
   // 彻底禁用全局 APlayer（避免双重播放）
   useEffect(() => {
     if (!musicPlayerEnabled) return

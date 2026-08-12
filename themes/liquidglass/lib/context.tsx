@@ -180,6 +180,10 @@ function LiquidGlassCanvasImpl({
   const rendererRefInternal = React.useRef<LiquidGlassRenderer | null>(null)
   // WebGL 初始化失败标记（如上下文数量超限），失败时降级为普通 CSS glass 效果
   const [initFailed, setInitFailed] = React.useState(false)
+  // 初始化重试：刷新页面后浏览器可能尚未释放旧的 WebGL 上下文，需要延迟重试
+  const [initKey, setInitKey] = React.useState(0)
+  const retryCountRef = React.useRef(0)
+  const MAX_INIT_RETRIES = 3
   // Keep refs to the latest state so pointer handlers can read them
   // without being re-created on every change.
   const elementsRef = React.useRef(elements)
@@ -209,12 +213,24 @@ function LiquidGlassCanvasImpl({
     try {
       renderer = new LiquidGlassRenderer(canvasRef.current)
     } catch (e) {
-      // WebGL 初始化失败（上下文超限、不支持等），降级为 CSS glass
-      console.warn('[LiquidGlassCanvas] WebGL init failed, fallback to CSS:', e)
-      setInitFailed(true)
-      onReady?.()
-      return
+      // WebGL 初始化失败（上下文超限、不支持等）
+      console.warn(`[LiquidGlassCanvas] WebGL init failed (attempt ${retryCountRef.current + 1}/${MAX_INIT_RETRIES + 1}):`, e)
+      if (retryCountRef.current < MAX_INIT_RETRIES) {
+        // 刷新页面后浏览器可能尚未释放旧的 WebGL 上下文，延迟重试
+        retryCountRef.current += 1
+        const delay = 500 * retryCountRef.current
+        const timer = setTimeout(() => setInitKey(k => k + 1), delay)
+        return () => clearTimeout(timer)
+      } else {
+        // 所有重试都失败，降级为 CSS glass
+        setInitFailed(true)
+        onReady?.()
+        return
+      }
     }
+    // 初始化成功，重置重试计数
+    retryCountRef.current = 0
+    setInitFailed(false)
     rendererRefInternal.current = renderer
     if (rendererRef) rendererRef.current = renderer
     renderer.setBackgroundColor(backgroundColor)
@@ -273,7 +289,7 @@ function LiquidGlassCanvasImpl({
       rendererRefInternal.current = null
       if (rendererRef) rendererRef.current = null
     }
-  }, [wallpaperSrc])
+  }, [wallpaperSrc, initKey])
 
   // Push backgroundColor changes (e.g. destination switch Home → other).
   React.useEffect(() => {

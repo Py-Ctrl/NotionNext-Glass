@@ -118,7 +118,13 @@ const BottomTabs = (props) => {
     try {
       const canvas = document.createElement('canvas')
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
-      if (!gl) setUseWebGL(false)
+      if (!gl) {
+        setUseWebGL(false)
+      } else {
+        // 释放临时检测用的 WebGL 上下文，避免占用上下文槽位
+        const loseExt = gl.getExtension('WEBGL_lose_context')
+        if (loseExt) loseExt.loseContext()
+      }
     } catch (e) {
       setUseWebGL(false)
     }
