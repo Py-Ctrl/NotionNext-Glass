@@ -234,6 +234,18 @@ function LiquidGlassCanvasImpl({
     rendererRefInternal.current = renderer
     if (rendererRef) rendererRef.current = renderer
     renderer.setBackgroundColor(backgroundColor)
+    // 初始化成功后立即同步当前 elements，避免重试后只有背景没有内容
+    if (elementsRef.current?.length) {
+      renderer.setElements(elementsRef.current)
+    }
+    if (contentHeight !== undefined) {
+      renderer.setContentHeight(contentHeight)
+    }
+    if (toggleTargets) {
+      for (const [groupId, target] of Object.entries(toggleTargets)) {
+        renderer.setToggleTarget(groupId, target.tabIndex, target.tabsCount)
+      }
+    }
     renderer.loadWallpaper(wallpaperSrc).then(() => {
       // Fire onReady after wallpaper loads + one frame renders
       requestAnimationFrame(() => { onReady?.() })
