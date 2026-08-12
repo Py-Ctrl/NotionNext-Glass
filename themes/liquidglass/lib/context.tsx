@@ -151,7 +151,7 @@ interface GestureState {
   transformPartner: number | null
 }
 
-export function LiquidGlassCanvas({
+function LiquidGlassCanvasImpl({
   wallpaperSrc,
   elements,
   contentHeight,
@@ -352,12 +352,19 @@ export function LiquidGlassCanvas({
     const renderer = rendererRefInternal.current
     if (!renderer) return
     let raf = 0
-    // Blink toggle for dirty markers — alternates each rAF tick so the red
-    // dot visibly flashes at ~30Hz when renders are happening. Combined
-    // with the consume-after-draw below, this gives the user a clear
-    // "renders are occurring" signal that disappears when idle.
     let dirtyBlinkOn = false
+    let cachedCtx: CanvasRenderingContext2D | null = null
     const draw = () => {
+      if (!renderer.showPefBbox &&
+          !renderer.showBlurDebug &&
+          !renderer.showShadowBbox &&
+          !renderer.showCullDebug &&
+          !renderer.showPlainRectDebug &&
+          !renderer.showPefPassDebug &&
+          !renderer.showDirtyMarkers) {
+        raf = requestAnimationFrame(draw)
+        return
+      }
       dirtyBlinkOn = !dirtyBlinkOn
       const oc = overlayCanvasRef.current
       const mc = canvasRef.current
@@ -367,8 +374,12 @@ export function LiquidGlassCanvas({
         if (oc.width !== cssW || oc.height !== cssH) {
           oc.width = cssW
           oc.height = cssH
+          cachedCtx = null
         }
-        const ctx = oc.getContext('2d')
+        if (!cachedCtx) {
+          cachedCtx = oc.getContext('2d')
+        }
+        const ctx = cachedCtx
         if (ctx) {
           ctx.clearRect(0, 0, oc.width, oc.height)
           if (renderer.showPefBbox) {
@@ -1328,3 +1339,5 @@ export function LiquidGlassCanvas({
     </div>
   )
 }
+
+export const LiquidGlassCanvas = React.memo(LiquidGlassCanvasImpl)

@@ -206,15 +206,6 @@ const nextConfig = {
   generateEtags: true,
 
   // 构建优化
-  swcMinify: true,
-  modularizeImports: {
-    '@heroicons/react/24/outline': {
-      transform: '@heroicons/react/24/outline/{{member}}'
-    },
-    '@heroicons/react/24/solid': {
-      transform: '@heroicons/react/24/solid/{{member}}'
-    }
-  },
   // 多语言， 在export时禁用
   i18n: process.env.EXPORT
     ? undefined

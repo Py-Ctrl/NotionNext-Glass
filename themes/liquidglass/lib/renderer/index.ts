@@ -1242,6 +1242,13 @@ export class LiquidGlassRenderer {
     gl.deleteProgram(this.elFboCompositeProgram)
     gl.deleteProgram(this.elFboCropProgram)
     gl.deleteBuffer(this.quadBuffer)
+    // 真正释放 WebGL context，避免 context 泄漏
+    try {
+      const loseContextExt = gl.getExtension('WEBGL_lose_context')
+      if (loseContextExt) loseContextExt.loseContext()
+    } catch (e) {
+      // ignore
+    }
   }
 }
 

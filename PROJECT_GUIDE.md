@@ -125,12 +125,11 @@ themes/liquidglass/
 ## 关键约束（不可违反）
 1. LoadingCover 组件不能使用（路由切换时全屏白/黑屏）
 2. MusicPlayer 仅桌面端渲染（`window.innerWidth >= 1024`），防止移动端双重播放
-3. 不使用 GooseHyperGlass CDN
-4. `liquid-glass-webgl` 渲染器需要不透明壁纸才能产生折射效果
-5. 底栏壁纸颜色必须匹配页面背景底部颜色
-6. `customMenu` 的 `subMenus` 必须清洗为 `{name, href, icon}` DTO
-7. `getIconPath` 必须处理非字符串输入（数组、对象）
-8. `isDarkMode` 必须在组件依赖数组中
+3. `liquid-glass-webgl` 渲染器需要不透明壁纸才能产生折射效果
+4. 底栏壁纸颜色必须匹配页面背景底部颜色
+5. `customMenu` 的 `subMenus` 必须清洗为 `{name, href, icon}` DTO
+6. `getIconPath` 必须处理非字符串输入（数组、对象）
+7. `isDarkMode` 必须在组件依赖数组中
 
 ## Git 仓库
 - 远程：`https://github.com/Py-Ctrl/NotionNext-Glass.git`

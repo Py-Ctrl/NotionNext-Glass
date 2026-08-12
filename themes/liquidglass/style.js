@@ -311,35 +311,6 @@ const Style = () => {
       background: rgba(30, 30, 50, 0.6);
     }
 
-    /* ========== 液态玻璃组件容器 ========== */
-    #theme-liquidglass .liquid-glass-container {
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: var(--glass-shadow);
-    }
-
-    #theme-liquidglass .liquid-glass-container liquid-glass {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* ========== 页面过渡 ========== */
-    #theme-liquidglass .glass-transition {
-      animation: glassFadeIn 0.5s ease-out;
-    }
-
-    @keyframes glassFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
     /* ========== 链接样式 ========== */
     #theme-liquidglass .glass-link {
       color: #6366f1;
@@ -405,43 +376,10 @@ const Style = () => {
       width: 100%;
     }
 
-    /* ========== liquid-glass 按钮容器 ========== */
-    #theme-liquidglass .liquid-glass-btn-wrapper {
-      position: relative;
-    }
-
-    #theme-liquidglass .liquid-glass-btn-wrapper liquid-glass {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* ========== liquid-glass 标签栏容器 ========== */
-    #theme-liquidglass .liquid-glass-tabs-wrapper liquid-glass {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
     /* ========== Live2D 宠物挂件 ========== */
     #theme-liquidglass #live2d {
       max-width: 100%;
       height: auto;
-    }
-
-    /* ========== 音乐播放器 ========== */
-    #theme-liquidglass .glass-music-player {
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
-      padding: 12px;
-    }
-
-    .dark #theme-liquidglass .glass-music-player {
-      background: var(--glass-bg-dark);
-      border-color: var(--glass-border-dark);
     }
 
     #theme-liquidglass .animate-spin-slow {
@@ -457,20 +395,6 @@ const Style = () => {
     .aplayer.aplayer-fixed,
     .aplayer {
       display: none !important;
-    }
-
-    /* 紧凑模式播放器 */
-    #theme-liquidglass .glass-music-player-compact {
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-    }
-
-    .dark #theme-liquidglass .glass-music-player-compact {
-      background: var(--glass-bg-dark);
-      border-color: var(--glass-border-dark);
     }
 
     /* ========== Algolia 搜索弹窗美化 ========== */

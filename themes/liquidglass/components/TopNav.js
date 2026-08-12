@@ -1,5 +1,4 @@
 import { useGlobal } from '@/lib/global'
-import SmartLink from '@/components/SmartLink'
 import LazyImage from '@/components/LazyImage'
 import { siteConfig } from '@/lib/config'
 import { useCallback, useEffect, useRef, useState } from 'react'
