@@ -178,6 +178,8 @@ function LiquidGlassCanvasImpl({
   const containerRef = externalContainerRef || internalContainerRef
   const overlayCanvasRef = React.useRef<HTMLCanvasElement>(null)
   const rendererRefInternal = React.useRef<LiquidGlassRenderer | null>(null)
+  // WebGL 初始化失败标记（如上下文数量超限），失败时降级为普通 CSS glass 效果
+  const [initFailed, setInitFailed] = React.useState(false)
   // Keep refs to the latest state so pointer handlers can read them
   // without being re-created on every change.
   const elementsRef = React.useRef(elements)
@@ -203,7 +205,16 @@ function LiquidGlassCanvasImpl({
   // --- Init renderer + wallpaper + resize observer ---
   React.useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return
-    const renderer = new LiquidGlassRenderer(canvasRef.current)
+    let renderer: LiquidGlassRenderer
+    try {
+      renderer = new LiquidGlassRenderer(canvasRef.current)
+    } catch (e) {
+      // WebGL 初始化失败（上下文超限、不支持等），降级为 CSS glass
+      console.warn('[LiquidGlassCanvas] WebGL init failed, fallback to CSS:', e)
+      setInitFailed(true)
+      onReady?.()
+      return
+    }
     rendererRefInternal.current = renderer
     if (rendererRef) rendererRef.current = renderer
     renderer.setBackgroundColor(backgroundColor)
@@ -1308,6 +1319,25 @@ function LiquidGlassCanvasImpl({
     },
     []
   )
+
+  // WebGL 初始化失败时降级为 CSS glass 效果
+  if (initFailed) {
+    return (
+      <div
+        ref={containerRef}
+        className={className}
+        style={{
+          position: 'relative',
+          ...style,
+          background: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(20px) saturate(1.5)',
+          WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+          borderRadius: 'inherit',
+          overflow: 'hidden',
+        }}
+      />
+    )
+  }
 
   return (
     <div ref={containerRef} className={className} style={{ position: 'relative', ...style }}>
