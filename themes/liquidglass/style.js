@@ -83,13 +83,6 @@ const Style = () => {
       transition: opacity 0.3s ease;
     }
 
-    #theme-liquidglass .glass-card:hover::before,
-    #theme-liquidglass .glass-post-item:hover::before,
-    #theme-liquidglass .glass-sidebar:hover::before,
-    #theme-liquidglass .algolia-glass-card:hover::before {
-      opacity: 1;
-    }
-
     /* 内部聚光：跟随鼠标，卡片内部淡光 */
     #theme-liquidglass .glass-card::after,
     #theme-liquidglass .glass-post-item::after,
@@ -110,11 +103,35 @@ const Style = () => {
       border-radius: inherit;
     }
 
-    #theme-liquidglass .glass-card:hover::after,
-    #theme-liquidglass .glass-post-item:hover::after,
-    #theme-liquidglass .glass-sidebar:hover::after,
-    #theme-liquidglass .algolia-glass-card:hover::after {
-      opacity: 1;
+    /* 仅在支持 hover 的设备（非触摸）上启用鼠标聚光 */
+    @media (hover: hover) {
+      #theme-liquidglass .glass-card:hover::before,
+      #theme-liquidglass .glass-post-item:hover::before,
+      #theme-liquidglass .glass-sidebar:hover::before,
+      #theme-liquidglass .algolia-glass-card:hover::before {
+        opacity: 1;
+      }
+
+      #theme-liquidglass .glass-card:hover::after,
+      #theme-liquidglass .glass-post-item:hover::after,
+      #theme-liquidglass .glass-sidebar:hover::after,
+      #theme-liquidglass .algolia-glass-card:hover::after {
+        opacity: 1;
+      }
+    }
+
+    /* 触摸设备完全禁用 ::before/::after 伪元素，节省资源 */
+    @media (pointer: coarse) {
+      #theme-liquidglass .glass-card::before,
+      #theme-liquidglass .glass-post-item::before,
+      #theme-liquidglass .glass-sidebar::before,
+      #theme-liquidglass .algolia-glass-card::before,
+      #theme-liquidglass .glass-card::after,
+      #theme-liquidglass .glass-post-item::after,
+      #theme-liquidglass .glass-sidebar::after,
+      #theme-liquidglass .algolia-glass-card::after {
+        display: none;
+      }
     }
 
     /* 暗色模式 */

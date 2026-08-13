@@ -105,8 +105,13 @@ const LayoutBase = props => {
   }, [scrollListener])
 
   // 卡片交互光晕：监听鼠标移动，动态设置 --glow-x/--glow-y（边框光晕）和 --mouse-x/--mouse-y（内部聚光）
+  // 触摸设备（移动端）不启用，避免触摸触发体验差且占用资源
   useEffect(() => {
     if (!isBrowser) return
+    // 检测触摸设备，移动端不启用鼠标聚光
+    const isTouch = window.matchMedia?.('(pointer: coarse)').matches || 'ontouchstart' in window
+    if (isTouch) return
+
     let rafId = null
     let lastX = 0
     let lastY = 0
