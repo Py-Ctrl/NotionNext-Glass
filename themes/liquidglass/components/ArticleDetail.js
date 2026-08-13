@@ -78,8 +78,8 @@ const ArticleDetail = (props) => {
         </div>
       )}
 
-      {/* 评论区 */}
-      <div className='glass-card p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28'>
+      {/* 评论区 — 不用 glass-card，避免 backdrop-filter + overflow:hidden 遮盖动态加载的 Twikoo */}
+      <div className='p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white/60 dark:bg-gray-900/60'>
         <Comment frontMatter={post} />
       </div>
     </div>

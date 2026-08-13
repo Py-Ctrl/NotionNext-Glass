@@ -608,8 +608,23 @@ const Style = () => {
     /* ========== 移动端响应式 ========== */
     @media (max-width: 640px) {
       #theme-liquidglass {
-        --glass-blur: 10px;
+        --glass-blur: 6px;
         --glass-radius: 12px;
+      }
+
+      /* ponytail: 移动端统一降级所有 backdrop-filter，去掉 saturate（GPU 大户），blur 降到 4px */
+      #theme-liquidglass .glass-card,
+      #theme-liquidglass .glass-nav,
+      #theme-liquidglass .glass-footer,
+      #theme-liquidglass .glass-post-item,
+      #theme-liquidglass .glass-sidebar,
+      #theme-liquidglass .liquid-glass-toggle,
+      #theme-liquidglass .liquid-glass-card,
+      #theme-liquidglass .liquid-glass-btn,
+      #theme-liquidglass .liquid-glass-btn-blue,
+      #theme-liquidglass .liquid-glass-share {
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
       }
 
       #theme-liquidglass .glass-card {
@@ -640,6 +655,12 @@ const Style = () => {
 
       #theme-liquidglass .liquid-glass-search-wrapper {
         border-radius: 14px;
+      }
+
+      /* ponytail: 移动端禁用 background-attachment:fixed（iOS Safari 严重掉帧元凶） */
+      #theme-liquidglass,
+      .dark #theme-liquidglass {
+        background-attachment: scroll !important;
       }
     }
 
