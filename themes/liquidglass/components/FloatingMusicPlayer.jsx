@@ -368,7 +368,8 @@ const FloatingMusicPlayer = () => {
                 {currentTrack?.cover ? (
                   <img
                     src={currentTrack.cover}
-                    className={`w-full h-full object-cover scale-110 ${isPlaying ? 'animate-spin-slow' : ''}`}
+                    className='w-full h-full object-cover scale-110 animate-spin-slow'
+                    style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}
                     alt={currentTrack?.name}
                     draggable={false}
                   />

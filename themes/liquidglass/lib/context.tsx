@@ -252,6 +252,12 @@ function LiquidGlassCanvasImpl({
       }
     }
     renderer.loadWallpaper(wallpaperSrc).then(() => {
+      // ponytail: 壁纸加载完成后重新应用 tabTargets，修复首帧指示器不显示
+      if (tabTargets) {
+        for (const [groupId, { tabIndex, tabsCount }] of Object.entries(tabTargets)) {
+          renderer.setTabSelected(groupId, tabIndex, tabsCount)
+        }
+      }
       // Fire onReady after wallpaper loads + one frame renders
       requestAnimationFrame(() => { onReady?.() })
     }).catch((e) => {

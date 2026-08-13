@@ -33,8 +33,6 @@ const BottomTabs = (props) => {
     const ua = navigator.userAgent || ''
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
     setIsDesktop(!isMobile)
-    // ponytail: 移动端禁用 WebGL 渲染，用 CSS backdrop-filter 替代（省 GPU、防掉帧）
-    if (isMobile) setUseWebGL(false)
   }, [])
 
   // 响应式尺寸：桌面端更大
