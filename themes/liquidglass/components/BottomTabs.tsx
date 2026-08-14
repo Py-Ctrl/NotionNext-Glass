@@ -229,7 +229,9 @@ const BottomTabs = (props) => {
         highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
         outerShadow: { ...DEFAULT_SHADOW },
         innerShadow: { radius: 8, alpha: 0.3, offsetX: 0, offsetY: 8 },
-        chromaticAberration: true,
+        // 透明模式下关闭色差：官方 demo 有实心壁纸背景，色散折射壁纸是自然玻璃质感；
+        // 但透明渲染采样到透明区域，会在容器边缘产生突兀的彩虹杂边
+        chromaticAberration: false,
       }
     )
     indicatorEl.independentBackdrop = false
