@@ -153,21 +153,37 @@ const FloatingMusicPlayer = () => {
     playTrack((currentIdx - 1 + audioList.length) % audioList.length)
   }, [audioList, currentIdx, playTrack])
 
-  // ponytail: 合并 src 设置和 play/pause 到单个 effect，仅 isPlaying 时才设 src（防止移动端 BFCache 自动恢复播放）
+  // 仅在曲目变化时设置 src（跳过首次挂载，防止 BFCache 自动恢复播放）
+  const srcInitialized = useRef(false)
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !currentTrack) return
+    if (!srcInitialized.current) {
+      srcInitialized.current = true
+      return
+    }
+    audio.src = currentTrack.url
+    if (isPlaying) audio.play().catch(() => setIsPlaying(false))
+  }, [currentIdx, currentTrack])
+
+  // play/pause 控制（不碰 src，保留播放进度）
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    if (isPlaying && currentTrack) {
+    if (isPlaying) {
       // 播放前杀掉页面上所有其他音频（APlayer 等），防止双重播放
       document.querySelectorAll('audio').forEach(a => {
         if (a !== audio) a.pause()
       })
-      audio.src = currentTrack.url
+      // 首次播放时 src 尚未设置，补上
+      if (!audio.src && currentTrack) {
+        audio.src = currentTrack.url
+      }
       audio.play().catch(() => setIsPlaying(false))
     } else {
       audio.pause()
     }
-  }, [currentIdx, currentTrack, isPlaying])
+  }, [isPlaying])
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume

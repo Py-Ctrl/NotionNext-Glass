@@ -78,11 +78,9 @@ const ArticleDetail = (props) => {
         </div>
       )}
 
-      {/* 评论区 */}
-      <div className='glass-card p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28'>
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <Comment frontMatter={post} />
-        </div>
+      {/* 评论区 — overflow:visible 避免 backdrop-filter+overflow:hidden 阻断 Twikoo 动态渲染 */}
+      <div className='glass-card p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28' style={{ overflow: 'visible' }}>
+        <Comment frontMatter={post} />
       </div>
     </div>
   )

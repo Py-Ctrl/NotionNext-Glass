@@ -608,23 +608,8 @@ const Style = () => {
     /* ========== 移动端响应式 ========== */
     @media (max-width: 640px) {
       #theme-liquidglass {
-        --glass-blur: 6px;
+        --glass-blur: 10px;
         --glass-radius: 12px;
-      }
-
-      /* ponytail: 移动端统一降级所有 backdrop-filter，去掉 saturate（GPU 大户），blur 降到 4px */
-      #theme-liquidglass .glass-card,
-      #theme-liquidglass .glass-nav,
-      #theme-liquidglass .glass-footer,
-      #theme-liquidglass .glass-post-item,
-      #theme-liquidglass .glass-sidebar,
-      #theme-liquidglass .liquid-glass-toggle,
-      #theme-liquidglass .liquid-glass-card,
-      #theme-liquidglass .liquid-glass-btn,
-      #theme-liquidglass .liquid-glass-btn-blue,
-      #theme-liquidglass .liquid-glass-share {
-        backdrop-filter: blur(4px) !important;
-        -webkit-backdrop-filter: blur(4px) !important;
       }
 
       #theme-liquidglass .glass-card {

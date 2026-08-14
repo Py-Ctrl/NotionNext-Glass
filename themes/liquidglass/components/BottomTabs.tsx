@@ -331,7 +331,6 @@ const BottomTabs = (props) => {
             height: `${CANVAS_H}px`,
             width: widthStyle,
             borderRadius: `${CANVAS_H / 2}px`,
-            overflow: 'hidden',
           }}
         />
       )}
