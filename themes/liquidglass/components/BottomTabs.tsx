@@ -162,18 +162,22 @@ const BottomTabs = (props) => {
     const glassY = CONTAINER_Y + GLASS_PAD
     const tabW = glassW / tabs.length
 
+    // 透明模式下的容器：不依赖折射（透明背景折射不到内容，放大重绘会反射黑），
+    // 改用半透明表面色 + 顶部高光 + 柔和阴影塑造玻璃感；
+    // 底层内容模糊交给 CSS backdrop-filter 处理。
     const containerEl = makeGlassShape(
       'tabs-container',
       { x: containerX, y: CONTAINER_Y, w: containerW, h: CONTAINER_H },
       {
         cornerRadius: containerR,
-        refractionHeight: 24,
-        refractionAmount: -24,
-        blurRadius: 8,
-        saturation: 1.5,
+        refractionHeight: 0,
+        refractionAmount: 0,
+        blurRadius: 0,
+        saturation: 1.0,
         surfaceColor: palette.tabsContainer,
         highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-        depthEffect: true,
+        outerShadow: { ...DEFAULT_SHADOW, alpha: 0.12 },
+        depthEffect: false,
       }
     )
     containerEl.isBottomTabContainer = { groupId: 'tabs', tabsCount: tabs.length }
@@ -215,22 +219,23 @@ const BottomTabs = (props) => {
 
     ints['tabs-container'] = dragInteractions
 
+    // 透明模式下的指示器：不依赖折射（折射不到内容会不可见），
+    // 用半透明 accent 表面色 + innerShadow + 顶部高光，让选中胶囊清晰可见。
     const indicatorEl = makeGlassShape(
       'tabs-indicator',
       { x: glassX, y: glassY, w: tabW, h: GLASS_H },
       {
         cornerRadius: glassR,
-        refractionHeight: 10,
-        refractionAmount: -14,
+        refractionHeight: 0,
+        refractionAmount: 0,
         blurRadius: 0,
         saturation: 1.0,
         tintColor: [0, 0, 0, 0],
-        surfaceColor: [0, 0, 0, 0],
+        surfaceColor: [...palette.tabsAccent, 0.35],
         highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-        outerShadow: { ...DEFAULT_SHADOW },
-        innerShadow: { radius: 8, alpha: 0.3, offsetX: 0, offsetY: 8 },
-        // 透明模式下关闭色差：官方 demo 有实心壁纸背景，色散折射壁纸是自然玻璃质感；
-        // 但透明渲染采样到透明区域，会在容器边缘产生突兀的彩虹杂边
+        outerShadow: { ...DEFAULT_SHADOW, alpha: 0.15 },
+        innerShadow: { radius: 8, alpha: 0.2, offsetX: 0, offsetY: 8 },
+        // 透明模式下关闭色差：采样到透明区域会产生突兀的彩虹杂边
         chromaticAberration: false,
       }
     )
