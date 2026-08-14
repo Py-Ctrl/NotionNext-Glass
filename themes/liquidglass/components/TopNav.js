@@ -1,5 +1,6 @@
 import { useGlobal } from '@/lib/global'
 import LazyImage from '@/components/LazyImage'
+import { saveDarkModeToLocalStorage } from '@/themes/theme'
 import { siteConfig } from '@/lib/config'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Collapse from '@/components/Collapse'
@@ -10,7 +11,7 @@ import { useRouter } from 'next/router'
 
 const TopNav = (props) => {
   const { tags, currentTag, categories, currentCategory, siteInfo, searchModal } = props
-  const { locale } = useGlobal()
+  const { locale, isDarkMode, updateDarkMode } = useGlobal()
   const searchDrawer = useRef()
   const collapseRef = useRef(null)
   const router = useRouter()
@@ -71,6 +72,15 @@ const TopNav = (props) => {
       searchDrawer?.current?.hide()
       router.push({ pathname: '/search/' + key })
     }
+  }
+
+  const handleToggleDarkMode = () => {
+    const newStatus = !isDarkMode
+    saveDarkModeToLocalStorage(newStatus)
+    updateDarkMode(newStatus)
+    const htmlElement = document.getElementsByTagName('html')[0]
+    htmlElement.classList?.remove(newStatus ? 'light' : 'dark')
+    htmlElement.classList?.add(newStatus ? 'dark' : 'light')
   }
 
   return (
@@ -149,8 +159,19 @@ const TopNav = (props) => {
             </span>
           </div>
 
-          {/* 右侧搜索 */}
-          <div className='w-8 h-8 flex items-center justify-center cursor-pointer'
+          {/* 右侧：主题切换 + 搜索 */}
+          <div className='flex items-center space-x-1'>
+            <button
+              onClick={handleToggleDarkMode}
+              className='w-8 h-8 flex items-center justify-center cursor-pointer'
+              title={isDarkMode ? '切换浅色模式' : '切换深色模式'}>
+              {isDarkMode ? (
+                <i className='fas fa-sun text-yellow-400 text-base' />
+              ) : (
+                <i className='fas fa-moon text-indigo-500 text-base' />
+              )}
+            </button>
+            <div className='w-8 h-8 flex items-center justify-center cursor-pointer'
                onClick={() => {
                  if (siteConfig('ALGOLIA_APP_ID') && searchModal?.current) {
                    searchModal.current.openSearch()
@@ -158,7 +179,8 @@ const TopNav = (props) => {
                    searchDrawer?.current?.show()
                  }
                }}>
-            <i className='fas fa-search text-gray-600 dark:text-gray-400' />
+              <i className='fas fa-search text-gray-600 dark:text-gray-400' />
+            </div>
           </div>
         </div>
 
