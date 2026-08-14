@@ -465,11 +465,21 @@ export const renderMethods = {
     )
   },
 
-  /** Render wallpaper or solid background color into fboA. */
+  /** Render wallpaper or solid background color into fboA.
+   *  When transparentBackground is true, clears fboA to transparent instead.
+   *  Glass elements with independentBackdrop=true sample the wallpaper texture
+   *  directly for refraction, while the canvas alpha passes through to the
+   *  browser compositor (CSS backdrop-filter on the container div handles
+   *  blurring the page content behind the canvas). */
   renderBackground(this: LiquidGlassRenderer) {
     const gl = this.gl
     this.bindFBO(this.fboA)
     gl.disable(gl.BLEND)
+    if (this.transparentBackground) {
+      gl.clearColor(0, 0, 0, 0)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+      return
+    }
     if (this.backgroundColor) {
       const [r, g, b] = this.backgroundColor
       this.drawSolidFill(r, g, b, 1)

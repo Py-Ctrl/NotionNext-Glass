@@ -45,6 +45,12 @@ export interface LiquidGlassCanvasProps {
   /** If set, the renderer fills the canvas with this RGB color instead
    *  of drawing the wallpaper. Used for the Home page (black background). */
   backgroundColor?: [number, number, number] | null
+  /** When true, the canvas background is transparent (no wallpaper drawn).
+   *  Glass elements with independentBackdrop=true sample the wallpaper texture
+   *  directly for refraction. The canvas alpha channel passes through to the
+   *  browser compositor, letting CSS backdrop-filter on the container div
+   *  show blurred page content behind the canvas. */
+  transparentBackground?: boolean
   /** Map of toggle groupId → target fraction (0 or 1). The canvas syncs
    *  these to the renderer whenever the map changes (programmatic toggle). */
   toggleTargets?: Record<string, number>
@@ -159,6 +165,7 @@ function LiquidGlassCanvasImpl({
   interactions,
   scrollResetToken,
   backgroundColor = null,
+  transparentBackground = false,
   toggleTargets,
   tabTargets,
   rendererRef,
@@ -234,6 +241,7 @@ function LiquidGlassCanvasImpl({
     rendererRefInternal.current = renderer
     if (rendererRef) rendererRef.current = renderer
     renderer.setBackgroundColor(backgroundColor)
+    renderer.transparentBackground = transparentBackground
     // 初始化成功后立即同步当前 elements，避免重试后只有背景没有内容
     if (elementsRef.current?.length) {
       renderer.setElements(elementsRef.current)
@@ -318,6 +326,14 @@ function LiquidGlassCanvasImpl({
   React.useEffect(() => {
     rendererRefInternal.current?.setBackgroundColor(backgroundColor)
   }, [backgroundColor])
+
+  // Sync transparentBackground flag to renderer.
+  React.useEffect(() => {
+    const r = rendererRefInternal.current
+    if (!r) return
+    r.transparentBackground = transparentBackground
+    r.requestRender()
+  }, [transparentBackground])
 
   // Apply DPR override when it changes (Settings page slider).
   // Also force-rebuilds the blur FBOs because effectiveBlurDownsample
