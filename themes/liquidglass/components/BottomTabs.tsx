@@ -43,8 +43,9 @@ const BottomTabs = (props) => {
   const ICON_LAYOUT_SIZE = isDesktop ? 28 : 24
   const FONT_SIZE = isDesktop ? 13 : 11
 
-  // 容器周围留白，给玻璃折射/高光/阴影留渲染空间（参考官方 demo 的 TABS_PAD）
-  const CANVAS_PAD = isDesktop ? 12 : 10
+  // 让容器铺满整个 canvas，使玻璃胶囊 = CSS 磨砂胶囊，消除内缩产生的"相框"。
+  // 阴影/高光保留在容器内部渲染，不再需要外部留白。
+  const CANVAS_PAD = 0
   // canvas 高度 = 容器高度 + 两侧留白，确保容器在 canvas 内居中
   const CANVAS_H = CONTAINER_H + 2 * CANVAS_PAD
   const CONTAINER_Y = CANVAS_PAD
@@ -175,14 +176,52 @@ const BottomTabs = (props) => {
         blurRadius: 0,
         saturation: 1.0,
         surfaceColor: palette.tabsContainer,
-        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-        outerShadow: { ...DEFAULT_SHADOW, alpha: 0.12 },
+        // 铺满画布后 0.5 的顶部高光会变成一条亮边，看着像边框 → 降到柔和光泽
+        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.2 },
+        // 容器铺满 canvas，无外部留白，外阴影会被裁切出边框线 → 置 0
+        outerShadow: { ...DEFAULT_SHADOW, alpha: 0 },
         depthEffect: false,
       }
     )
     containerEl.isBottomTabContainer = { groupId: 'tabs', tabsCount: tabs.length }
     containerEl.independentBackdrop = true
     els.push(containerEl)
+
+    // 指示器绘制在文字之下，文字清晰叠在指示器上（对齐原版 LiquidBottomTabs.kt）。
+    // 这里用半透明 accent 表面色 + innerShadow + 顶部高光塑造选中胶囊；
+    // 静止时(progress=0)折射/高光/阴影均为0，只显示表面色，文字在其上保持清晰。
+    const indicatorEl = makeGlassShape(
+      'tabs-indicator',
+      { x: glassX, y: glassY, w: tabW, h: GLASS_H },
+      {
+        cornerRadius: glassR,
+        refractionHeight: 0,
+        refractionAmount: 0,
+        blurRadius: 0,
+        saturation: 1.0,
+        tintColor: [0, 0, 0, 0],
+        surfaceColor: [...palette.tabsAccent, 0.5],
+        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
+        outerShadow: { ...DEFAULT_SHADOW, alpha: 0.15 },
+        innerShadow: { radius: 8, alpha: 0.2, offsetX: 0, offsetY: 8 },
+        // 透明模式下关闭色差：采样到透明区域会产生突兀的彩虹杂边
+        chromaticAberration: false,
+      }
+    )
+    indicatorEl.independentBackdrop = false
+    indicatorEl.isBottomTabIndicator = {
+      groupId: 'tabs',
+      dragWidth: tabW,
+      dimColor: palette.backIconColor,
+      accentColor: [...palette.tabsAccent],
+      containerRect: { x: glassX - GLASS_PAD, y: glassY, w: glassW + 2 * GLASS_PAD, h: GLASS_H },
+      containerCenterX: containerX + containerW / 2,
+      containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
+      containerWidth: containerW,
+      tabContentIds: tabs.map((_, i) => `tab-${i}`),
+      tabContentRects: tabs.map((_, i) => ({ x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H })),
+    }
+    els.push(indicatorEl)
 
     const dragInteractions = makeTabDragInteractions('tabs', tabW, tabs.length, handleTabSelect, rendererRef)
 
@@ -218,41 +257,6 @@ const BottomTabs = (props) => {
     }
 
     ints['tabs-container'] = dragInteractions
-
-    // 透明模式下的指示器：不依赖折射（折射不到内容会不可见），
-    // 用半透明 accent 表面色 + innerShadow + 顶部高光，让选中胶囊清晰可见。
-    const indicatorEl = makeGlassShape(
-      'tabs-indicator',
-      { x: glassX, y: glassY, w: tabW, h: GLASS_H },
-      {
-        cornerRadius: glassR,
-        refractionHeight: 0,
-        refractionAmount: 0,
-        blurRadius: 0,
-        saturation: 1.0,
-        tintColor: [0, 0, 0, 0],
-        surfaceColor: [...palette.tabsAccent, 0.35],
-        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-        outerShadow: { ...DEFAULT_SHADOW, alpha: 0.15 },
-        innerShadow: { radius: 8, alpha: 0.2, offsetX: 0, offsetY: 8 },
-        // 透明模式下关闭色差：采样到透明区域会产生突兀的彩虹杂边
-        chromaticAberration: false,
-      }
-    )
-    indicatorEl.independentBackdrop = false
-    indicatorEl.isBottomTabIndicator = {
-      groupId: 'tabs',
-      dragWidth: tabW,
-      dimColor: palette.backIconColor,
-      accentColor: [...palette.tabsAccent],
-      containerRect: { x: glassX - GLASS_PAD, y: glassY, w: glassW + 2 * GLASS_PAD, h: GLASS_H },
-      containerCenterX: containerX + containerW / 2,
-      containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
-      containerWidth: containerW,
-      tabContentIds: tabs.map((_, i) => `tab-${i}`),
-      tabContentRects: tabs.map((_, i) => ({ x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H })),
-    }
-    els.push(indicatorEl)
 
     return { elements: els, interactions: ints }
   }, [tabs, isDarkMode, canvasW, handleTabSelect, isDesktop])
