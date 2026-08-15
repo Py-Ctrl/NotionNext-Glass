@@ -447,10 +447,6 @@ const nextConfig = {
     delete pages['/sitemap.xml']
     delete pages['/auth']
     return pages
-  },
-  publicRuntimeConfig: {
-    // 这里的配置既可以服务端获取到，也可以在浏览器端获取到
-    THEMES: themes
   }
 }
 
