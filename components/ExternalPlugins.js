@@ -385,6 +385,26 @@ const ExternalPlugin = props => {
         </>
       )}
 
+      {CHATBASE_ID && (
+        <>
+          <script
+            id={CHATBASE_ID}
+            src='https://www.chatbase.co/embed.min.js'
+            defer
+          />
+          <script
+            async
+            dangerouslySetInnerHTML={{
+              __html: `
+                    window.chatbaseConfig = {
+                        chatbotId: "${CHATBASE_ID}",
+                        }
+                    `
+            }}
+          />
+        </>
+      )}
+
       {/* {COMMENT_TWIKOO_ENV_ID && <script defer src={COMMENT_TWIKOO_CDN_URL} />} */}
 
       {COMMENT_ARTALK_SERVER && <script defer src={COMMENT_ARTALK_JS} />}
