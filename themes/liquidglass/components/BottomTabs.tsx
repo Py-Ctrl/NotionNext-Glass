@@ -9,9 +9,18 @@ import { LiquidGlassCanvas } from '../lib/context'
 import { makeGlassShape, makeText, makeTabDragInteractions } from '../lib/helpers'
 import { getPalette, DEFAULT_HIGHLIGHT, DEFAULT_SHADOW } from '../lib/types'
 import { getBottomBarWallpaper } from './liquidGlassWallpaper'
+import { generateCapsuleLensMap } from './capsuleLensMap'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
+
+// SVG 透镜底栏（backdrop-filter: url(#feDisplacementMap)，折射真实页面内容）。
+// 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 自动回退到下方 WebGL 底栏。
+// 置为 false 可强制所有浏览器走 WebGL 底栏。
+const SVG_LENS_ENABLED = true
+// 透镜环带宽度（px）与最大位移（px），对应 WebGL 版 refractionHeight/refractionAmount
+const LENS_REFRACTION_H = 18
+const LENS_MAX_MAG = 14
 
 const BottomTabs = (props) => {
   const { isDarkMode, locale } = useGlobal()
@@ -23,6 +32,7 @@ const BottomTabs = (props) => {
   const tabsRef = React.useRef([])
   const [canvasW, setCanvasW] = React.useState(380)
   const [useWebGL, setUseWebGL] = React.useState(true)
+  const [svgLens, setSvgLens] = React.useState(false)
   const [subMenuOpen, setSubMenuOpen] = React.useState(null)
   const subMenuOpenRef = React.useRef(null)
   const subMenuRef = React.useRef(null)
@@ -112,7 +122,8 @@ const BottomTabs = (props) => {
     const observer = new ResizeObserver(updateWidth)
     observer.observe(containerRef.current)
     return () => observer.disconnect()
-  }, [])
+    // svgLens 切换会更换承载 containerRef 的 DOM 节点，需重新挂载 observer
+  }, [svgLens])
 
   React.useEffect(() => {
     try {
@@ -129,6 +140,27 @@ const BottomTabs = (props) => {
       setUseWebGL(false)
     }
   }, [])
+
+  // 检测 backdrop-filter: url(#svgFilter) 支持（仅 Chromium）
+  React.useEffect(() => {
+    try {
+      if (SVG_LENS_ENABLED && typeof CSS !== 'undefined' && CSS.supports) {
+        setSvgLens(CSS.supports('backdrop-filter', 'url(#liquid-tabs-lens-probe)'))
+      }
+    } catch (e) {
+      setSvgLens(false)
+    }
+  }, [])
+
+  // 位移图只随几何尺寸变化重建（Canvas2D 光栅，客户端才有 DOM canvas）
+  const lensMap = React.useMemo(
+    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
+    [svgLens, canvasW, CONTAINER_H]
+  )
+  const lensFilterId = React.useMemo(
+    () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
+    [canvasW, CONTAINER_H]
+  )
 
   const handleTabSelect = React.useCallback((i) => {
     const tab = tabsRef.current[i]
@@ -280,6 +312,117 @@ const BottomTabs = (props) => {
           </SmartLink>
         ))}
       </div>
+    )
+  }
+
+  // SVG 透镜底栏：backdrop-filter 直接采样真实页面，feDisplacementMap 做透镜折射
+  if (svgLens) {
+    const tabW = (canvasW - 2 * GLASS_PAD) / tabs.length
+    const accentCss = isDarkMode ? 'rgba(0,145,255,0.5)' : 'rgba(0,136,255,0.5)'
+    const textActive = isDarkMode ? '#ffffff' : '#111111'
+    const textMuted = isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'
+    return (
+      <>
+        {renderSubMenu()}
+        {canvasW > 10 && tabs.length > 0 && (
+          <div
+            ref={containerRef}
+            style={{
+              position: 'fixed',
+              bottom: '16px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              height: `${CONTAINER_H}px`,
+              width: widthStyle,
+              zIndex: 30,
+            }}>
+            <svg
+              aria-hidden='true'
+              width='0'
+              height='0'
+              style={{ position: 'absolute', pointerEvents: 'none' }}>
+              <filter id={lensFilterId} colorInterpolationFilters='sRGB'>
+                <feImage
+                  href={lensMap}
+                  x={0}
+                  y={0}
+                  width={canvasW}
+                  height={CONTAINER_H}
+                  result='map'
+                  preserveAspectRatio='none'
+                />
+                <feDisplacementMap
+                  in='SourceGraphic'
+                  in2='map'
+                  scale={LENS_MAX_MAG * 2}
+                  xChannelSelector='R'
+                  yChannelSelector='G'
+                />
+                <feGaussianBlur stdDeviation={1.4} />
+                <feColorMatrix type='saturate' values='1.35' />
+              </filter>
+            </svg>
+            <div
+              style={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                borderRadius: `${CONTAINER_H / 2}px`,
+                backdropFilter: `url(#${lensFilterId})`,
+                WebkitBackdropFilter: 'blur(12px) saturate(1.35)',
+                background: isDarkMode ? 'rgba(18,18,18,0.32)' : 'rgba(250,250,250,0.28)',
+                boxShadow: isDarkMode
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.25), 0 8px 32px rgba(0,0,0,0.4)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
+              }}>
+              {/* 滑动指示器 */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: GLASS_PAD,
+                  left: GLASS_PAD,
+                  width: tabW,
+                  height: GLASS_H,
+                  borderRadius: `${GLASS_H / 2}px`,
+                  background: accentCss,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(0,136,255,0.3)',
+                  transform: `translateX(${activeTab * tabW}px)`,
+                  transition: 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+              />
+              {/* tab 按钮 */}
+              <div className='flex h-full'>
+                {tabs.map((tab, i) => (
+                  <button
+                    key={i}
+                    type='button'
+                    onClick={() => handleTabSelect(i)}
+                    className='flex-1 flex flex-col items-center justify-center gap-1 relative z-10 cursor-pointer'
+                    style={{
+                      color: activeTab === i ? textActive : textMuted,
+                      WebkitTapHighlightColor: 'transparent',
+                    }}>
+                    <svg
+                      style={{ width: ICON_SIZE, height: ICON_SIZE }}
+                      viewBox='0 0 24 24'
+                      fill='currentColor'>
+                      <path d={tab.icon} />
+                    </svg>
+                    <span
+                      style={{
+                        fontSize: FONT_SIZE,
+                        fontWeight: activeTab === i ? 600 : 400,
+                        transition: 'color 0.2s',
+                      }}>
+                      {tab.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     )
   }
 
