@@ -2,21 +2,24 @@
 'use client'
 
 /**
- * 生成胶囊透镜的位移图（feDisplacementMap 的 in2 输入）。
+ * 生成圆角矩形透镜的位移图（feDisplacementMap 的 in2 输入），返回 PNG data URL。
  *
  * 编码方式：R/G 通道存归一化偏移向量
  *   channel = 0.5 + 0.5 * offset / maxMag
  * 配合 filter 的 scale = 2 * maxMag，最终位移 = scale * (channel - 0.5) = offset（像素）。
  *
- * 位移场：胶囊边缘处最强、方向指向中轴（向内采样 = 边缘放大，等效
+ * 位移场：边缘处最强、方向指向内部（向内采样 = 边缘放大，等效
  * WebGL 版 refractionAmount 为负的透镜效果），向内按圆弧轮廓衰减，
  * 超过 refractionHeight 后归零（透镜只作用于边缘环带）。
  *
- * 返回 PNG data URL，尺寸与传入的 w/h 一致。
+ * 注意：feImage 引用 data URL 是异步加载的，Chromium 加载完成后不会自动
+ * 重跑 backdrop-filter —— 挂载后必须强制重绘（backdrop-filter 关-开切换），
+ * 否则位移图不生效（见 BottomTabs / useLensBackdrop 里的 repaint effect）。
  */
-export function generateCapsuleLensMap(
+export function generateRoundedRectLensMap(
   w: number,
   h: number,
+  radius: number,
   refractionHeight: number,
   maxMag: number
 ): string {
@@ -31,39 +34,59 @@ export function generateCapsuleLensMap(
   const img = ctx.createImageData(W, H)
   const data = img.data
 
-  // 胶囊 = 圆角矩形（radius = h/2）：中轴线段 (r,r) → (W-r,r)，
-  // 任意点到胶囊边界的距离 = 点到中轴的距离 - r。
-  const r = Math.min(H / 2, W / 2)
-  const ax = r
-  const ay = r
-  const bx = W - r
-  const by = r
-  const segLenSq = Math.max(1e-6, (bx - ax) * (bx - ax) + (by - ay) * (by - ay))
+  const hx = W / 2
+  const hy = H / 2
+  const r = Math.max(0, Math.min(radius, Math.min(hx, hy)))
+  // 核心盒：圆角矩形向内缩 r 后的直边区域（胶囊时退化为线段）
+  const coreX = hx - r
+  const coreY = hy - r
 
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      const px = x + 0.5
-      const py = y + 0.5
+      const dx = x + 0.5 - hx
+      const dy = y + 0.5 - hy
 
-      // 点到中轴线段的最近点
-      let t = ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / segLenSq
-      t = Math.max(0, Math.min(1, t))
-      const cx = ax + (bx - ax) * t
-      const cy = ay + (by - ay) * t
+      let nx = 0
+      let ny = 0
+      let edgeDist = 0
 
-      const dxv = px - cx
-      const dyv = py - cy
-      const dist = Math.sqrt(dxv * dxv + dyv * dyv) || 1e-6
-      const edgeDist = r - dist // >0 在胶囊内部，=距边缘的深度
+      // 最近核心盒点（clamp 到 [-core, core]）
+      const qx = Math.max(-coreX, Math.min(coreX, dx))
+      const qy = Math.max(-coreY, Math.min(coreY, dy))
+
+      if (qx !== dx || qy !== dy) {
+        // 边带（直边或圆角弧）：边界点 = q + r * normalize(p - q)
+        const ux = dx - qx
+        const uy = dy - qy
+        const u = Math.sqrt(ux * ux + uy * uy) || 1e-6
+        edgeDist = r - u
+        nx = -ux / u
+        ny = -uy / u
+      } else {
+        // 中心区：最近的是四条直边，法线为轴向
+        const dL = dx + hx
+        const dR = hx - dx
+        const dT = dy + hy
+        const dB = hy - dy
+        edgeDist = Math.min(dL, dR, dT, dB)
+        if (edgeDist === dL) {
+          nx = 1
+        } else if (edgeDist === dR) {
+          nx = -1
+        } else if (edgeDist === dT) {
+          ny = 1
+        } else {
+          ny = -1
+        }
+      }
 
       let ox = 0
       let oy = 0
       if (edgeDist > 0 && edgeDist < refractionHeight) {
-        const ft = edgeDist / refractionHeight // 0=边缘 1=环带内边界
-        const mag = maxMag * Math.sqrt(1 - ft * ft) // 边缘最强，圆弧衰减
-        // 向内法线 = (c - p)/dist；采样点向中心偏移 → 边缘放大
-        ox = -(dxv / dist) * mag
-        oy = -(dyv / dist) * mag
+        const ft = edgeDist / refractionHeight
+        const mag = maxMag * Math.sqrt(1 - ft * ft)
+        ox = nx * mag
+        oy = ny * mag
       }
 
       const i = (y * W + x) * 4
@@ -76,4 +99,14 @@ export function generateCapsuleLensMap(
 
   ctx.putImageData(img, 0, 0)
   return canvas.toDataURL('image/png')
+}
+
+/** 胶囊（radius = h/2）特例，底栏用 */
+export function generateCapsuleLensMap(
+  w: number,
+  h: number,
+  refractionHeight: number,
+  maxMag: number
+): string {
+  return generateRoundedRectLensMap(w, h, Math.min(h / 2, w / 2), refractionHeight, maxMag)
 }

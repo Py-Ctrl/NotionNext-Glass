@@ -9,7 +9,7 @@ import { LiquidGlassCanvas } from '../lib/context'
 import { makeGlassShape, makeText, makeTabDragInteractions } from '../lib/helpers'
 import { getPalette, DEFAULT_HIGHLIGHT, DEFAULT_SHADOW } from '../lib/types'
 import { getBottomBarWallpaper } from './liquidGlassWallpaper'
-import { generateCapsuleLensMap } from './capsuleLensMap'
+import { generateCapsuleLensMap, generateRoundedRectLensMap } from './capsuleLensMap'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
@@ -21,6 +21,30 @@ const SVG_LENS_ENABLED = true
 // 透镜环带宽度（px）与最大位移（px），对应 WebGL 版 refractionHeight/refractionAmount
 const LENS_REFRACTION_H = 18
 const LENS_MAX_MAG = 14
+// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，即位移 14px）
+const IND_REFRACTION_H = 10
+const IND_MAX_MAG = 14
+
+// --- 长按折射弹簧（原版 InteractiveHighlight.kt spring(0.5f, 300f)） ---
+const SPRING_K = 300
+const SPRING_ZETA = 0.5
+const SPRING_OMEGA_N = Math.sqrt(SPRING_K)
+const SPRING_OMEGA_D = SPRING_OMEGA_N * Math.sqrt(1 - SPRING_ZETA * SPRING_ZETA)
+const SPRING_THRESHOLD = 0.003
+
+function springStep1D(current, velocity, target, dt) {
+  const x0 = current - target
+  const v0 = velocity
+  const decay = Math.exp(-SPRING_ZETA * SPRING_OMEGA_N * dt)
+  const cosWd = Math.cos(SPRING_OMEGA_D * dt)
+  const sinWd = Math.sin(SPRING_OMEGA_D * dt)
+  const b0 = (v0 + SPRING_ZETA * SPRING_OMEGA_N * x0) / SPRING_OMEGA_D
+  const offset = x0 * decay * cosWd + b0 * decay * sinWd
+  const newVel =
+    -SPRING_ZETA * SPRING_OMEGA_N * offset +
+    decay * (-x0 * SPRING_OMEGA_D * sinWd + b0 * SPRING_OMEGA_D * cosWd)
+  return { current: target + offset, velocity: newVel }
+}
 
 const BottomTabs = (props) => {
   const { isDarkMode, locale } = useGlobal()
@@ -30,10 +54,19 @@ const BottomTabs = (props) => {
   const rendererRef = React.useRef(null)
   const containerRef = React.useRef(null)
   const tabsRef = React.useRef([])
+  // SVG 透镜分支的透镜底栏
+  const glassRef = React.useRef(null)
+  const indicatorRef = React.useRef(null)
+  const indXRef = React.useRef(0)
+  const visualIdxRef = React.useRef(0)
+  const pressedBtnRef = React.useRef(null)
+  const suppressClickUntilRef = React.useRef(0)
+  const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null })
   const [canvasW, setCanvasW] = React.useState(380)
   const [useWebGL, setUseWebGL] = React.useState(true)
   const [svgLens, setSvgLens] = React.useState(false)
   const [subMenuOpen, setSubMenuOpen] = React.useState(null)
+  const [visualIdxState, setVisualIdxState] = React.useState(0)
   const subMenuOpenRef = React.useRef(null)
   const subMenuRef = React.useRef(null)
   const [isDesktop, setIsDesktop] = React.useState(false)
@@ -47,9 +80,10 @@ const BottomTabs = (props) => {
 
   // 响应式尺寸：桌面端更大
   const CANVAS_H = isDesktop ? 84 : 72
-  const CONTAINER_H = isDesktop ? 76 : 64
+  // 原版几何：指示器 56dp 按压放大到 78dp 仍在 80dp 底栏内（放大不越界）
+  const CONTAINER_H = isDesktop ? 80 : 64
   const CONTAINER_Y = (CANVAS_H - CONTAINER_H) / 2
-  const GLASS_H = isDesktop ? 68 : 56
+  const GLASS_H = isDesktop ? 56 : 44
   const GLASS_PAD = (CONTAINER_H - GLASS_H) / 2
   const TAB_WIDTH = isDesktop ? 96 : 76
   const ICON_SIZE = isDesktop ? 24 : 20
@@ -153,6 +187,7 @@ const BottomTabs = (props) => {
   }, [])
 
   // 位移图只随几何尺寸变化重建（Canvas2D 光栅，客户端才有 DOM canvas）
+  const indW = tabs.length > 0 ? (canvasW - 2 * GLASS_PAD) / tabs.length : 0
   const lensMap = React.useMemo(
     () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
     [svgLens, canvasW, CONTAINER_H]
@@ -161,17 +196,265 @@ const BottomTabs = (props) => {
     () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
     [canvasW, CONTAINER_H]
   )
+  // 指示器透镜：胶囊位移图（原版 refractionHeight 10 / refractionAmount -14 / 无模糊 / 饱和 1）
+  const indMap = React.useMemo(
+    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, IND_REFRACTION_H, IND_MAX_MAG) : ''),
+    [svgLens, indW, GLASS_H]
+  )
+  const indFilterId = React.useMemo(
+    () => `liquid-tabs-ind-${Math.round(indW)}-${Math.round(GLASS_H)}`,
+    [indW, GLASS_H]
+  )
+
+  // feImage 的 data URL 异步加载完成后 Chromium 不重跑 backdrop-filter，
+  // 必须等位移图预加载完成后再强制重绘（关-开），否则透镜不生效
+  React.useEffect(() => {
+    if (!svgLens || !lensMap || !glassRef.current) return
+    const el = glassRef.current
+    const url = `url(#${lensFilterId})`
+    let cancelled = false
+    let t1 = 0
+    let t2 = 0
+    const img = new Image()
+    img.onload = () => {
+      if (cancelled) return
+      t1 = window.setTimeout(() => {
+        if (cancelled) return
+        el.style.backdropFilter = 'none'
+        t2 = window.setTimeout(() => {
+          if (cancelled) return
+          el.style.backdropFilter = url
+        }, 100)
+      }, 50)
+    }
+    img.src = lensMap
+    return () => {
+      cancelled = true
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [svgLens, lensMap, lensFilterId])
+
+  React.useEffect(() => {
+    if (!svgLens || !indMap || !indicatorRef.current) return
+    const el = indicatorRef.current
+    const url = `url(#${indFilterId})`
+    let cancelled = false
+    let t1 = 0
+    let t2 = 0
+    const img = new Image()
+    img.onload = () => {
+      if (cancelled) return
+      t1 = window.setTimeout(() => {
+        if (cancelled) return
+        el.style.backdropFilter = 'none'
+        t2 = window.setTimeout(() => {
+          if (cancelled) return
+          el.style.backdropFilter = url
+        }, 100)
+      }, 50)
+    }
+    img.src = indMap
+    return () => {
+      cancelled = true
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [svgLens, indMap, indFilterId])
+
+  // 长按（原版 InteractiveHighlight spring(0.5f, 300f)）：
+  // 只放大指示器（56→78dp）与被按 tab 的内容（→1.2），底栏容器本身不缩放。
+  // 折射强度不额外加码：transform 放大已按比例放大折射（原版即纯几何放大）
+  const applyFrame = React.useCallback((p, x) => {
+    const ind = indicatorRef.current
+    if (ind) {
+      const s = 1 + (78 / 56 - 1) * p
+      ind.style.transform = `translateX(${x}px) scale(${s})`
+    }
+    const btn = pressedBtnRef.current
+    if (btn) {
+      btn.style.transform = p > 0 ? `scale(${1 + 0.2 * p})` : ''
+    }
+  }, [])
+
+  // 双弹簧逐帧驱动：progress（按压量）+ px（指示器位置），无 CSS transition，避免互相打断
+  const startPressLoop = React.useCallback(() => {
+    const st = pressRef.current
+    if (st.raf) return
+    const idle =
+      st.progress === st.target && st.velocity === 0 &&
+      st.px === st.pxTarget && st.pv === 0
+    if (idle) return
+    st.last = performance.now()
+    const tick = () => {
+      const now = performance.now()
+      const dt = Math.min((now - st.last) / 1000, 0.05)
+      st.last = now
+      const settledPress =
+        Math.abs(st.target - st.progress) <= SPRING_THRESHOLD &&
+        Math.abs(st.velocity) <= SPRING_THRESHOLD
+      const settledPos =
+        Math.abs(st.pxTarget - st.px) <= 0.5 && Math.abs(st.pv) <= 0.5
+      if (settledPress && settledPos) {
+        st.progress = st.target
+        st.velocity = 0
+        st.px = st.pxTarget
+        st.pv = 0
+        indXRef.current = st.px
+        applyFrame(st.progress, st.px)
+        st.raf = 0
+        return
+      }
+      if (!settledPress) {
+        const r = springStep1D(st.progress, st.velocity, st.target, dt)
+        st.progress = r.current
+        st.velocity = r.velocity
+      }
+      if (!settledPos) {
+        const r = springStep1D(st.px, st.pv, st.pxTarget, dt)
+        st.px = r.current
+        st.pv = r.velocity
+        indXRef.current = st.px
+      }
+      applyFrame(st.progress, st.px)
+      st.raf = requestAnimationFrame(tick)
+    }
+    st.raf = requestAnimationFrame(tick)
+  }, [applyFrame])
+
+  const setVisualIdx = React.useCallback((i) => {
+    if (visualIdxRef.current === i) return
+    visualIdxRef.current = i
+    setVisualIdxState(i)
+  }, [])
+
+  // 拖动跟手：直接设置位置并同步弹簧状态（清速度）
+  const followIndicator = React.useCallback((x) => {
+    const st = pressRef.current
+    st.px = x
+    st.pv = 0
+    st.pxTarget = x
+    indXRef.current = x
+    applyFrame(st.progress, x)
+  }, [applyFrame])
+
+  // 弹簧动画到目标位置（拖动 snap / 路由切换）
+  const animateIndicatorTo = React.useCallback((x) => {
+    const st = pressRef.current
+    st.pxTarget = x
+    startPressLoop()
+  }, [startPressLoop])
+
+  // 路由驱动指示器位置（拖动/点击之外的来源）
+  React.useEffect(() => {
+    if (!svgLens || indW <= 4) return
+    animateIndicatorTo(activeTab * indW)
+    setVisualIdx(activeTab)
+  }, [svgLens, activeTab, indW, animateIndicatorTo, setVisualIdx])
+
+  // 底栏指针交互：拖动切换 tab（横向），按住不动触发长按放大
+  const handleBarPointerDown = React.useCallback((e) => {
+    const st = pressRef.current
+    if (st.pointerId !== null) return
+    const n = Math.max(1, tabsRef.current.length)
+    const tabW = indW
+    if (tabW <= 4) return
+    st.pointerId = e.pointerId
+    st.startX = e.clientX
+    st.startY = e.clientY
+    st.indX0 = indXRef.current
+    st.dragging = false
+    st.target = 1
+    pressedBtnRef.current = e.target.closest && e.target.closest('button')
+    startPressLoop()
+
+    const move = (ev) => {
+      if (ev.pointerId !== st.pointerId) return
+      const dx = ev.clientX - st.startX
+      const dy = ev.clientY - st.startY
+      if (!st.dragging) {
+        // 横向主导且超过 14px 才算拖动：按住时的微漂移不取消长按（原版行为）
+        if (Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+        st.dragging = true
+        st.target = 0
+        const btn = pressedBtnRef.current
+        if (btn) btn.style.transform = ''
+        startPressLoop()
+      }
+      const maxX = (n - 1) * tabW
+      const x = Math.max(0, Math.min(maxX, st.indX0 + dx))
+      followIndicator(x)
+      setVisualIdx(Math.max(0, Math.min(n - 1, Math.round(x / tabW))))
+    }
+
+    const release = (ev) => {
+      if (ev.pointerId !== st.pointerId) return
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', release)
+      window.removeEventListener('pointercancel', release)
+      st.pointerId = null
+      st.release = null
+      st.move = null
+      const btn = pressedBtnRef.current
+      if (st.dragging) {
+        // 拖动结束：snap 到最近的 tab 并导航；抑制随后的原生 click
+        // 用时间戳而非布尔：拖动后 click 可能落在祖先元素上不触发 handler，布尔会遗留误吞下次点击
+        suppressClickUntilRef.current = performance.now() + 300
+        const idx = Math.max(0, Math.min(n - 1, Math.round(indXRef.current / tabW)))
+        animateIndicatorTo(idx * tabW)
+        setVisualIdx(idx)
+        const tab = tabsRef.current[idx]
+        if (tab) {
+          if (tab.subMenus && tab.subMenus.length > 0) {
+            setSubMenuOpen(idx)
+          } else {
+            setSubMenuOpen(null)
+            routerRef.current.push(tab.href)
+          }
+        }
+      }
+      pressedBtnRef.current = null
+      if (btn) btn.style.transform = ''
+      st.target = 0
+      startPressLoop()
+    }
+
+    st.move = move
+    st.release = release
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', release)
+    window.addEventListener('pointercancel', release)
+  }, [indW, followIndicator, animateIndicatorTo, setVisualIdx, startPressLoop])
+
+  React.useEffect(() => {
+    const st = pressRef.current
+    return () => {
+      if (st.raf) {
+        cancelAnimationFrame(st.raf)
+        st.raf = 0
+      }
+      if (st.release) {
+        window.removeEventListener('pointermove', st.move)
+        window.removeEventListener('pointerup', st.release)
+        window.removeEventListener('pointercancel', st.release)
+        st.release = null
+        st.move = null
+      }
+    }
+  }, [])
 
   const handleTabSelect = React.useCallback((i) => {
+    if (performance.now() < suppressClickUntilRef.current) return
     const tab = tabsRef.current[i]
     if (!tab) return
+    setVisualIdx(i)
     if (tab.subMenus.length > 0) {
       setSubMenuOpen(prev => prev === i ? null : i)
     } else {
       setSubMenuOpen(null)
       routerRef.current.push(tab.href)
     }
-  }, [])
+  }, [setVisualIdx])
 
   const { elements, interactions } = React.useMemo(() => {
     if (!tabs.length || canvasW < 10) return { elements: [], interactions: {} }
@@ -315,11 +598,10 @@ const BottomTabs = (props) => {
     )
   }
 
-  // SVG 透镜底栏：backdrop-filter 直接采样真实页面，feDisplacementMap 做透镜折射
+  // SVG 透镜底栏：backdrop-filter 直接采样真实页面，feDisplacementMap 做透镜折射。
+  // 指示器是独立透明透镜（原版 tint/surface 全透明），选中项靠文字变蓝表达
   if (svgLens) {
-    const tabW = (canvasW - 2 * GLASS_PAD) / tabs.length
-    const accentCss = isDarkMode ? 'rgba(0,145,255,0.5)' : 'rgba(0,136,255,0.5)'
-    const textActive = isDarkMode ? '#ffffff' : '#111111'
+    const accentText = isDarkMode ? '#0A84FF' : '#007AFF'
     const textMuted = isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'
     return (
       <>
@@ -327,6 +609,8 @@ const BottomTabs = (props) => {
         {canvasW > 10 && tabs.length > 0 && (
           <div
             ref={containerRef}
+            onPointerDown={handleBarPointerDown}
+            onContextMenu={(e) => e.preventDefault()}
             style={{
               position: 'fixed',
               bottom: '16px',
@@ -335,6 +619,11 @@ const BottomTabs = (props) => {
               height: `${CONTAINER_H}px`,
               width: widthStyle,
               zIndex: 30,
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              // 手势全归底栏（原版 Android bar 独占触摸）：按住不被页面滚动抢走触发 pointercancel
+              touchAction: 'none',
             }}>
             <svg
               aria-hidden='true'
@@ -361,12 +650,32 @@ const BottomTabs = (props) => {
                 <feGaussianBlur stdDeviation={1.4} />
                 <feColorMatrix type='saturate' values='1.35' />
               </filter>
+              <filter id={indFilterId} colorInterpolationFilters='sRGB'>
+                <feImage
+                  href={indMap}
+                  x={0}
+                  y={0}
+                  width={indW}
+                  height={GLASS_H}
+                  result='map'
+                  preserveAspectRatio='none'
+                />
+                <feDisplacementMap
+                  in='SourceGraphic'
+                  in2='map'
+                  scale={IND_MAX_MAG * 2}
+                  xChannelSelector='R'
+                  yChannelSelector='G'
+                />
+                <feColorMatrix type='saturate' values='1.0' />
+              </filter>
             </svg>
+            {/* 玻璃底板 */}
             <div
+              ref={glassRef}
               style={{
-                position: 'relative',
-                width: '100%',
-                height: '100%',
+                position: 'absolute',
+                inset: 0,
                 borderRadius: `${CONTAINER_H / 2}px`,
                 backdropFilter: `url(#${lensFilterId})`,
                 WebkitBackdropFilter: 'blur(12px) saturate(1.35)',
@@ -374,33 +683,52 @@ const BottomTabs = (props) => {
                 boxShadow: isDarkMode
                   ? 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.25), 0 8px 32px rgba(0,0,0,0.4)'
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
+              }}
+            />
+            {/* 裁剪层：指示器按压放大时不渲染到底栏圆角外（原版 shader 即按 bar 形状裁剪），
+                否则越界部分采样的是未经底栏处理的原始背景，出现锯齿状模糊断层 */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: `${CONTAINER_H / 2}px`,
+                overflow: 'hidden',
+                zIndex: 2,
               }}>
-              {/* 滑动指示器 */}
+              {/* 透明透镜指示器：只折射放大背后内容 + 边缘高光，无实心底色 */}
               <div
+                ref={indicatorRef}
                 style={{
                   position: 'absolute',
                   top: GLASS_PAD,
                   left: GLASS_PAD,
-                  width: tabW,
+                  width: indW,
                   height: GLASS_H,
                   borderRadius: `${GLASS_H / 2}px`,
-                  background: accentCss,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(0,136,255,0.3)',
-                  transform: `translateX(${activeTab * tabW}px)`,
-                  transition: 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  background: 'transparent',
+                  backdropFilter: `url(#${indFilterId})`,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
+                  pointerEvents: 'none',
+                  transformOrigin: 'center',
+                  willChange: 'transform',
                 }}
               />
-              {/* tab 按钮 */}
-              <div className='flex h-full'>
-                {tabs.map((tab, i) => (
+            </div>
+            {/* tab 内容层：指示器之上，文字不被透镜扭曲 */}
+            <div className='absolute inset-0 flex h-full' style={{ zIndex: 3 }}>
+              {tabs.map((tab, i) => {
+                const isActive = visualIdxState === i
+                return (
                   <button
                     key={i}
                     type='button'
                     onClick={() => handleTabSelect(i)}
-                    className='flex-1 flex flex-col items-center justify-center gap-1 relative z-10 cursor-pointer'
+                    className='flex-1 flex flex-col items-center justify-center gap-1 relative cursor-pointer'
                     style={{
-                      color: activeTab === i ? textActive : textMuted,
+                      color: isActive ? accentText : textMuted,
                       WebkitTapHighlightColor: 'transparent',
+                      transformOrigin: 'center center',
+                      willChange: 'transform',
                     }}>
                     <svg
                       style={{ width: ICON_SIZE, height: ICON_SIZE }}
@@ -411,14 +739,15 @@ const BottomTabs = (props) => {
                     <span
                       style={{
                         fontSize: FONT_SIZE,
-                        fontWeight: activeTab === i ? 600 : 400,
-                        transition: 'color 0.2s',
+                        fontWeight: isActive ? 600 : 400,
+                        whiteSpace: 'nowrap',
+                        transition: 'color 0.2s, font-weight 0.2s',
                       }}>
                       {tab.label}
                     </span>
                   </button>
-                ))}
-              </div>
+                )
+              })}
             </div>
           </div>
         )}

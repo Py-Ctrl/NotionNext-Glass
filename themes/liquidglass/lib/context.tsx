@@ -277,9 +277,9 @@ function LiquidGlassCanvasImpl({
 
     const resize = () => {
       const r = containerRef.current?.getBoundingClientRect()
-      if (!r) return
-      canvasRef.current!.style.width = r.width + 'px'
-      canvasRef.current!.style.height = r.height + 'px'
+      if (!r || !canvasRef.current) return
+      canvasRef.current.style.width = r.width + 'px'
+      canvasRef.current.style.height = r.height + 'px'
       renderer.resize(r.width, r.height)
     }
     // Apply the DPR override BEFORE the first resize so the renderer uses

@@ -10,10 +10,13 @@ import { useRouter } from 'next/router'
 import CONFIG from '../config'
 import TagItemMini from './TagItemMini'
 import LiquidGlassButton from './LiquidGlassButton'
+import { useLensBackdrop } from './useLensBackdrop'
 
 const BlogPostCard = ({ post, index, showSummary }) => {
   const { locale } = useGlobal()
   const router = useRouter()
+  // 滚动容器卡片透镜折射（原版 Scroll Container：环带 16px / 无模糊 / 饱和 1.5）
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 14, blur: 3, saturate: 1.5 })
   const showPreview =
     siteConfig('LIQUID_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
 
@@ -28,7 +31,12 @@ const BlogPostCard = ({ post, index, showSummary }) => {
       : {}
 
   return (
-    <div className='glass-post-item w-full' {...aosProps}>
+    <div
+      ref={lens.elRef}
+      className='glass-post-item w-full'
+      style={lens.style || undefined}
+      {...aosProps}>
+      {lens.filterNode}
       <div key={post.id} className='flex flex-col-reverse justify-between'>
         <div className='p-4 sm:p-6 lg:p-8 flex flex-col w-full'>
           {/* 标题 */}
