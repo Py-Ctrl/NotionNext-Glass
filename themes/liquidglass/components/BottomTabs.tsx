@@ -18,12 +18,16 @@ import CONFIG from '../config'
 // 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 自动回退到下方 WebGL 底栏。
 // 置为 false 可强制所有浏览器走 WebGL 底栏。
 const SVG_LENS_ENABLED = true
-// 透镜环带宽度（px）与最大位移（px），对应 WebGL 版 refractionHeight/refractionAmount
-const LENS_REFRACTION_H = 18
+// 透镜环带宽度（px）与最大位移（px），对应 WebGL 版 refractionHeight/refractionAmount。
+// 玻璃条为 56dp 胶囊时环带取 16（原版 80dp 容器用 24，按高度等比）
+const LENS_REFRACTION_H = 16
 const LENS_MAX_MAG = 14
-// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，即位移 14px）
+// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，即位移 14px）。
+// 原版静止时折射为 0，按压时 lens(10dp*progress, 14dp*progress) 渐显；
+// 这里保留 45% 静止底量让透镜常驻可感知，按压补足到 100%
 const IND_REFRACTION_H = 10
 const IND_MAX_MAG = 14
+const IND_IDLE = 0.45
 
 // --- 长按折射弹簧（原版 InteractiveHighlight.kt spring(0.5f, 300f)） ---
 const SPRING_K = 300
@@ -57,6 +61,8 @@ const BottomTabs = (props) => {
   // SVG 透镜分支的透镜底栏
   const glassRef = React.useRef(null)
   const indicatorRef = React.useRef(null)
+  const indDispRef = React.useRef(null)
+  const indHighlightRef = React.useRef(null)
   const indXRef = React.useRef(0)
   const visualIdxRef = React.useRef(0)
   const pressedBtnRef = React.useRef(null)
@@ -187,14 +193,17 @@ const BottomTabs = (props) => {
   }, [])
 
   // 位移图只随几何尺寸变化重建（Canvas2D 光栅，客户端才有 DOM canvas）
-  const indW = tabs.length > 0 ? (canvasW - 2 * GLASS_PAD) / tabs.length : 0
+  // 可见玻璃条 = 内层胶囊（glassW × GLASS_H，原版 glassX/glassY 布局），
+  // 外层 CONTAINER_H 只是布局/触摸容器，同时给按压指示器留出超出玻璃的渲染空间
+  const glassW = Math.max(0, canvasW - 2 * GLASS_PAD)
+  const indW = tabs.length > 0 ? glassW / tabs.length : 0
   const lensMap = React.useMemo(
-    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
-    [svgLens, canvasW, CONTAINER_H]
+    () => (svgLens ? generateCapsuleLensMap(glassW, GLASS_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
+    [svgLens, glassW, GLASS_H]
   )
   const lensFilterId = React.useMemo(
-    () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
-    [canvasW, CONTAINER_H]
+    () => `liquid-tabs-lens-${Math.round(glassW)}-${GLASS_H}`,
+    [glassW, GLASS_H]
   )
   // 指示器透镜：胶囊位移图（原版 refractionHeight 10 / refractionAmount -14 / 无模糊 / 饱和 1）
   const indMap = React.useMemo(
@@ -263,13 +272,30 @@ const BottomTabs = (props) => {
   }, [svgLens, indMap, indFilterId])
 
   // 长按（原版 InteractiveHighlight spring(0.5f, 300f)）：
-  // 只放大指示器（56→78dp）与被按 tab 的内容（→1.2），底栏容器本身不缩放。
-  // 折射强度不额外加码：transform 放大已按比例放大折射（原版即纯几何放大）
+  // 指示器 56→78dp 超出可见玻璃条（原版指示器是容器兄弟节点，不受裁剪），
+  // 折射/高光/外阴影/内阴影全部随 progress 渐显（原版 lens(10dp*p, 14dp*p)、
+  // highlight alpha=p、shadow alpha=p、innerShadow(8dp*p)），被按 tab 内容 →1.2。
+  // 底栏容器本身不缩放
   const applyFrame = React.useCallback((p, x) => {
     const ind = indicatorRef.current
     if (ind) {
       const s = 1 + (78 / 56 - 1) * p
       ind.style.transform = `translateX(${x}px) scale(${s})`
+      // 内阴影(8dp*p) + 顶部高光线 + 外阴影(24dp, offsetY 4dp, alpha*p)
+      ind.style.boxShadow = [
+        `inset 0 1px 0 rgba(255,255,255,${(0.16 + 0.17 * p).toFixed(3)})`,
+        `inset 0 0 ${(8 * p).toFixed(1)}px rgba(0,0,0,${(0.12 * p).toFixed(3)})`,
+        `0 ${(4 * p).toFixed(1)}px ${(24 * p).toFixed(1)}px rgba(0,0,0,${(0.14 * p).toFixed(3)})`,
+      ].join(', ')
+    }
+    const hl = indHighlightRef.current
+    if (hl) {
+      // 45° 镜面高光条（原版 DEFAULT_HIGHLIGHT: white, 45°, alpha 0.3）
+      hl.style.opacity = (0.35 + 0.65 * p).toFixed(3)
+    }
+    const disp = indDispRef.current
+    if (disp) {
+      disp.setAttribute('scale', String(IND_MAX_MAG * 2 * (IND_IDLE + (1 - IND_IDLE) * p)))
     }
     const btn = pressedBtnRef.current
     if (btn) {
@@ -635,8 +661,8 @@ const BottomTabs = (props) => {
                   href={lensMap}
                   x={0}
                   y={0}
-                  width={canvasW}
-                  height={CONTAINER_H}
+                  width={glassW}
+                  height={GLASS_H}
                   result='map'
                   preserveAspectRatio='none'
                 />
@@ -661,22 +687,27 @@ const BottomTabs = (props) => {
                   preserveAspectRatio='none'
                 />
                 <feDisplacementMap
+                  ref={indDispRef}
                   in='SourceGraphic'
                   in2='map'
-                  scale={IND_MAX_MAG * 2}
+                  scale={IND_MAX_MAG * 2 * IND_IDLE}
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
-            {/* 玻璃底板 */}
+            {/* 可见玻璃条：内层胶囊（原版 glassX/glassY/glassW/GLASS_H 布局）。
+                外层容器透明，给按压指示器留出超出玻璃的渲染空间 */}
             <div
               ref={glassRef}
               style={{
                 position: 'absolute',
-                inset: 0,
-                borderRadius: `${CONTAINER_H / 2}px`,
+                top: GLASS_PAD,
+                left: GLASS_PAD,
+                right: GLASS_PAD,
+                height: GLASS_H,
+                borderRadius: `${GLASS_H / 2}px`,
                 backdropFilter: `url(#${lensFilterId})`,
                 WebkitBackdropFilter: 'blur(12px) saturate(1.35)',
                 background: isDarkMode ? 'rgba(18,18,18,0.32)' : 'rgba(250,250,250,0.28)',
@@ -685,37 +716,48 @@ const BottomTabs = (props) => {
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
               }}
             />
-            {/* 裁剪层：指示器按压放大时不渲染到底栏圆角外（原版 shader 即按 bar 形状裁剪），
-                否则越界部分采样的是未经底栏处理的原始背景，出现锯齿状模糊断层 */}
+            {/* 透明透镜指示器（原版为容器兄弟节点，不裁剪）：按压放大到 78dp，
+                上下各超出 56dp 玻璃条 11dp，形成 pop-out；45° 高光条随按压渐显 */}
             <div
+              ref={indicatorRef}
               style={{
                 position: 'absolute',
-                inset: 0,
-                borderRadius: `${CONTAINER_H / 2}px`,
-                overflow: 'hidden',
+                top: GLASS_PAD,
+                left: GLASS_PAD,
+                width: indW,
+                height: GLASS_H,
+                borderRadius: `${GLASS_H / 2}px`,
+                background: 'transparent',
+                backdropFilter: `url(#${indFilterId})`,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16)',
                 zIndex: 2,
+                pointerEvents: 'none',
+                transformOrigin: 'center',
+                willChange: 'transform',
               }}>
-              {/* 透明透镜指示器：只折射放大背后内容 + 边缘高光，无实心底色 */}
               <div
-                ref={indicatorRef}
+                ref={indHighlightRef}
                 style={{
                   position: 'absolute',
-                  top: GLASS_PAD,
-                  left: GLASS_PAD,
-                  width: indW,
-                  height: GLASS_H,
-                  borderRadius: `${GLASS_H / 2}px`,
-                  background: 'transparent',
-                  backdropFilter: `url(#${indFilterId})`,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
+                  inset: 0,
+                  borderRadius: 'inherit',
+                  background:
+                    'linear-gradient(135deg, rgba(255,255,255,0) 22%, rgba(255,255,255,0.38) 47%, rgba(255,255,255,0.10) 56%, rgba(255,255,255,0) 78%)',
+                  opacity: 0.35,
                   pointerEvents: 'none',
-                  transformOrigin: 'center',
-                  willChange: 'transform',
                 }}
               />
             </div>
             {/* tab 内容层：指示器之上，文字不被透镜扭曲 */}
-            <div className='absolute inset-0 flex h-full' style={{ zIndex: 3 }}>
+            <div
+              className='absolute flex'
+              style={{
+                top: GLASS_PAD,
+                left: GLASS_PAD,
+                right: GLASS_PAD,
+                height: GLASS_H,
+                zIndex: 3,
+              }}>
               {tabs.map((tab, i) => {
                 const isActive = visualIdxState === i
                 return (
