@@ -9,10 +9,10 @@ import SmartLink from '@/components/SmartLink'
 import { useRouter } from 'next/router'
 import CONFIG from '../config'
 import TagItemMini from './TagItemMini'
-import LiquidGlassButton from './LiquidGlassButton'
+import GlassButton from './GlassButton'
 import { useLensBackdrop } from './useLensBackdrop'
 
-const BlogPostCard = ({ post, index, showSummary }) => {
+const BlogPostCard = ({ post, index, showSummary, disableAos }) => {
   const { locale } = useGlobal()
   const router = useRouter()
   // 滚动容器卡片透镜折射（原版 Scroll Container：环带 16px / 无模糊 / 饱和 1.5）
@@ -21,7 +21,7 @@ const BlogPostCard = ({ post, index, showSummary }) => {
     siteConfig('LIQUID_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
 
   const aosProps =
-    index > 2
+    index > 2 && !disableAos
       ? {
           'data-aos': 'fade-up',
           'data-aos-duration': '400',
@@ -103,13 +103,13 @@ const BlogPostCard = ({ post, index, showSummary }) => {
 
           {/* 阅读更多 */}
           <div className='flex justify-end border-t pt-4 sm:pt-6 border-gray-200/50 dark:border-gray-700/50'>
-            <LiquidGlassButton
+            <GlassButton
               label={locale.COMMON.ARTICLE_DETAIL || '阅读更多'}
               btnStyle='blue'
               onTap={() => router.push(post?.href)}
               width='140px'
               height='48px'
-              className='rounded-2xl overflow-hidden'
+              className='rounded-2xl'
               fallbackClassName='text-indigo-600 dark:text-indigo-400 text-sm'
             />
           </div>

@@ -22,6 +22,7 @@ import BottomTabs from './components/BottomTabs'
 import FloatDarkModeButton from './components/FloatDarkModeButton'
 import Footer from './components/Footer'
 import FloatingMusicPlayer from './components/FloatingMusicPlayer'
+import GlassScrollContainer from './components/GlassScrollContainer'
 import JumpToBottomButton from './components/JumpToBottomButton'
 import JumpToTopButton from './components/JumpToTopButton'
 import SideAreaLeft from './components/SideAreaLeft'
@@ -33,7 +34,6 @@ import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
 import CONFIG from './config'
 import { Style } from './style'
-import LiquidGlassSearchScript from './components/LiquidGlassSearchScript'
 
 const AlgoliaSearchModal = dynamic(
   () => import('@/components/AlgoliaSearchModal'),
@@ -167,7 +167,6 @@ const LayoutBase = props => {
         id='theme-liquidglass'
         className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth`}>
         <Style />
-        <LiquidGlassSearchScript />
 
         {/* 移动端顶部导航 */}
         <TopNav {...props} searchModal={searchModal} />
@@ -246,9 +245,28 @@ const LayoutBase = props => {
 }
 
 const LayoutIndex = props => {
+  const { locale } = useGlobal()
+  const showScrollContainer =
+    siteConfig('LIQUID_SCROLL_CONTAINER', true, CONFIG) &&
+    (!props.page || props.page === 1)
+
   return (
     <>
       <BlogListBar {...props} />
+      {showScrollContainer && (
+        <GlassScrollContainer
+          title={locale.COMMON?.LATEST_POSTS || '最新发布'}
+          height={siteConfig('LIQUID_SCROLL_CONTAINER_HEIGHT', 360, CONFIG)}
+          className='mb-4 sm:mb-6'
+          items={(props.latestPosts || []).slice(0, 12).map(p => ({
+            key: p.id,
+            title: p.title,
+            subtitle: p.date?.start_date,
+            linkText: locale.COMMON?.ARTICLE_DETAIL || '阅读',
+            href: p.href
+          }))}
+        />
+      )}
       {siteConfig('POST_LIST_STYLE') !== 'page' ? (
         <BlogPostListScroll {...props} showSummary={true} />
       ) : (

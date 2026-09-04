@@ -1,9 +1,10 @@
 import { useGlobal } from '@/lib/global'
 import { useRouter } from 'next/router'
-import LiquidGlassButton from './LiquidGlassButton'
+import GlassButton from './GlassButton'
 
 const PaginationNumber = ({ page, totalPage }) => {
   const router = useRouter()
+  const { locale } = useGlobal()
   const currentPage = page || 1
 
   if (!totalPage || totalPage <= 1) return null
@@ -25,82 +26,42 @@ const PaginationNumber = ({ page, totalPage }) => {
     else router.push(`/page/${p}`)
   }
 
+  const btn = (p, style, label) => (
+    <GlassButton
+      label={label}
+      btnStyle={style}
+      onTap={() => goToPage(p)}
+      width='48px'
+      height='48px'
+      className='rounded-xl'
+    />
+  )
+
   return (
     <div className='flex justify-center items-center gap-2 mt-8 mb-4 flex-wrap'>
-      {currentPage > 1 && (
-        <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
-          <LiquidGlassButton
-            label='<'
-            btnStyle='surface'
-            onTap={() => goToPage(currentPage - 1)}
-            width='48px'
-            height='48px'
-            className='rounded-xl overflow-hidden'
-          />
-        </div>
-      )}
+      {currentPage > 1 && btn(currentPage - 1, 'surface', '<')}
 
       {start > 1 && (
         <>
-          <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
-            <LiquidGlassButton
-              label='1'
-              btnStyle='surface'
-              onTap={() => goToPage(1)}
-              width='48px'
-              height='48px'
-              className='rounded-xl overflow-hidden'
-            />
-          </div>
+          {btn(1, 'surface', '1')}
           {start > 2 && <span className='text-gray-400 px-1'>...</span>}
         </>
       )}
 
       {pages.map(p => (
-        <div
-          key={p}
-          className='rounded-xl overflow-hidden'
-          style={{ width: '48px', height: '48px' }}
-        >
-          <LiquidGlassButton
-            label={String(p)}
-            btnStyle={p === currentPage ? 'blue' : 'surface'}
-            onTap={() => goToPage(p)}
-            width='48px'
-            height='48px'
-            className='rounded-xl overflow-hidden'
-          />
+        <div key={p} className='contents'>
+          {btn(p, p === currentPage ? 'blue' : 'surface', String(p))}
         </div>
       ))}
 
       {end < totalPage && (
         <>
           {end < totalPage - 1 && <span className='text-gray-400 px-1'>...</span>}
-          <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
-            <LiquidGlassButton
-              label={String(totalPage)}
-              btnStyle='surface'
-              onTap={() => goToPage(totalPage)}
-              width='48px'
-              height='48px'
-              className='rounded-xl overflow-hidden'
-            />
-          </div>
+          {btn(totalPage, 'surface', String(totalPage))}
         </>
       )}
 
-      {currentPage < totalPage && (
-        <div className='rounded-xl overflow-hidden' style={{ width: '48px', height: '48px' }}>
-          <LiquidGlassButton
-            label='>'
-            btnStyle='surface'
-            onTap={() => goToPage(currentPage + 1)}
-            width='48px'
-            height='48px'
-            className='rounded-xl overflow-hidden'
-          />
-        </div>
-      )}
+      {currentPage < totalPage && btn(currentPage + 1, 'surface', '>')}
     </div>
   )
 }

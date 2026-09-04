@@ -1,7 +1,7 @@
-# LiquidGlass 主题项目结构与编辑指南
+# Glass 主题项目结构与编辑指南
 
 ## 项目概述
-NotionNext 博客的 LiquidGlass 主题，基于 `martin65536/liquid-glass-webgl` 项目的 WebGL 渲染器实现真正的液态玻璃效果。
+NotionNext 博客的 Glass 主题（目录名 `liquidglass`），基于 `martin65536/liquid-glass-webgl` 项目的液态玻璃效果，用 CSS + SVG feDisplacementMap 实现真实折射。主题介绍见 `themes/liquidglass/README.md`。
 
 ## 目录结构
 

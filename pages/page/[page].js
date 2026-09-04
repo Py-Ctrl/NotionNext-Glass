@@ -3,7 +3,7 @@ import { siteConfig } from '@/lib/config'
 import { fetchGlobalAllData, getPostBlocks } from '@/lib/db/SiteDataApi'
 import { formatNotionBlock } from '@/lib/db/notion/getPostBlocks'
 import { adapterNotionBlockMap } from '@/lib/utils/notion.util'
-import { DynamicLayout } from '@/themes/theme'
+import { DynamicLayout, resolvePostsPerPage } from '@/themes/theme'
 
 /**
  * 文章列表分页
@@ -19,7 +19,7 @@ export async function getStaticPaths({ locale }) {
   const from = 'page-paths'
   const { postCount, NOTION_CONFIG } = await fetchGlobalAllData({ from, locale })
   const totalPages = Math.ceil(
-    postCount / siteConfig('POSTS_PER_PAGE', null, NOTION_CONFIG)
+    postCount / (await resolvePostsPerPage(NOTION_CONFIG))
   )
   return {
     // remove first page, we 're not gonna handle that.
@@ -43,7 +43,7 @@ export async function getStaticProps({ params: { page }, locale }) {
   const allPosts = allPages?.filter(
     page => page.type === 'Post' && page.status === 'Published'
   )
-  const POSTS_PER_PAGE = siteConfig('POSTS_PER_PAGE', 12, props?.NOTION_CONFIG)
+  const POSTS_PER_PAGE = await resolvePostsPerPage(props?.NOTION_CONFIG)
   // 处理分页
   props.posts = allPosts.slice(
     POSTS_PER_PAGE * (page - 1),

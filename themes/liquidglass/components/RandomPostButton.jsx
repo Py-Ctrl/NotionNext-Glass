@@ -1,11 +1,10 @@
 import { siteConfig } from '@/lib/config'
 import { useGlobal } from '@/lib/global'
 import { useRouter } from 'next/router'
-import LiquidGlassButton from './LiquidGlassButton'
+import GlassButton from './GlassButton'
 
 /**
- * 随机跳转到一篇文章 - "随便逛逛"按钮
- * 使用项目 WebGL 液态玻璃渲染器
+ * 随机跳转到一篇文章 - "随便逛逛"按钮（CSS + SVG 透镜玻璃）
  */
 export default function RandomPostButton({ latestPosts }) {
   const router = useRouter()
@@ -23,13 +22,13 @@ export default function RandomPostButton({ latestPosts }) {
 
   return (
     <div className='flex justify-center'>
-      <LiquidGlassButton
+      <GlassButton
         label={locale.MENU?.WALK_AROUND || '随便逛逛'}
         btnStyle='surface'
         onTap={handleClick}
         width='100%'
         height='44px'
-        className='rounded-xl overflow-hidden'
+        className='rounded-xl'
         fallbackClassName='liquid-glass-btn liquid-glass-btn-surface w-full rounded-xl'
       />
     </div>

@@ -1,3 +1,9 @@
+/**
+ * Glass 主题配置
+ * 液态玻璃风格的 NotionNext 主题，渲染效果参考
+ * martin65536/liquid-glass-webgl（Kyant0/AndroidLiquidGlass 的 WebGL 移植）。
+ * 折射采用 SVG feDisplacementMap（backdrop-filter: url()），零 WebGL 开销。
+ */
 const CONFIG = {
 
   // 玻璃主题色
@@ -26,13 +32,22 @@ const CONFIG = {
   // 推荐文章
   LIQUID_ARTICLE_RECOMMEND_POSTS: true,
 
-  // 是否启用 liquid-glass WebGL 组件（需引入 liquid-glass.js CDN）
-  LIQUID_GLASS_WEBGL_ENABLED: true,
-
   // 玻璃模糊强度
   LIQUID_BLUR_INTENSITY: '16px',
 
   // 玻璃透明度
-  LIQUID_GLASS_OPACITY: '0.65'
+  LIQUID_GLASS_OPACITY: '0.65',
+
+  // 翻页模式每页文章数（优先级：Notion 配置 > 此处 > conf/post.config.js）
+  POSTS_PER_PAGE: 12,
+
+  // 文章列表默认排列：'list' 纵向列表 | 'hover' 网格悬停展开（其余卡片模糊）
+  POST_LIST_LAYOUT: 'list',
+
+  // 首页滚动容器（玻璃卡片列表，实时折射页面背景）
+  LIQUID_SCROLL_CONTAINER: true,
+
+  // 滚动容器高度（px）
+  LIQUID_SCROLL_CONTAINER_HEIGHT: 360
 }
 export default CONFIG

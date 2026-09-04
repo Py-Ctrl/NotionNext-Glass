@@ -4,13 +4,18 @@ import { useEffect, useState } from 'react'
 import BlogPostCard from './BlogPostCard'
 import BlogPostListEmpty from './BlogPostListEmpty'
 import GlassButton from './GlassButton'
+import { usePostListLayout } from './usePostListLayout'
+import { siteConfig } from '@/lib/config'
+import CONFIG from '../config'
 
 const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
   const { locale } = useGlobal()
   const router = useRouter()
+  const { layout } = usePostListLayout()
   const [currentPage, setCurrentPage] = useState(1)
   const [showLoadMore, setShowLoadMore] = useState(true)
-  const pageSize = 6
+  const pageSize = siteConfig('POSTS_PER_PAGE', 6, CONFIG)
+  const isGrid = layout === 'hover'
 
   const postsToShow = posts.slice(0, currentPage * pageSize)
 
@@ -32,18 +37,26 @@ const BlogPostListScroll = ({ posts = [], showSummary, siteInfo }) => {
   }
 
   return (
-    <div className='space-y-4 sm:space-y-6 w-full'>
-      {postsToShow.map((post, index) => (
-        <BlogPostCard
-          key={post.id}
-          post={post}
-          index={index}
-          showSummary={showSummary}
-        />
-      ))}
+    <div className='w-full'>
+      <div
+        className={
+          isGrid
+            ? 'glass-hover-grid grid gap-5 grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3'
+            : 'space-y-4 sm:space-y-6'
+        }>
+        {postsToShow.map((post, index) => (
+          <BlogPostCard
+            key={post.id}
+            post={post}
+            index={index}
+            showSummary={showSummary}
+            disableAos={isGrid}
+          />
+        ))}
+      </div>
 
       {showLoadMore && postsToShow.length < posts.length && (
-        <div className='flex justify-center pt-2 sm:pt-4'>
+        <div className='flex justify-center pt-6 sm:pt-8'>
           <GlassButton
             label={locale.COMMON.MORE || '加载更多'}
             btnStyle='blue'

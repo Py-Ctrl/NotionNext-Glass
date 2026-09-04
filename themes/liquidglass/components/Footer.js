@@ -27,7 +27,7 @@ const Footer = ({ title }) => {
           </SmartLink>
           <span className='text-gray-300 dark:text-gray-600 hidden sm:inline'>|</span>
           <span className='opacity-60 hidden md:inline'>
-            Powered by NotionNext v{version} & Liquid Glass
+            Powered by NotionNext v{version} & Glass
           </span>
         </div>
       </div>

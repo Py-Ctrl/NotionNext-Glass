@@ -392,19 +392,6 @@ const Style = () => {
       border-radius: 12px;
     }
 
-    /* ========== liquid-glass-search 容器 ========== */
-    #theme-liquidglass .liquid-glass-search-wrapper {
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: var(--glass-shadow);
-      position: relative;
-    }
-
-    #theme-liquidglass .liquid-glass-search-wrapper liquid-glass-search {
-      display: block;
-      width: 100%;
-    }
-
     /* ========== Live2D 宠物挂件 ========== */
     #theme-liquidglass #live2d {
       max-width: 100%;
@@ -636,10 +623,6 @@ const Style = () => {
       #theme-liquidglass .glass-float-btn {
         width: 36px;
         height: 36px;
-      }
-
-      #theme-liquidglass .liquid-glass-search-wrapper {
-        border-radius: 14px;
       }
 
       /* ponytail: 移动端禁用 background-attachment:fixed（iOS Safari 严重掉帧元凶） */
@@ -972,6 +955,221 @@ const Style = () => {
 
     .dark #theme-liquidglass .liquid-glass-share button:hover i {
       color: #a5b4fc !important;
+    }
+
+    /* ========== 列表排列切换按钮 ========== */
+    #theme-liquidglass .glass-layout-toggle {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .dark #theme-liquidglass .glass-layout-toggle {
+      background: rgba(15, 15, 25, 0.35);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    #theme-liquidglass .glass-layout-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #6b7280;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #theme-liquidglass .glass-layout-btn:hover {
+      color: #4f46e5;
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    #theme-liquidglass .glass-layout-btn.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(139, 92, 246, 0.85));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .dark #theme-liquidglass .glass-layout-btn {
+      color: #9ca3af;
+    }
+
+    .dark #theme-liquidglass .glass-layout-btn.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
+      color: #e0e7ff;
+    }
+
+    /* ========== 网格悬停展开布局：指针靠近的卡片展开、其余模糊 ========== */
+    #theme-liquidglass .glass-hover-grid .glass-post-item {
+      position: relative;
+      transition:
+        transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 0.35s ease,
+        opacity 0.35s ease,
+        box-shadow 0.35s ease;
+    }
+
+    #theme-liquidglass .glass-hover-grid .glass-post-item:hover {
+      transform: translateY(-4px) scale(1.02);
+      z-index: 10;
+      box-shadow: 0 24px 48px -12px rgba(99, 102, 241, 0.28);
+    }
+
+    #theme-liquidglass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
+      filter: blur(6px) saturate(0.85);
+      opacity: 0.55;
+      transform: scale(0.985);
+    }
+
+    @media (hover: none) {
+      #theme-liquidglass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
+        filter: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ========== 滚动容器（原版 scroll-container）==========
+       外层面板不能带 backdrop-filter —— 会成为 backdrop root，
+       内部卡片的透镜就采样不到页面背景，实时折射会失效 */
+    #theme-liquidglass .glass-scroll-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid var(--glass-border);
+      background:
+        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(99, 102, 241, 0.08), transparent),
+        var(--glass-bg);
+      box-shadow: var(--glass-shadow);
+    }
+
+    .dark #theme-liquidglass .glass-scroll-container {
+      border-color: var(--glass-border-dark);
+      background:
+        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(99, 102, 241, 0.1), transparent),
+        var(--glass-bg-dark);
+    }
+
+    #theme-liquidglass .glass-scroll-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px 6px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    #theme-liquidglass .glass-scroll-head i {
+      color: #6366f1;
+      font-size: 12px;
+    }
+
+    .dark #theme-liquidglass .glass-scroll-head {
+      color: #9ca3af;
+    }
+
+    #theme-liquidglass .glass-scroll-viewport {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 8px 14px 14px;
+    }
+
+    #theme-liquidglass .glass-scroll-viewport::-webkit-scrollbar {
+      display: none;
+    }
+
+    #theme-liquidglass .glass-scroll-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      width: 100%;
+      padding: 13px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(3px) saturate(150%);
+      -webkit-backdrop-filter: blur(3px) saturate(150%);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    #theme-liquidglass .glass-scroll-card:hover {
+      transform: scale(1.015);
+      border-color: rgba(99, 102, 241, 0.35);
+      box-shadow: 0 8px 22px rgba(99, 102, 241, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    }
+
+    #theme-liquidglass .glass-scroll-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    #theme-liquidglass .glass-scroll-card-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    #theme-liquidglass .glass-scroll-card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #4f46e5;
+    }
+
+    #theme-liquidglass .glass-scroll-card-link i {
+      font-size: 10px;
+      transition: transform 0.25s ease;
+    }
+
+    #theme-liquidglass .glass-scroll-card:hover .glass-scroll-card-link i {
+      transform: translateX(3px);
+    }
+
+    .dark #theme-liquidglass .glass-scroll-card {
+      border-color: var(--glass-border-dark);
+      background: rgba(25, 25, 40, 0.4);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .dark #theme-liquidglass .glass-scroll-card-title {
+      color: #e5e7eb;
+    }
+
+    .dark #theme-liquidglass .glass-scroll-card-subtitle {
+      color: #9ca3af;
+    }
+
+    .dark #theme-liquidglass .glass-scroll-card-link {
+      color: #a5b4fc;
     }
 
     ${themeConsoleStyle('liquidglass', CONFIG)}

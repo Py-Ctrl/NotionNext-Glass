@@ -9,7 +9,7 @@ import { formatNotionBlock } from '@/lib/db/notion/getPostBlocks'
 import { generateRobotsTxt } from '@/lib/utils/robots.txt'
 import { generateRss, shouldGenerateRssForLocale } from '@/lib/utils/rss'
 import { generateSitemapXml } from '@/lib/utils/sitemap.xml'
-import { DynamicLayout } from '@/themes/theme'
+import { DynamicLayout, resolvePostsPerPage } from '@/themes/theme'
 import { generateRedirectJson } from '@/lib/utils/redirect'
 import { checkDataFromAlgolia } from '@/lib/plugins/algolia'
 import pLimit from 'p-limit'
@@ -74,7 +74,7 @@ export async function getStaticProps(req) {
     'page',
     props?.NOTION_CONFIG
   )
-  const POSTS_PER_PAGE = siteConfig('POSTS_PER_PAGE', 12, props?.NOTION_CONFIG)
+  const POSTS_PER_PAGE = await resolvePostsPerPage(props?.NOTION_CONFIG)
   const totalPostCount = props.posts?.length || 0
   if (POST_LIST_STYLE === 'scroll') {
     // 滚动列表默认给前端返回所有数据

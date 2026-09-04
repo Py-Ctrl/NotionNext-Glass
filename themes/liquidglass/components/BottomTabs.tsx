@@ -5,29 +5,21 @@ import * as React from 'react'
 import { useRouter } from 'next/router'
 import { useGlobal } from '@/lib/global'
 import { siteConfig } from '@/lib/config'
-import { LiquidGlassCanvas } from '../lib/context'
-import { makeGlassShape, makeText, makeTabDragInteractions } from '../lib/helpers'
-import { getPalette, DEFAULT_HIGHLIGHT, DEFAULT_SHADOW } from '../lib/types'
-import { getBottomBarWallpaper } from './liquidGlassWallpaper'
 import { generateCapsuleLensMap, generateRoundedRectLensMap } from './capsuleLensMap'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
 
 // SVG 透镜底栏（backdrop-filter: url(#feDisplacementMap)，折射真实页面内容）。
-// 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 自动回退到下方 WebGL 底栏。
-// 置为 false 可强制所有浏览器走 WebGL 底栏。
+// 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 回退到 CSS 玻璃底栏。
+// 按钮类组件一律 SVG/CSS 实现（WebGL 开销大，只留给真正需要的场景）。
 const SVG_LENS_ENABLED = true
-// 透镜环带宽度（px）与最大位移（px），对应 WebGL 版 refractionHeight/refractionAmount。
-// 玻璃条为 56dp 胶囊时环带取 16（原版 80dp 容器用 24，按高度等比）
-const LENS_REFRACTION_H = 16
+// 透镜环带宽度（px）与最大位移（px），对应 WebGL 版 refractionHeight/refractionAmount
+const LENS_REFRACTION_H = 18
 const LENS_MAX_MAG = 14
-// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，即位移 14px）。
-// 原版静止时折射为 0，按压时 lens(10dp*progress, 14dp*progress) 渐显；
-// 这里保留 45% 静止底量让透镜常驻可感知，按压补足到 100%
+// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，即位移 14px）
 const IND_REFRACTION_H = 10
 const IND_MAX_MAG = 14
-const IND_IDLE = 0.45
 
 // --- 长按折射弹簧（原版 InteractiveHighlight.kt spring(0.5f, 300f)） ---
 const SPRING_K = 300
@@ -55,21 +47,17 @@ const BottomTabs = (props) => {
   const { customMenu, customNav } = props
   const router = useRouter()
   const routerRef = React.useRef(router)
-  const rendererRef = React.useRef(null)
   const containerRef = React.useRef(null)
   const tabsRef = React.useRef([])
   // SVG 透镜分支的透镜底栏
   const glassRef = React.useRef(null)
   const indicatorRef = React.useRef(null)
-  const indDispRef = React.useRef(null)
-  const indHighlightRef = React.useRef(null)
   const indXRef = React.useRef(0)
   const visualIdxRef = React.useRef(0)
   const pressedBtnRef = React.useRef(null)
   const suppressClickUntilRef = React.useRef(0)
   const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null })
   const [canvasW, setCanvasW] = React.useState(380)
-  const [useWebGL, setUseWebGL] = React.useState(true)
   const [svgLens, setSvgLens] = React.useState(false)
   const [subMenuOpen, setSubMenuOpen] = React.useState(null)
   const [visualIdxState, setVisualIdxState] = React.useState(0)
@@ -85,11 +73,8 @@ const BottomTabs = (props) => {
   }, [])
 
   // 响应式尺寸：桌面端更大
-  const CANVAS_H = isDesktop ? 84 : 72
-  // 原版几何：指示器 56dp 按压放大到 78dp 仍在 80dp 底栏内（放大不越界）
-  const CONTAINER_H = isDesktop ? 80 : 64
-  const CONTAINER_Y = (CANVAS_H - CONTAINER_H) / 2
-  const GLASS_H = isDesktop ? 56 : 44
+  const CONTAINER_H = isDesktop ? 76 : 64
+  const GLASS_H = isDesktop ? 68 : 56
   const GLASS_PAD = (CONTAINER_H - GLASS_H) / 2
   const TAB_WIDTH = isDesktop ? 96 : 76
   const ICON_SIZE = isDesktop ? 24 : 20
@@ -165,22 +150,6 @@ const BottomTabs = (props) => {
     // svgLens 切换会更换承载 containerRef 的 DOM 节点，需重新挂载 observer
   }, [svgLens])
 
-  React.useEffect(() => {
-    try {
-      const canvas = document.createElement('canvas')
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
-      if (!gl) {
-        setUseWebGL(false)
-      } else {
-        // 释放临时检测用的 WebGL 上下文，避免占用上下文槽位
-        const loseExt = gl.getExtension('WEBGL_lose_context')
-        if (loseExt) loseExt.loseContext()
-      }
-    } catch (e) {
-      setUseWebGL(false)
-    }
-  }, [])
-
   // 检测 backdrop-filter: url(#svgFilter) 支持（仅 Chromium）
   React.useEffect(() => {
     try {
@@ -193,17 +162,14 @@ const BottomTabs = (props) => {
   }, [])
 
   // 位移图只随几何尺寸变化重建（Canvas2D 光栅，客户端才有 DOM canvas）
-  // 可见玻璃条 = 内层胶囊（glassW × GLASS_H，原版 glassX/glassY 布局），
-  // 外层 CONTAINER_H 只是布局/触摸容器，同时给按压指示器留出超出玻璃的渲染空间
-  const glassW = Math.max(0, canvasW - 2 * GLASS_PAD)
-  const indW = tabs.length > 0 ? glassW / tabs.length : 0
+  const indW = tabs.length > 0 ? (canvasW - 2 * GLASS_PAD) / tabs.length : 0
   const lensMap = React.useMemo(
-    () => (svgLens ? generateCapsuleLensMap(glassW, GLASS_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
-    [svgLens, glassW, GLASS_H]
+    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
+    [svgLens, canvasW, CONTAINER_H]
   )
   const lensFilterId = React.useMemo(
-    () => `liquid-tabs-lens-${Math.round(glassW)}-${GLASS_H}`,
-    [glassW, GLASS_H]
+    () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
+    [canvasW, CONTAINER_H]
   )
   // 指示器透镜：胶囊位移图（原版 refractionHeight 10 / refractionAmount -14 / 无模糊 / 饱和 1）
   const indMap = React.useMemo(
@@ -272,30 +238,14 @@ const BottomTabs = (props) => {
   }, [svgLens, indMap, indFilterId])
 
   // 长按（原版 InteractiveHighlight spring(0.5f, 300f)）：
-  // 指示器 56→78dp 超出可见玻璃条（原版指示器是容器兄弟节点，不受裁剪），
-  // 折射/高光/外阴影/内阴影全部随 progress 渐显（原版 lens(10dp*p, 14dp*p)、
-  // highlight alpha=p、shadow alpha=p、innerShadow(8dp*p)），被按 tab 内容 →1.2。
-  // 底栏容器本身不缩放
+  // 只放大指示器（×1.39，即 56→78dp 的比例）与被按 tab 的内容（→1.2），
+  // 底栏容器本身不缩放。折射强度保持常量 28：超出底栏的部分随 transform
+  // 等比放大折射，加大位移 scale 会把边缘撕出锯齿
   const applyFrame = React.useCallback((p, x) => {
     const ind = indicatorRef.current
     if (ind) {
       const s = 1 + (78 / 56 - 1) * p
       ind.style.transform = `translateX(${x}px) scale(${s})`
-      // 内阴影(8dp*p) + 顶部高光线 + 外阴影(24dp, offsetY 4dp, alpha*p)
-      ind.style.boxShadow = [
-        `inset 0 1px 0 rgba(255,255,255,${(0.16 + 0.17 * p).toFixed(3)})`,
-        `inset 0 0 ${(8 * p).toFixed(1)}px rgba(0,0,0,${(0.12 * p).toFixed(3)})`,
-        `0 ${(4 * p).toFixed(1)}px ${(24 * p).toFixed(1)}px rgba(0,0,0,${(0.14 * p).toFixed(3)})`,
-      ].join(', ')
-    }
-    const hl = indHighlightRef.current
-    if (hl) {
-      // 45° 镜面高光条（原版 DEFAULT_HIGHLIGHT: white, 45°, alpha 0.3）
-      hl.style.opacity = (0.35 + 0.65 * p).toFixed(3)
-    }
-    const disp = indDispRef.current
-    if (disp) {
-      disp.setAttribute('scale', String(IND_MAX_MAG * 2 * (IND_IDLE + (1 - IND_IDLE) * p)))
     }
     const btn = pressedBtnRef.current
     if (btn) {
@@ -482,114 +432,6 @@ const BottomTabs = (props) => {
     }
   }, [setVisualIdx])
 
-  const { elements, interactions } = React.useMemo(() => {
-    if (!tabs.length || canvasW < 10) return { elements: [], interactions: {} }
-
-    const palette = getPalette(!isDarkMode)
-    const els = []
-    const ints = {}
-
-    const containerX = 0
-    const containerW = canvasW
-    const containerR = CONTAINER_H / 2
-    const glassX = GLASS_PAD
-    const glassW = canvasW - 2 * GLASS_PAD
-    const glassR = GLASS_H / 2
-    const glassY = CONTAINER_Y + GLASS_PAD
-    const tabW = glassW / tabs.length
-
-    const containerEl = makeGlassShape(
-      'tabs-container',
-      { x: containerX, y: CONTAINER_Y, w: containerW, h: CONTAINER_H },
-      {
-        cornerRadius: containerR,
-        refractionHeight: 24,
-        refractionAmount: -24,
-        blurRadius: 8,
-        saturation: 1.5,
-        surfaceColor: palette.tabsContainer,
-        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.5 },
-      }
-    )
-    containerEl.isBottomTabContainer = { groupId: 'tabs', tabsCount: tabs.length }
-    containerEl.independentBackdrop = false
-    els.push(containerEl)
-
-    const dragInteractions = makeTabDragInteractions('tabs', tabW, tabs.length, handleTabSelect, rendererRef)
-
-    for (let i = 0; i < tabs.length; i++) {
-      const tab = tabs[i]
-      const tabEl = makeText(
-        `tab-${i}`,
-        { x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H },
-        tab.label,
-        {
-          color: palette.tabsContentColor,
-          fontSizePx: FONT_SIZE,
-          fontWeight: 400,
-          align: 'center',
-          paddingPx: 0,
-          halo: palette.tabsTextHalo,
-          icon: { path: tab.icon, size: ICON_SIZE, layoutSize: ICON_LAYOUT_SIZE, color: palette.tabsContentColor, viewport: 24 }
-        }
-      )
-      tabEl.isBottomTabContent = {
-        groupId: 'tabs',
-        containerCenterX: containerX + containerW / 2,
-        containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
-        containerWidth: containerW,
-      }
-      els.push(tabEl)
-      ints[`tab-${i}`] = {
-        onTap: () => handleTabSelect(i),
-        onDragStart: dragInteractions.onDragStart,
-        onDrag: dragInteractions.onDrag,
-        onDragEnd: dragInteractions.onDragEnd,
-      }
-    }
-
-    ints['tabs-container'] = dragInteractions
-
-    // 指示器放在 tab 内容之后渲染：蓝色 accent mask 覆盖在白色文字上，选中的 tab 文字变蓝。
-    // 指示器采样 uTabsGlassLayer（不含 tab text 的快照），折射不会扭曲已渲染的白色文字。
-    const indicatorEl = makeGlassShape(
-      'tabs-indicator',
-      { x: glassX, y: glassY, w: tabW, h: GLASS_H },
-      {
-        cornerRadius: glassR,
-        refractionHeight: 10,
-        refractionAmount: -14,
-        blurRadius: 0,
-        saturation: 1.0,
-        tintColor: [0, 0, 0, 0],
-        surfaceColor: [0, 0, 0, 0],
-        highlight: { ...DEFAULT_HIGHLIGHT, alpha: 0.3 },
-        outerShadow: null,
-        chromaticAberration: false,
-      }
-    )
-    indicatorEl.independentBackdrop = false
-    indicatorEl.isBottomTabIndicator = {
-      groupId: 'tabs',
-      dragWidth: tabW,
-      dimColor: palette.backIconColor,
-      accentColor: [...palette.tabsAccent],
-      containerRect: { x: glassX - GLASS_PAD, y: glassY, w: glassW + 2 * GLASS_PAD, h: GLASS_H },
-      containerCenterX: containerX + containerW / 2,
-      containerCenterY: CONTAINER_Y + CONTAINER_H / 2,
-      containerWidth: containerW,
-      tabContentIds: tabs.map((_, i) => `tab-${i}`),
-      tabContentRects: tabs.map((_, i) => ({ x: glassX + tabW * i, y: glassY, w: tabW, h: GLASS_H })),
-    }
-    els.push(indicatorEl)
-
-    return { elements: els, interactions: ints }
-  }, [tabs, isDarkMode, canvasW, handleTabSelect, isDesktop])
-
-  const tabTargets = React.useMemo(() => ({
-    'tabs': { tabIndex: activeTab, tabsCount: tabs.length }
-  }), [activeTab, tabs.length])
-
   React.useEffect(() => {
     const handleClickOutside = (e) => {
       if (subMenuRef.current && !subMenuRef.current.contains(e.target)) {
@@ -661,8 +503,8 @@ const BottomTabs = (props) => {
                   href={lensMap}
                   x={0}
                   y={0}
-                  width={glassW}
-                  height={GLASS_H}
+                  width={canvasW}
+                  height={CONTAINER_H}
                   result='map'
                   preserveAspectRatio='none'
                 />
@@ -687,27 +529,22 @@ const BottomTabs = (props) => {
                   preserveAspectRatio='none'
                 />
                 <feDisplacementMap
-                  ref={indDispRef}
                   in='SourceGraphic'
                   in2='map'
-                  scale={IND_MAX_MAG * 2 * IND_IDLE}
+                  scale={IND_MAX_MAG * 2}
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
-            {/* 可见玻璃条：内层胶囊（原版 glassX/glassY/glassW/GLASS_H 布局）。
-                外层容器透明，给按压指示器留出超出玻璃的渲染空间 */}
+            {/* 玻璃底板 */}
             <div
               ref={glassRef}
               style={{
                 position: 'absolute',
-                top: GLASS_PAD,
-                left: GLASS_PAD,
-                right: GLASS_PAD,
-                height: GLASS_H,
-                borderRadius: `${GLASS_H / 2}px`,
+                inset: 0,
+                borderRadius: `${CONTAINER_H / 2}px`,
                 backdropFilter: `url(#${lensFilterId})`,
                 WebkitBackdropFilter: 'blur(12px) saturate(1.35)',
                 background: isDarkMode ? 'rgba(18,18,18,0.32)' : 'rgba(250,250,250,0.28)',
@@ -716,8 +553,8 @@ const BottomTabs = (props) => {
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
               }}
             />
-            {/* 透明透镜指示器（原版为容器兄弟节点，不裁剪）：按压放大到 78dp，
-                上下各超出 56dp 玻璃条 11dp，形成 pop-out；45° 高光条随按压渐显 */}
+            {/* 透明透镜指示器：只折射放大背后内容 + 边缘高光，无实心底色。
+                按压放大 ×1.39 超出底栏上下边缘，超出部分随 transform 等比放大折射 */}
             <div
               ref={indicatorRef}
               style={{
@@ -729,35 +566,15 @@ const BottomTabs = (props) => {
                 borderRadius: `${GLASS_H / 2}px`,
                 background: 'transparent',
                 backdropFilter: `url(#${indFilterId})`,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
                 zIndex: 2,
                 pointerEvents: 'none',
                 transformOrigin: 'center',
                 willChange: 'transform',
-              }}>
-              <div
-                ref={indHighlightRef}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: 'inherit',
-                  background:
-                    'linear-gradient(135deg, rgba(255,255,255,0) 22%, rgba(255,255,255,0.38) 47%, rgba(255,255,255,0.10) 56%, rgba(255,255,255,0) 78%)',
-                  opacity: 0.35,
-                  pointerEvents: 'none',
-                }}
-              />
-            </div>
+              }}
+            />
             {/* tab 内容层：指示器之上，文字不被透镜扭曲 */}
-            <div
-              className='absolute flex'
-              style={{
-                top: GLASS_PAD,
-                left: GLASS_PAD,
-                right: GLASS_PAD,
-                height: GLASS_H,
-                zIndex: 3,
-              }}>
+            <div className='absolute inset-0 flex h-full' style={{ zIndex: 3 }}>
               {tabs.map((tab, i) => {
                 const isActive = visualIdxState === i
                 return (
@@ -797,58 +614,28 @@ const BottomTabs = (props) => {
     )
   }
 
-  if (!useWebGL) {
-    return (
-      <>
-        {renderSubMenu()}
-        <nav className='fixed bottom-4 left-0 right-0 z-30 glass-nav'>
-          <div className='flex justify-around items-center mx-auto py-2' style={{ width: widthStyle }}>
-            {tabs.map((tab, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleTabSelect(idx)}
-                className={`flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors ${
-                  activeTab === idx ? 'text-indigo-500' : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                <svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
-                  <path d={tab.icon} />
-                </svg>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </nav>
-      </>
-    )
-  }
-
+  // 回退底栏：SSR / 不支持 backdrop-filter url() 的浏览器（Safari、Firefox、触屏）
   return (
     <>
       {renderSubMenu()}
-      {canvasW > 10 && tabs.length > 0 && (
-        <LiquidGlassCanvas
-          wallpaperSrc={getBottomBarWallpaper(isDarkMode)}
-          elements={elements}
-          interactions={interactions}
-          tabTargets={tabTargets}
-          rendererRef={rendererRef}
-          contentHeight={CANVAS_H}
-          dpr={1.5}
-          containerRef={containerRef}
-          className='z-30'
-          style={{
-            position: 'fixed',
-            bottom: '16px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            height: `${CANVAS_H}px`,
-            width: widthStyle,
-            borderRadius: `${CANVAS_H / 2}px`,
-            overflow: 'hidden',
-          }}
-        />
-      )}
+      <nav className='fixed bottom-4 left-0 right-0 z-30 glass-nav'>
+        <div className='flex justify-around items-center mx-auto py-2' style={{ width: widthStyle }}>
+          {tabs.map((tab, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleTabSelect(idx)}
+              className={`flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors ${
+                activeTab === idx ? 'text-indigo-500' : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              <svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
+                <path d={tab.icon} />
+              </svg>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </nav>
     </>
   )
 }

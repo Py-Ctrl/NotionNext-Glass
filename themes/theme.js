@@ -2,6 +2,7 @@ import BLOG, { LAYOUT_MAPPINGS } from '@/blog.config'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { getQueryParam, getQueryVariable, isBrowser } from '../lib/utils'
+import { siteConfig } from '@/lib/config'
 import themesConf from '@/conf/themes'
 
 // 主题清单（静态，替代已弃用的 next/config publicRuntimeConfig）
@@ -103,6 +104,28 @@ const scheduleFixThemeDOM = (delay = 120) => {
     fixThemeDOM()
     domFixTimer = null
   }, delay)
+}
+
+/**
+ * 解析每页文章数（仅 getStaticProps 服务端调用）。
+ * 优先级：Notion 配置 > 主题 config.js 的 POSTS_PER_PAGE > 全局默认。
+ */
+export async function resolvePostsPerPage(NOTION_CONFIG = {}) {
+  const notionRaw = NOTION_CONFIG?.POSTS_PER_PAGE
+  if (notionRaw !== undefined && notionRaw !== null && notionRaw !== '') {
+    return siteConfig('POSTS_PER_PAGE', 12, NOTION_CONFIG)
+  }
+  const cfg = await importThemeConfig(
+    normalizeThemeName(NOTION_CONFIG?.THEME || BLOG.THEME)
+  )
+  if (cfg) {
+    return siteConfig(
+      'POSTS_PER_PAGE',
+      siteConfig('POSTS_PER_PAGE', 12, NOTION_CONFIG),
+      cfg
+    )
+  }
+  return siteConfig('POSTS_PER_PAGE', 12, NOTION_CONFIG)
 }
 
 async function importThemeConfig(themeFolderName) {
