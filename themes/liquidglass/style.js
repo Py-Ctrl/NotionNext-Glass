@@ -1020,15 +1020,16 @@ const Style = () => {
     }
 
     #theme-liquidglass .glass-hover-grid .glass-post-item:hover {
-      transform: translateY(-4px) scale(1.02);
+      transform: translateY(-6px) scale(1.05);
       z-index: 10;
-      box-shadow: 0 24px 48px -12px rgba(99, 102, 241, 0.28);
+      box-shadow: 0 24px 48px -12px rgba(99, 102, 241, 0.32);
+      border-color: rgba(99, 102, 241, 0.4);
     }
 
     #theme-liquidglass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
-      filter: blur(6px) saturate(0.85);
-      opacity: 0.55;
-      transform: scale(0.985);
+      filter: blur(10px) saturate(0.8);
+      opacity: 0.42;
+      transform: scale(0.97);
     }
 
     @media (hover: none) {

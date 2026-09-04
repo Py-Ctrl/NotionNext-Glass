@@ -245,6 +245,9 @@ const BottomTabs = (props) => {
     const ind = indicatorRef.current
     if (ind) {
       const s = 1 + (78 / 56 - 1) * p
+      // idle 只留淡弱在场感（不显眼、不误认成第二个圈）；按住/拖动时满显放大
+      const o = 0.35 + 0.65 * p
+      ind.style.opacity = String(o)
       ind.style.transform = `translateX(${x}px) scale(${s})`
     }
     const btn = pressedBtnRef.current
@@ -352,7 +355,9 @@ const BottomTabs = (props) => {
         // 横向主导且超过 14px 才算拖动：按住时的微漂移不取消长按（原版行为）
         if (Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 1.5) return
         st.dragging = true
-        st.target = 0
+        // 拖动时保持放大跟手（原版：指示器随手指移动且持续放大，不缩回）；
+        // 内容层不放大，避免按住按钮跟随移动产生错位
+        st.target = 1
         const btn = pressedBtnRef.current
         if (btn) btn.style.transform = ''
         startPressLoop()

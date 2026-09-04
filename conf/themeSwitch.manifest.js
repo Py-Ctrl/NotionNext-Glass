@@ -11,6 +11,23 @@
 
 /** @type {Record<string, { name?: string, summary?: string, cover?: string, coverWebp?: string, rootId?: string, tier?: 'free' | 'paid', settings?: Array<{ key: string, label: string, type: 'boolean' | 'text' | 'number' | 'select', defaultValue: string | number | boolean, options?: Array<{ label: string, value: string | number | boolean }> }>, palette?: Array<{ key: string, cssVar: string, label: string, defaultValue: string }> }>} */
 export const THEME_SWITCH_MANIFEST = {
+  liquidglass: {
+    name: 'Glass',
+    summary: '液态玻璃风格：SVG feDisplacementMap 真实折射背景，玻璃底栏、滚动容器、网格悬停展开。',
+    settings: [
+      { key: 'POST_LIST_LAYOUT', label: '列表排列', type: 'select', defaultValue: 'list', options: [{ label: '纵向列表', value: 'list' }, { label: '网格悬停展开', value: 'hover' }] },
+      { key: 'POSTS_PER_PAGE', label: '每页文章数', type: 'number', defaultValue: 12 },
+      { key: 'LIQUID_SCROLL_CONTAINER', label: '首页滚动容器', type: 'boolean', defaultValue: true },
+      { key: 'LIQUID_POST_LIST_COVER', label: '列表卡片封面', type: 'boolean', defaultValue: true },
+      { key: 'LIQUID_POST_LIST_PREVIEW', label: '列表卡片预览', type: 'boolean', defaultValue: true },
+      { key: 'LIQUID_ARTICLE_RECOMMEND_POSTS', label: '文章推荐', type: 'boolean', defaultValue: true }
+    ],
+    palette: [
+      { key: 'LIQUID_GLASS_PRIMARY', cssVar: '--glass-primary', label: '主玻璃色', defaultValue: '#6366f1' },
+      { key: 'LIQUID_GLASS_SECONDARY', cssVar: '--glass-secondary', label: '辅玻璃色', defaultValue: '#8b5cf6' },
+      { key: 'LIQUID_GLASS_ACCENT', cssVar: '--glass-accent', label: '强调色', defaultValue: '#06b6d4' }
+    ]
+  },
   endspace: {
     name: 'Endspace',
     summary: '轻工业终末风，侧栏导航、悬浮控件与加载动画。',
