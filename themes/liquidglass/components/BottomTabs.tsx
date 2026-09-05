@@ -56,6 +56,10 @@ const BottomTabs = (props) => {
   const visualIdxRef = React.useRef(0)
   const pressedBtnRef = React.useRef(null)
   const suppressClickUntilRef = React.useRef(0)
+  // SVG filter 元素引用：按帧更新位移强度 / 位移图尺寸
+  const lensDispRef = React.useRef(null)
+  const indFeImgRef = React.useRef(null)
+  const indGlowRef = React.useRef(null)
   const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null })
   const [canvasW, setCanvasW] = React.useState(380)
   const [svgLens, setSvgLens] = React.useState(false)
@@ -154,7 +158,9 @@ const BottomTabs = (props) => {
   React.useEffect(() => {
     try {
       if (SVG_LENS_ENABLED && typeof CSS !== 'undefined' && CSS.supports) {
-        setSvgLens(CSS.supports('backdrop-filter', 'url(#liquid-tabs-lens-probe)'))
+        // 用最朴素 #probe 探测：带具体长 id 的 value 在移动端 Chromium 的 CSS.supports
+        // 中可能返回 false（误判为不支持 → 永远回退 CSS 模糊）
+        setSvgLens(CSS.supports('backdrop-filter', 'url(#probe)'))
       }
     } catch (e) {
       setSvgLens(false)
@@ -180,6 +186,38 @@ const BottomTabs = (props) => {
     () => `liquid-tabs-ind-${Math.round(indW)}-${Math.round(GLASS_H)}`,
     [indW, GLASS_H]
   )
+
+  // 位移图是 data URL，异步加载；Chromium 加载完不会自动重跑 backdrop-filter，
+  // 不强制重绘则 feDisplacementMap 零位移（折射"根本没效果"的根因）。
+  // 加载后分级关-开 backdrop-filter 逼浏览器重新采样。
+  React.useEffect(() => {
+    if (!svgLens) return
+    const srcs = [lensMap, indMap].filter(Boolean)
+    if (srcs.length === 0) return
+    let loaded = 0
+    const repaint = () => {
+      const toggle = el => {
+        if (!el || !el.style) return
+        const cur = el.style.backdropFilter
+        el.style.backdropFilter = 'none'
+        setTimeout(() => {
+          el.style.backdropFilter = cur
+        }, 50)
+      }
+      toggle(glassRef.current)
+      toggle(indicatorRef.current)
+    }
+    for (const src of srcs) {
+      const img = new Image()
+      img.onload = () => {
+        if (++loaded === srcs.length) {
+          setTimeout(repaint, 30)
+          setTimeout(repaint, 120)
+        }
+      }
+      img.src = src
+    }
+  }, [lensMap, indMap, svgLens])
 
   // feImage 的 data URL 异步加载完成后 Chromium 不重跑 backdrop-filter，
   // 必须等位移图预加载完成后再强制重绘（关-开），否则透镜不生效
@@ -258,10 +296,26 @@ const BottomTabs = (props) => {
       ind.style.width = `${w}px`
       ind.style.height = `${h}px`
       ind.style.borderRadius = `${h / 2}px`
-      // 只做平移不缩放，backdrop 采样区随平移动完整保留
+      // 只做平移，backdrop 采样随平移动完整保留
       ind.style.transform = `translateX(${x}px)`
-      // idle 只留淡弱在场感；按住/拖动时满显放大
+      // idle 弱在场，按住/拖动满显
       ind.style.opacity = String(0.35 + 0.65 * p)
+      // 位移图随几何拉伸铺满放大区域：放大边缘的折射也因此完整
+      const feImg = indFeImgRef.current
+      if (feImg) {
+        feImg.setAttribute('width', w)
+        feImg.setAttribute('height', h)
+      }
+    }
+    // 蓝色胶囊高光：idle 淡，按下满显（不与底栏混成"第二个圈"）
+    const glow = indGlowRef.current
+    if (glow) {
+      glow.style.opacity = String(0.35 + 0.65 * p)
+    }
+    // 长按增强整条底栏折射（原版 press ramps bar refraction）
+    const lensDisp = lensDispRef.current
+    if (lensDisp) {
+      lensDisp.setAttribute('scale', (LENS_MAX_MAG * 2 * (0.6 + 0.4 * p)).toFixed(1))
     }
     const btn = pressedBtnRef.current
     if (btn) {
@@ -487,7 +541,6 @@ const BottomTabs = (props) => {
   // SVG 透镜底栏：backdrop-filter 直接采样真实页面，feDisplacementMap 做透镜折射。
   // 指示器是独立透明透镜（原版 tint/surface 全透明），选中项靠文字变蓝表达
   if (svgLens) {
-    const accentText = isDarkMode ? '#0A84FF' : '#007AFF'
     const textMuted = isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'
     return (
       <>
@@ -527,6 +580,7 @@ const BottomTabs = (props) => {
                   preserveAspectRatio='none'
                 />
                 <feDisplacementMap
+                  ref={lensDispRef}
                   in='SourceGraphic'
                   in2='map'
                   scale={LENS_MAX_MAG * 2}
@@ -538,6 +592,7 @@ const BottomTabs = (props) => {
               </filter>
               <filter id={indFilterId} colorInterpolationFilters='sRGB'>
                 <feImage
+                  ref={indFeImgRef}
                   href={indMap}
                   x={0}
                   y={0}
@@ -571,8 +626,9 @@ const BottomTabs = (props) => {
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
               }}
             />
-            {/* 透明透镜指示器：只折射放大背后内容 + 边缘高光，无实心底色。
-                按压放大 ×1.39 超出底栏上下边缘，超出部分随 transform 等比放大折射 */}
+            {/* 透明透镜指示器：只折射放大背后内容 + 蓝色胶囊高光。
+                蓝色在胶囊内部（·随按压 ramp），不是靠文字变蓝表达。
+                按压放大 ×1.39 超出底栏上下边缘，位移图随几何拉伸保持折射 */}
             <div
               ref={indicatorRef}
               style={{
@@ -584,13 +640,25 @@ const BottomTabs = (props) => {
                 borderRadius: `${GLASS_H / 2}px`,
                 background: 'transparent',
                 backdropFilter: `url(#${indFilterId})`,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
                 zIndex: 2,
                 pointerEvents: 'none',
                 transformOrigin: 'center',
                 willChange: 'transform',
-              }}
-            />
+              }}>
+              {/* 蓝色胶囊高光：原版选中是蓝字，这里蓝落在胶囊里，idle 淡、按住满显 */}
+              <div
+                ref={indGlowRef}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 'inherit',
+                  background:
+                    'linear-gradient(135deg, rgba(0,122,255,0.55), rgba(10,132,255,0.3))',
+                  opacity: 0.35,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
+                }}
+              />
+            </div>
             {/* tab 内容层：指示器之上，文字不被透镜扭曲 */}
             <div className='absolute inset-0 flex h-full' style={{ zIndex: 3 }}>
               {tabs.map((tab, i) => {
@@ -602,7 +670,7 @@ const BottomTabs = (props) => {
                     onClick={() => handleTabSelect(i)}
                     className='flex-1 flex flex-col items-center justify-center gap-1 relative cursor-pointer'
                     style={{
-                      color: isActive ? accentText : textMuted,
+                      color: textMuted,
                       WebkitTapHighlightColor: 'transparent',
                       transformOrigin: 'center center',
                       willChange: 'transform',
