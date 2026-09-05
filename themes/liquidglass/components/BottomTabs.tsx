@@ -624,9 +624,11 @@ const BottomTabs = (props) => {
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
               }}
             />
-            {/* 透明透镜指示器（原版 Layer 3）：表面全透明，折射只在按压时 ramp。
-                放在内容层之下：原版指示器采样"无文字的玻璃层"，蓝色内容由
-                fgTexture 掩膜画在折射之上 —— CSS 等价 = 内容层盖在透镜上不折射 */}
+            {/* 透明透镜指示器（原版 Layer 3）。必须在内容层之上（z=4 > 内容 z=3）：
+                原版 element.ts 用 refractedScreen（位移后坐标）调 sampleIndicatorBackdrop，
+                而蓝色 tab 文字被 mix 进该采样层（element-utils.ts 第 4 步）——
+                即原版的文字随镜头一起折射弯折。CSS 等价 = 透镜盖在文字上，
+                backdrop-filter 把玻璃+文字一起采样位移；静止 scale=0 时文字原样清晰 */}
             <div
               ref={indicatorRef}
               style={{
@@ -638,7 +640,7 @@ const BottomTabs = (props) => {
                 borderRadius: `${GLASS_H / 2}px`,
                 background: 'transparent',
                 backdropFilter: `url(#${indFilterId})`,
-                zIndex: 2,
+                zIndex: 4,
                 pointerEvents: 'none',
                 transformOrigin: 'center',
                 willChange: 'transform',
