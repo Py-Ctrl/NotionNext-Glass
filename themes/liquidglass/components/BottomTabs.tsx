@@ -188,92 +188,50 @@ const BottomTabs = (props) => {
   )
 
   // 位移图是 data URL，异步加载；Chromium 加载完不会自动重跑 backdrop-filter，
-  // 不强制重绘则 feDisplacementMap 零位移（折射"根本没效果"的根因）。
-  // 加载后分级关-开 backdrop-filter 逼浏览器重新采样。
+  // 必须等位移图预加载完成后强制重绘（关-开），否则 feDisplacementMap 零位移。
+  //
+  // 特别注意：早期实现里这段逻辑拆成了三个互相竞争的 effect，每个都会直接改
+  // el.style.backdropFilter='none'。竞态下玻璃/指示器会被留在 'none'，折射永久失效
+  // （pubished 状态里既看不到折射，也扫不到带 url(#…) 的内联样式）。这里合并成一个，
+  // 且后端重置时总是先强制回流再写回 url(#…)，并加兜底定时器确保不落在 'none'。
   React.useEffect(() => {
     if (!svgLens) return
     const srcs = [lensMap, indMap].filter(Boolean)
     if (srcs.length === 0) return
     let loaded = 0
-    const repaint = () => {
-      const toggle = el => {
-        if (!el || !el.style) return
-        const cur = el.style.backdropFilter
-        el.style.backdropFilter = 'none'
-        setTimeout(() => {
-          el.style.backdropFilter = cur
-        }, 50)
-      }
-      toggle(glassRef.current)
-      toggle(indicatorRef.current)
+    const apply = (el, u) => {
+      if (!el || !el.style) return
+      el.style.backdropFilter = 'none'
+      // 强制回流，让合成器注意到 filter 属性变化后重新跑 SVG filter
+      void el.offsetWidth
+      el.style.backdropFilter = u
     }
+    const repaint = () => {
+      apply(glassRef.current, `url(#${lensFilterId})`)
+      apply(indicatorRef.current, `url(#${indFilterId})`)
+    }
+    // img.onload 意味着 data URL 已解码进图片缓存，此刻关-开才有效
     for (const src of srcs) {
       const img = new Image()
       img.onload = () => {
-        if (++loaded === srcs.length) {
+        if (++loaded >= srcs.length) {
           setTimeout(repaint, 30)
           setTimeout(repaint, 120)
         }
       }
       img.src = src
     }
-  }, [lensMap, indMap, svgLens])
-
-  // feImage 的 data URL 异步加载完成后 Chromium 不重跑 backdrop-filter，
-  // 必须等位移图预加载完成后再强制重绘（关-开），否则透镜不生效
-  React.useEffect(() => {
-    if (!svgLens || !lensMap || !glassRef.current) return
-    const el = glassRef.current
-    const url = `url(#${lensFilterId})`
-    let cancelled = false
-    let t1 = 0
-    let t2 = 0
-    const img = new Image()
-    img.onload = () => {
-      if (cancelled) return
-      t1 = window.setTimeout(() => {
-        if (cancelled) return
-        el.style.backdropFilter = 'none'
-        t2 = window.setTimeout(() => {
-          if (cancelled) return
-          el.style.backdropFilter = url
-        }, 100)
-      }, 50)
-    }
-    img.src = lensMap
-    return () => {
-      cancelled = true
-      clearTimeout(t1)
-      clearTimeout(t2)
-    }
-  }, [svgLens, lensMap, lensFilterId])
-
-  React.useEffect(() => {
-    if (!svgLens || !indMap || !indicatorRef.current) return
-    const el = indicatorRef.current
-    const url = `url(#${indFilterId})`
-    let cancelled = false
-    let t1 = 0
-    let t2 = 0
-    const img = new Image()
-    img.onload = () => {
-      if (cancelled) return
-      t1 = window.setTimeout(() => {
-        if (cancelled) return
-        el.style.backdropFilter = 'none'
-        t2 = window.setTimeout(() => {
-          if (cancelled) return
-          el.style.backdropFilter = url
-        }, 100)
-      }, 50)
-    }
-    img.src = indMap
-    return () => {
-      cancelled = true
-      clearTimeout(t1)
-      clearTimeout(t2)
-    }
-  }, [svgLens, indMap, indFilterId])
+    // 兜底：任何路径把 backdrop-filter 落在 'none'，都恢复为 url(#…)
+    const guard = setTimeout(() => {
+      if (glassRef.current && !String(glassRef.current.style.backdropFilter).includes('url')) {
+        glassRef.current.style.backdropFilter = `url(#${lensFilterId})`
+      }
+      if (indicatorRef.current && !String(indicatorRef.current.style.backdropFilter).includes('url')) {
+        indicatorRef.current.style.backdropFilter = `url(#${indFilterId})`
+      }
+    }, 600)
+    return () => clearTimeout(guard)
+  }, [svgLens, lensMap, indMap, lensFilterId, indFilterId])
 
   // 长按（原版 InteractiveHighlight spring(0.5f, 300f)）：
   // 只放大指示器（×1.39，即 56→78dp 的比例）与被按 tab 的内容（→1.2），
