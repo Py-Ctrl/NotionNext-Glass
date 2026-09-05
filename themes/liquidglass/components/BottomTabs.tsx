@@ -12,15 +12,14 @@ import CONFIG from '../config'
 
 // SVG 透镜底栏（backdrop-filter: url(#feDisplacementMap)，折射真实页面内容）。
 // 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 回退到 CSS 玻璃底栏。
-// 参数 1:1 对齐原版 liquid-glass-webgl（build-bottom-tabs.ts / element-pass-indicator.ts）：
-//   容器玻璃 lens(24dp,-24dp) + blur(8dp) + saturate(1.5) + surface FAFAFA@0.4/121212@0.4
-//   指示器   lens(10dp*p, 14dp*p) 折射随按压 ramp（静止为 0），表面全透明，
-//            静止仅 10% 暗化层；蓝色 = 选中 tab 图标+文字染 accent(#0088FF/#0091FF)，
-//            不是给胶囊涂蓝色。
+// 容器玻璃参数为长期调校值（blur 1.4 / band 18 / mag 14 / saturate 1.35），
+// 指示器按压 ramp 1:1 对齐原版 liquid-glass-webgl：
+//   lens(10dp*p, 14dp*p) 折射随按压 ramp（静止为 0），表面全透明，
+//   静止仅 10% 暗化层；蓝色 = 选中 tab 图标+文字染 accent(#0088FF/#0091FF)。
 const SVG_LENS_ENABLED = true
-// 容器透镜环带宽度（px）与最大位移（px），对应原版 refractionHeight/refractionAmount
-const LENS_REFRACTION_H = 24
-const LENS_MAX_MAG = 24
+// 容器透镜环带宽度（px）与最大位移（px）
+const LENS_REFRACTION_H = 18
+const LENS_MAX_MAG = 14
 // 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，乘以 pressProgress）
 const IND_REFRACTION_H = 10
 const IND_MAX_MAG = 14
@@ -200,50 +199,49 @@ const BottomTabs = (props) => {
   )
   geoRef.current = { indW, GLASS_H, GLASS_PAD }
 
-  // 位移图是 data URL，异步加载；Chromium 加载完不会自动重跑 backdrop-filter，
-  // 必须等位移图预加载完成后强制重绘（关-开），否则 feDisplacementMap 零位移。
+  // 位移图是 data URL，异步解码；Chromium 解码完成后不会重跑 backdrop-filter，
+  // 必须让 'none' 真实绘制至少一帧再写回 url()，filter 才会带着已加载的 feImage 重新执行。
   //
-  // 特别注意：早期实现里这段逻辑拆成了三个互相竞争的 effect，每个都会直接改
-  // el.style.backdropFilter='none'。竞态下玻璃/指示器会被留在 'none'，折射永久失效
-  // （pubished 状态里既看不到折射，也扫不到带 url(#…) 的内联样式）。这里合并成一个，
-  // 且后端重置时总是先强制回流再写回 url(#…)，并加兜底定时器确保不落在 'none'。
+  // 教训（连续三轮"折射没效果"的根因）：同步 none→回流→url 会被样式系统合并，
+  // 'none' 从未被绘制，feDisplacementMap 永远零位移（链上模糊照常 → 看起来像玻璃
+  // 但完全没有折射）。必须跨帧：双 requestAnimationFrame（或定时器）分开两帧写。
   React.useEffect(() => {
     if (!svgLens) return
     const srcs = [lensMap, indMap].filter(Boolean)
     if (srcs.length === 0) return
     let loaded = 0
-    const apply = (el, u) => {
+    const rafs = []
+    const repaintEl = (el, u) => {
       if (!el || !el.style) return
       el.style.backdropFilter = 'none'
-      // 强制回流，让合成器注意到 filter 属性变化后重新跑 SVG filter
-      void el.offsetWidth
-      el.style.backdropFilter = u
+      // 双 rAF：保证 'none' 先被绘制一帧，下一帧再写回 url，filter 必然重新执行
+      rafs.push(
+        requestAnimationFrame(() => {
+          rafs.push(
+            requestAnimationFrame(() => {
+              el.style.backdropFilter = u
+            })
+          )
+        })
+      )
     }
     const repaint = () => {
-      apply(glassRef.current, `url(#${lensFilterId})`)
-      apply(indicatorRef.current, `url(#${indFilterId})`)
+      repaintEl(glassRef.current, `url(#${lensFilterId})`)
+      repaintEl(indicatorRef.current, `url(#${indFilterId})`)
     }
-    // img.onload 意味着 data URL 已解码进图片缓存，此刻关-开才有效
     for (const src of srcs) {
       const img = new Image()
       img.onload = () => {
         if (++loaded >= srcs.length) {
           setTimeout(repaint, 30)
-          setTimeout(repaint, 120)
+          setTimeout(repaint, 150)
         }
       }
       img.src = src
     }
-    // 兜底：任何路径把 backdrop-filter 落在 'none'，都恢复为 url(#…)
-    const guard = setTimeout(() => {
-      if (glassRef.current && !String(glassRef.current.style.backdropFilter).includes('url')) {
-        glassRef.current.style.backdropFilter = `url(#${lensFilterId})`
-      }
-      if (indicatorRef.current && !String(indicatorRef.current.style.backdropFilter).includes('url')) {
-        indicatorRef.current.style.backdropFilter = `url(#${indFilterId})`
-      }
-    }, 600)
-    return () => clearTimeout(guard)
+    return () => {
+      rafs.forEach(id => cancelAnimationFrame(id))
+    }
   }, [svgLens, lensMap, indMap, lensFilterId, indFilterId])
 
   // 长按（原版 InteractiveHighlight spring(0.5f, 300f)），一切随 progress ramp：
@@ -584,8 +582,8 @@ const BottomTabs = (props) => {
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
-                <feGaussianBlur stdDeviation={8} />
-                <feColorMatrix type='saturate' values='1.5' />
+                <feGaussianBlur stdDeviation={1.4} />
+                <feColorMatrix type='saturate' values='1.35' />
               </filter>
               {/* 指示器透镜：原版 lens(10dp*p, 14dp*p)，scale 随按压 0→28 逐帧 ramp */}
               <filter id={indFilterId} colorInterpolationFilters='sRGB'>
@@ -612,8 +610,7 @@ const BottomTabs = (props) => {
             </svg>
             {/* 玻璃底板：只能用 backdropFilter: url(#lens) 折射。
                 绝不能同时写 -webkit-backdrop-filter: blur(...) —— Chromium 中这两者
-                是同一属性的别名，-webkit 在后会覆盖 url()，导致位移全部失效，永远只剩纯模糊。
-                表面色原版 FAFAFA@0.4 / 121212@0.4 */}
+                是同一属性的别名，-webkit 在后会覆盖 url()，导致位移全部失效，永远只剩纯模糊 */}
             <div
               ref={glassRef}
               style={{
@@ -621,7 +618,7 @@ const BottomTabs = (props) => {
                 inset: 0,
                 borderRadius: `${CONTAINER_H / 2}px`,
                 backdropFilter: `url(#${lensFilterId})`,
-                background: isDarkMode ? 'rgba(18,18,18,0.4)' : 'rgba(250,250,250,0.4)',
+                background: isDarkMode ? 'rgba(18,18,18,0.32)' : 'rgba(250,250,250,0.28)',
                 boxShadow: isDarkMode
                   ? 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.25), 0 8px 32px rgba(0,0,0,0.4)'
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
