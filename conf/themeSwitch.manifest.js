@@ -13,7 +13,7 @@
 export const THEME_SWITCH_MANIFEST = {
   liquidglass: {
     name: 'Glass',
-    summary: '液态玻璃风格：SVG feDisplacementMap 真实折射背景，玻璃底栏、滚动容器、网格悬停展开。',
+    summary: '玻璃质感与丰富的特效',
     settings: [
       { key: 'POST_LIST_LAYOUT', label: '列表排列', type: 'select', defaultValue: 'list', options: [{ label: '纵向列表', value: 'list' }, { label: '网格悬停展开', value: 'hover' }] },
       { key: 'POSTS_PER_PAGE', label: '每页文章数', type: 'number', defaultValue: 12 },
