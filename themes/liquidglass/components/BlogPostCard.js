@@ -15,8 +15,9 @@ import { useLensBackdrop } from './useLensBackdrop'
 const BlogPostCard = ({ post, index, showSummary, disableAos }) => {
   const { locale } = useGlobal()
   const router = useRouter()
-  // 滚动容器卡片透镜折射（原版 Scroll Container：环带 16px / 无模糊 / 饱和 1.5）
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 14, blur: 3, saturate: 1.5 })
+  // 原版 Scroll Container 卡片参数（build-scroll-container.ts）：
+  // refractionHeight 16 / refractionAmount -32 / 无模糊 / 饱和 1.5 —— 静止即满强度边缘折射
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
   const showPreview =
     siteConfig('LIQUID_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
 
@@ -105,12 +106,12 @@ const BlogPostCard = ({ post, index, showSummary, disableAos }) => {
           <div className='flex justify-end border-t pt-4 sm:pt-6 border-gray-200/50 dark:border-gray-700/50'>
             <GlassButton
               label={locale.COMMON.ARTICLE_DETAIL || '阅读更多'}
-              btnStyle='blue'
+              btnStyle='surface'
               onTap={() => router.push(post?.href)}
               width='140px'
               height='48px'
               className='rounded-2xl'
-              fallbackClassName='text-indigo-600 dark:text-indigo-400 text-sm'
+              fallbackClassName='text-sm'
             />
           </div>
         </div>

@@ -15,8 +15,9 @@ import { useLensBackdrop } from './useLensBackdrop'
  */
 const ScrollCard = ({ item, index, onItemTap }) => {
   const router = useRouter()
-  // 原版 Scroll Container 卡片参数：环带 16px / 位移 14 / 轻模糊 3 / 饱和 1.5
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 14, blur: 3, saturate: 1.5 })
+  // 原版 Scroll Container 卡片参数（build-scroll-container.ts）：
+  // refractionHeight 16 / refractionAmount -32 / 无模糊 / 饱和 1.5
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
 
   const handleClick = () => {
     if (onItemTap) {

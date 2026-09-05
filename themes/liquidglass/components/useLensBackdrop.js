@@ -8,20 +8,22 @@ let uidCounter = 0
 
 /**
  * 给任意玻璃卡片挂 SVG 透镜折射（backdrop-filter: url(#feDisplacementMap)），
- * 对应原版 liquid-glass-webgl Scroll Container 的卡片效果
- * （refractionHeight 16dp / refractionAmount -32dp / 无模糊 / 饱和 1.5）。
+ * 默认参数 = 原版 liquid-glass-webgl Scroll Container 卡片
+ * （build-scroll-container.ts：refractionHeight 16dp / refractionAmount -32dp /
+ *   无模糊 / 饱和 1.5），静止即满强度边缘折射。
  *
  * - 圆角自动读取元素 computed border-radius（响应式断点切换半径也能跟随）
  * - ResizeObserver 跟随尺寸变化重建位移图
  * - feImage 的 data URL 异步加载后 Chromium 不重跑 backdrop-filter，
- *   每次换图后强制重绘（关-开 backdrop-filter）
+ *   每次换图后强制重绘（关-开 backdrop-filter，必须跨帧：'none' 要真实
+ *   绘制过一帧再写回 url()，同一任务内同步切换是无效操作）
  * - 仅 Chromium 支持 url() 引用；Safari/Firefox / 触屏设备返回 null，
  *   调用方保留原有 CSS 模糊回退
  */
 export function useLensBackdrop({
   refractionHeight = 16,
-  maxMag = 14,
-  blur = 3,
+  maxMag = 32,
+  blur = 0,
   saturate = 1.5,
 } = {}) {
   const elRef = useRef(null)
