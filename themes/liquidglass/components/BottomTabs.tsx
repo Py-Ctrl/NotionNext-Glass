@@ -611,7 +611,9 @@ const BottomTabs = (props) => {
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
-            {/* 玻璃底板 */}
+            {/* 玻璃底板：只能用 backdropFilter: url(#lens) 折射。
+                绝不能同时写 -webkit-backdrop-filter: blur(...) —— Chromium 中这两者
+                是同一属性的别名，-webkit 在后会覆盖 url()，导致位移全部失效，永远只剩纯模糊 */}
             <div
               ref={glassRef}
               style={{
@@ -619,7 +621,6 @@ const BottomTabs = (props) => {
                 inset: 0,
                 borderRadius: `${CONTAINER_H / 2}px`,
                 backdropFilter: `url(#${lensFilterId})`,
-                WebkitBackdropFilter: 'blur(12px) saturate(1.35)',
                 background: isDarkMode ? 'rgba(18,18,18,0.32)' : 'rgba(250,250,250,0.28)',
                 boxShadow: isDarkMode
                   ? 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.25), 0 8px 32px rgba(0,0,0,0.4)'
@@ -640,7 +641,8 @@ const BottomTabs = (props) => {
                 borderRadius: `${GLASS_H / 2}px`,
                 background: 'transparent',
                 backdropFilter: `url(#${indFilterId})`,
-                zIndex: 2,
+                // 指示器（含放大后）要盖在 tab 内容层之上，蓝色胶囊不能"沉在底栏下面"
+                zIndex: 4,
                 pointerEvents: 'none',
                 transformOrigin: 'center',
                 willChange: 'transform',
