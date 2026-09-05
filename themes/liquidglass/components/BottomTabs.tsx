@@ -244,11 +244,24 @@ const BottomTabs = (props) => {
   const applyFrame = React.useCallback((p, x) => {
     const ind = indicatorRef.current
     if (ind) {
-      const s = 1 + (78 / 56 - 1) * p
-      // idle 只留淡弱在场感（不显眼、不误认成第二个圈）；按住/拖动时满显放大
-      const o = 0.35 + 0.65 * p
-      ind.style.opacity = String(o)
-      ind.style.transform = `translateX(${x}px) scale(${s})`
+      // 放大必须改几何尺寸（width/height/top/left），不能靠 transform: scale():
+      // Chromium 对带 transform 缩放的 backdrop-filter 按缩放前尺寸裁剪采样区，
+      // 溢出边缘就没有折射，会变成干净圆片。
+      // 几何尺寸围绕中心放大：left+width/2 与 top+height/2 在放大前后保持不变。
+      const grow = (78 / 56 - 1) * p // 0 → ×1.39
+      const w = indW * (1 + grow)
+      const h = GLASS_H * (1 + grow)
+      const dl = (w - indW) / 2
+      const dt = (h - GLASS_H) / 2
+      ind.style.left = `${GLASS_PAD - dl}px`
+      ind.style.top = `${GLASS_PAD - dt}px`
+      ind.style.width = `${w}px`
+      ind.style.height = `${h}px`
+      ind.style.borderRadius = `${h / 2}px`
+      // 只做平移不缩放，backdrop 采样区随平移动完整保留
+      ind.style.transform = `translateX(${x}px)`
+      // idle 只留淡弱在场感；按住/拖动时满显放大
+      ind.style.opacity = String(0.35 + 0.65 * p)
     }
     const btn = pressedBtnRef.current
     if (btn) {
