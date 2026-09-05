@@ -12,14 +12,21 @@ import CONFIG from '../config'
 
 // SVG 透镜底栏（backdrop-filter: url(#feDisplacementMap)，折射真实页面内容）。
 // 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 回退到 CSS 玻璃底栏。
-// 按钮类组件一律 SVG/CSS 实现（WebGL 开销大，只留给真正需要的场景）。
+// 参数 1:1 对齐原版 liquid-glass-webgl（build-bottom-tabs.ts / element-pass-indicator.ts）：
+//   容器玻璃 lens(24dp,-24dp) + blur(8dp) + saturate(1.5) + surface FAFAFA@0.4/121212@0.4
+//   指示器   lens(10dp*p, 14dp*p) 折射随按压 ramp（静止为 0），表面全透明，
+//            静止仅 10% 暗化层；蓝色 = 选中 tab 图标+文字染 accent(#0088FF/#0091FF)，
+//            不是给胶囊涂蓝色。
 const SVG_LENS_ENABLED = true
-// 透镜环带宽度（px）与最大位移（px），对应 WebGL 版 refractionHeight/refractionAmount
-const LENS_REFRACTION_H = 18
-const LENS_MAX_MAG = 14
-// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，即位移 14px）
+// 容器透镜环带宽度（px）与最大位移（px），对应原版 refractionHeight/refractionAmount
+const LENS_REFRACTION_H = 24
+const LENS_MAX_MAG = 24
+// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，乘以 pressProgress）
 const IND_REFRACTION_H = 10
 const IND_MAX_MAG = 14
+// 原版强调色：light #0088FF / dark #0091FF
+const ACCENT_LIGHT = '#0088FF'
+const ACCENT_DARK = '#0091FF'
 
 // --- 长按折射弹簧（原版 InteractiveHighlight.kt spring(0.5f, 300f)） ---
 const SPRING_K = 300
@@ -57,9 +64,14 @@ const BottomTabs = (props) => {
   const pressedBtnRef = React.useRef(null)
   const suppressClickUntilRef = React.useRef(0)
   // SVG filter 元素引用：按帧更新位移强度 / 位移图尺寸
-  const lensDispRef = React.useRef(null)
+  const indDispRef = React.useRef(null)
   const indFeImgRef = React.useRef(null)
-  const indGlowRef = React.useRef(null)
+  const indDimRef = React.useRef(null)
+  const indDarkRef = React.useRef(null)
+  const indHiRef = React.useRef(null)
+  // applyFrame 必须读到最新几何值：useCallback([]) 会捕获首帧（isDesktop=false、
+  // canvasW 初值）的尺寸，按压/路由动画落定后会把指示器写回错误的小尺寸
+  const geoRef = React.useRef(null)
   const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null })
   const [canvasW, setCanvasW] = React.useState(380)
   const [svgLens, setSvgLens] = React.useState(false)
@@ -186,6 +198,7 @@ const BottomTabs = (props) => {
     () => `liquid-tabs-ind-${Math.round(indW)}-${Math.round(GLASS_H)}`,
     [indW, GLASS_H]
   )
+  geoRef.current = { indW, GLASS_H, GLASS_PAD }
 
   // 位移图是 data URL，异步加载；Chromium 加载完不会自动重跑 backdrop-filter，
   // 必须等位移图预加载完成后强制重绘（关-开），否则 feDisplacementMap 零位移。
@@ -233,18 +246,23 @@ const BottomTabs = (props) => {
     return () => clearTimeout(guard)
   }, [svgLens, lensMap, indMap, lensFilterId, indFilterId])
 
-  // 长按（原版 InteractiveHighlight spring(0.5f, 300f)）：
-  // 只放大指示器（×1.39，即 56→78dp 的比例）与被按 tab 的内容（→1.2），
-  // 底栏容器本身不缩放。折射强度保持常量 28：超出底栏的部分随 transform
-  // 等比放大折射，加大位移 scale 会把边缘撕出锯齿
+  // 长按（原版 InteractiveHighlight spring(0.5f, 300f)），一切随 progress ramp：
+  //   lens(10dp*p, 14dp*p)   折射 0 → 满（静止完全无折射）
+  //   highlight alpha 0.5*p   白色 45° 方向高光
+  //   shadow alpha p          外阴影 24dp 半径 / 4dp 偏移 / Black@0.1
+  //   innerShadow 8dp*p       内阴影 alpha 0.3*p
+  //   暗化 0.1*(1-p) 淡出 + Black@0.03*p 淡入（原版 onDrawSurface）
+  //   指示器 ×1.393（56→78dp，超出底栏）+ 被按 tab 内容 ×1.2
+  // 蓝色不参与 ramp：选中项图标+文字恒为 accent 蓝（原版 fgTexture 蓝色 tint 掩膜）
   const applyFrame = React.useCallback((p, x) => {
+    const geo = geoRef.current || { indW: 0, GLASS_H: 56, GLASS_PAD: 4 }
+    const { indW, GLASS_H, GLASS_PAD } = geo
     const ind = indicatorRef.current
     if (ind) {
-      // 放大必须改几何尺寸（width/height/top/left），不能靠 transform: scale():
+      // 放大必须改几何尺寸（width/height/top/left），不能靠 transform: scale()：
       // Chromium 对带 transform 缩放的 backdrop-filter 按缩放前尺寸裁剪采样区，
-      // 溢出边缘就没有折射，会变成干净圆片。
-      // 几何尺寸围绕中心放大：left+width/2 与 top+height/2 在放大前后保持不变。
-      const grow = (78 / 56 - 1) * p // 0 → ×1.39
+      // 溢出边缘就没有折射。几何尺寸围绕中心放大，backdrop 采样随平移完整保留。
+      const grow = (78 / 56 - 1) * p // 0 → ×1.393
       const w = indW * (1 + grow)
       const h = GLASS_H * (1 + grow)
       const dl = (w - indW) / 2
@@ -254,27 +272,31 @@ const BottomTabs = (props) => {
       ind.style.width = `${w}px`
       ind.style.height = `${h}px`
       ind.style.borderRadius = `${h / 2}px`
-      // 只做平移，backdrop 采样随平移动完整保留
       ind.style.transform = `translateX(${x}px)`
-      // idle 弱在场，按住/拖动满显
-      ind.style.opacity = String(0.35 + 0.65 * p)
+      ind.style.boxShadow =
+        p > 0.004
+          ? `0 ${(4 * p).toFixed(1)}px ${(24 * p).toFixed(1)}px rgba(0,0,0,${(0.1 * p).toFixed(3)}), inset 0 ${(8 * p).toFixed(1)}px ${(8 * p).toFixed(1)}px rgba(0,0,0,${(0.3 * p).toFixed(3)})`
+          : 'none'
       // 位移图随几何拉伸铺满放大区域：放大边缘的折射也因此完整
       const feImg = indFeImgRef.current
       if (feImg) {
         feImg.setAttribute('width', w)
         feImg.setAttribute('height', h)
       }
+      // 折射随按压 ramp：静止 scale=0（feDisplacementMap 空操作）
+      const disp = indDispRef.current
+      if (disp) {
+        disp.setAttribute('scale', (IND_MAX_MAG * 2 * p).toFixed(1))
+      }
     }
-    // 蓝色胶囊高光：idle 淡，按下满显（不与底栏混成"第二个圈"）
-    const glow = indGlowRef.current
-    if (glow) {
-      glow.style.opacity = String(0.35 + 0.65 * p)
-    }
-    // 长按增强整条底栏折射（原版 press ramps bar refraction）
-    const lensDisp = lensDispRef.current
-    if (lensDisp) {
-      lensDisp.setAttribute('scale', (LENS_MAX_MAG * 2 * (0.6 + 0.4 * p)).toFixed(1))
-    }
+    // 原版 onDrawSurface 两层覆盖：暗化淡出 + 按压黑 3% 淡入
+    const dim = indDimRef.current
+    if (dim) dim.style.opacity = (0.1 * (1 - p)).toFixed(3)
+    const dark = indDarkRef.current
+    if (dark) dark.style.opacity = (0.03 * p).toFixed(3)
+    // 原版 Highlight.Default.copy(alpha=0.5*p)：白色 45° 方向性高光
+    const hi = indHiRef.current
+    if (hi) hi.style.opacity = (0.5 * p).toFixed(3)
     const btn = pressedBtnRef.current
     if (btn) {
       btn.style.transform = p > 0 ? `scale(${1 + 0.2 * p})` : ''
@@ -369,7 +391,20 @@ const BottomTabs = (props) => {
     st.indX0 = indXRef.current
     st.dragging = false
     st.target = 1
-    pressedBtnRef.current = e.target.closest && e.target.closest('button')
+    // 原版 beginTabDrag：按下哪个 tab，指示器就弹簧滑向哪个 tab 并开始放大；
+    // 拖动基线也是被按 tab（原版 dragTab: newTarget = startTabIndex + delta/tabW）
+    const rect = containerRef.current && containerRef.current.getBoundingClientRect()
+    if (rect) {
+      const idx = Math.max(0, Math.min(n - 1, Math.floor((e.clientX - rect.left - GLASS_PAD) / tabW)))
+      st.pxTarget = idx * tabW
+      st.indX0 = idx * tabW
+      setVisualIdx(idx)
+      pressedBtnRef.current =
+        (e.target.closest && e.target.closest('button')) ||
+        (containerRef.current.querySelectorAll('button')[idx] ?? null)
+    } else {
+      pressedBtnRef.current = e.target.closest && e.target.closest('button')
+    }
     startPressLoop()
 
     const move = (ev) => {
@@ -430,7 +465,7 @@ const BottomTabs = (props) => {
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', release)
     window.addEventListener('pointercancel', release)
-  }, [indW, followIndicator, animateIndicatorTo, setVisualIdx, startPressLoop])
+  }, [indW, GLASS_PAD, followIndicator, animateIndicatorTo, setVisualIdx, startPressLoop])
 
   React.useEffect(() => {
     const st = pressRef.current
@@ -497,9 +532,13 @@ const BottomTabs = (props) => {
   }
 
   // SVG 透镜底栏：backdrop-filter 直接采样真实页面，feDisplacementMap 做透镜折射。
-  // 指示器是独立透明透镜（原版 tint/surface 全透明），选中项靠文字变蓝表达
+  // 1:1 原版：选中项图标+文字染 accent 蓝（fgTexture tint 掩膜），
+  // 指示器胶囊全透明，静止仅 10% 暗化，按压时折射/高光/阴影 ramp + ×1.393 放大
   if (svgLens) {
-    const textMuted = isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'
+    const accent = isDarkMode ? ACCENT_DARK : ACCENT_LIGHT
+    const contentColor = isDarkMode ? '#ffffff' : '#000000'
+    const dimColor = isDarkMode ? '#ffffff' : '#000000'
+    const textHalo = isDarkMode ? '0 1px 2px rgba(0,0,0,0.45)' : '0 1px 2px rgba(255,255,255,0.35)'
     return (
       <>
         {renderSubMenu()}
@@ -527,6 +566,7 @@ const BottomTabs = (props) => {
               width='0'
               height='0'
               style={{ position: 'absolute', pointerEvents: 'none' }}>
+              {/* 容器玻璃：原版 lens(24dp,-24dp) + blur(8dp) + saturate(1.5)，恒定不随按压变 */}
               <filter id={lensFilterId} colorInterpolationFilters='sRGB'>
                 <feImage
                   href={lensMap}
@@ -538,16 +578,16 @@ const BottomTabs = (props) => {
                   preserveAspectRatio='none'
                 />
                 <feDisplacementMap
-                  ref={lensDispRef}
                   in='SourceGraphic'
                   in2='map'
                   scale={LENS_MAX_MAG * 2}
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
-                <feGaussianBlur stdDeviation={1.4} />
-                <feColorMatrix type='saturate' values='1.35' />
+                <feGaussianBlur stdDeviation={8} />
+                <feColorMatrix type='saturate' values='1.5' />
               </filter>
+              {/* 指示器透镜：原版 lens(10dp*p, 14dp*p)，scale 随按压 0→28 逐帧 ramp */}
               <filter id={indFilterId} colorInterpolationFilters='sRGB'>
                 <feImage
                   ref={indFeImgRef}
@@ -560,9 +600,10 @@ const BottomTabs = (props) => {
                   preserveAspectRatio='none'
                 />
                 <feDisplacementMap
+                  ref={indDispRef}
                   in='SourceGraphic'
                   in2='map'
-                  scale={IND_MAX_MAG * 2}
+                  scale={0}
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
@@ -571,7 +612,8 @@ const BottomTabs = (props) => {
             </svg>
             {/* 玻璃底板：只能用 backdropFilter: url(#lens) 折射。
                 绝不能同时写 -webkit-backdrop-filter: blur(...) —— Chromium 中这两者
-                是同一属性的别名，-webkit 在后会覆盖 url()，导致位移全部失效，永远只剩纯模糊 */}
+                是同一属性的别名，-webkit 在后会覆盖 url()，导致位移全部失效，永远只剩纯模糊。
+                表面色原版 FAFAFA@0.4 / 121212@0.4 */}
             <div
               ref={glassRef}
               style={{
@@ -579,15 +621,15 @@ const BottomTabs = (props) => {
                 inset: 0,
                 borderRadius: `${CONTAINER_H / 2}px`,
                 backdropFilter: `url(#${lensFilterId})`,
-                background: isDarkMode ? 'rgba(18,18,18,0.32)' : 'rgba(250,250,250,0.28)',
+                background: isDarkMode ? 'rgba(18,18,18,0.4)' : 'rgba(250,250,250,0.4)',
                 boxShadow: isDarkMode
                   ? 'inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.25), 0 8px 32px rgba(0,0,0,0.4)'
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
               }}
             />
-            {/* 透明透镜指示器：只折射放大背后内容 + 蓝色胶囊高光。
-                蓝色在胶囊内部（·随按压 ramp），不是靠文字变蓝表达。
-                按压放大 ×1.39 超出底栏上下边缘，位移图随几何拉伸保持折射 */}
+            {/* 透明透镜指示器（原版 Layer 3）：表面全透明，折射只在按压时 ramp。
+                放在内容层之下：原版指示器采样"无文字的玻璃层"，蓝色内容由
+                fgTexture 掩膜画在折射之上 —— CSS 等价 = 内容层盖在透镜上不折射 */}
             <div
               ref={indicatorRef}
               style={{
@@ -599,27 +641,48 @@ const BottomTabs = (props) => {
                 borderRadius: `${GLASS_H / 2}px`,
                 background: 'transparent',
                 backdropFilter: `url(#${indFilterId})`,
-                // 指示器（含放大后）要盖在 tab 内容层之上，蓝色胶囊不能"沉在底栏下面"
-                zIndex: 4,
+                zIndex: 2,
                 pointerEvents: 'none',
                 transformOrigin: 'center',
                 willChange: 'transform',
               }}>
-              {/* 蓝色胶囊高光：原版选中是蓝字，这里蓝落在胶囊里，idle 淡、按住满显 */}
+              {/* 原版 onDrawSurface：暗化 dimColor@0.1（静止）→ 0（按压） */}
               <div
-                ref={indGlowRef}
+                ref={indDimRef}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 'inherit',
+                  background: dimColor,
+                  opacity: 0.1,
+                }}
+              />
+              {/* 原版 onDrawSurface 第二层：Black@0.03*progress（按压淡入） */}
+              <div
+                ref={indDarkRef}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 'inherit',
+                  background: '#000000',
+                  opacity: 0,
+                }}
+              />
+              {/* 原版 Highlight.Default.copy(alpha=0.5*p)：白色 45° 方向性边缘高光 */}
+              <div
+                ref={indHiRef}
                 style={{
                   position: 'absolute',
                   inset: 0,
                   borderRadius: 'inherit',
                   background:
-                    'linear-gradient(135deg, rgba(0,122,255,0.55), rgba(10,132,255,0.3))',
-                  opacity: 0.35,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
+                    'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.2) 42%, rgba(255,255,255,0) 72%)',
+                  opacity: 0,
                 }}
               />
             </div>
-            {/* tab 内容层：指示器之上，文字不被透镜扭曲 */}
+            {/* tab 内容层：盖在指示器之上（原版蓝色内容由掩膜画在折射层上方，不折射）。
+                选中项图标+文字染 accent 蓝（原版 fgTexture tint 掩膜），其余黑/白 */}
             <div className='absolute inset-0 flex h-full' style={{ zIndex: 3 }}>
               {tabs.map((tab, i) => {
                 const isActive = visualIdxState === i
@@ -630,13 +693,18 @@ const BottomTabs = (props) => {
                     onClick={() => handleTabSelect(i)}
                     className='flex-1 flex flex-col items-center justify-center gap-1 relative cursor-pointer'
                     style={{
-                      color: textMuted,
+                      color: isActive ? accent : contentColor,
+                      textShadow: textHalo,
                       WebkitTapHighlightColor: 'transparent',
                       transformOrigin: 'center center',
                       willChange: 'transform',
                     }}>
                     <svg
-                      style={{ width: ICON_SIZE, height: ICON_SIZE }}
+                      style={{
+                        width: ICON_SIZE,
+                        height: ICON_SIZE,
+                        filter: isActive ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' : 'none',
+                      }}
                       viewBox='0 0 24 24'
                       fill='currentColor'>
                       <path d={tab.icon} />
@@ -646,7 +714,7 @@ const BottomTabs = (props) => {
                         fontSize: FONT_SIZE,
                         fontWeight: isActive ? 600 : 400,
                         whiteSpace: 'nowrap',
-                        transition: 'color 0.2s, font-weight 0.2s',
+                        transition: 'color 0.15s',
                       }}>
                       {tab.label}
                     </span>
@@ -670,11 +738,10 @@ const BottomTabs = (props) => {
             <button
               key={idx}
               onClick={() => handleTabSelect(idx)}
-              className={`flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors ${
-                activeTab === idx ? 'text-indigo-500' : 'text-gray-500 dark:text-gray-400'
-              }`}
+              className='flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors'
+              style={{ color: activeTab === idx ? (isDarkMode ? ACCENT_DARK : ACCENT_LIGHT) : undefined }}
             >
-              <svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
+              <svg className={`w-5 h-5 ${activeTab === idx ? '' : 'text-gray-500 dark:text-gray-400'}`} viewBox='0 0 24 24' fill='currentColor'>
                 <path d={tab.icon} />
               </svg>
               {tab.label}
