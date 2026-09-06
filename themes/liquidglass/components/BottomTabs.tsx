@@ -22,8 +22,9 @@ const LENS_REFRACTION_H = 18
 const LENS_MAX_MAG = 14
 // 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）边缘壳带折射
 const IND_MAX_MAG = 14
-// 原版指示器 lens(refractionHeight=10dp)：位移只在边缘壳带，中心不折射
-const IND_REFRACTION_H = 10
+// 原版指示器 lens(refractionHeight=10dp)：位移只在边缘壳带，中心不折射；
+// 壳带宽度取 18px 使边缘→中心过渡更柔和（太窄会在文字边缘产生生硬放大条带）
+const IND_REFRACTION_H = 18
 // 原版强调色：light #0088FF / dark #0091FF
 const ACCENT_LIGHT = '#0088FF'
 const ACCENT_DARK = '#0091FF'
