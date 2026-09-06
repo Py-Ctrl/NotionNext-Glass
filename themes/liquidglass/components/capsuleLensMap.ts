@@ -21,7 +21,8 @@ export function generateRoundedRectLensMap(
   h: number,
   radius: number,
   refractionHeight: number,
-  maxMag: number
+  maxMag: number,
+  minRatio: number = 0
 ): string {
   const W = Math.max(2, Math.round(w))
   const H = Math.max(2, Math.round(h))
@@ -82,9 +83,12 @@ export function generateRoundedRectLensMap(
 
       let ox = 0
       let oy = 0
-      if (edgeDist > 0 && edgeDist < refractionHeight) {
-        const ft = edgeDist / refractionHeight
-        const mag = maxMag * Math.sqrt(1 - ft * ft)
+      // 原版凸透镜折射贯穿全幅：位移随到边缘距离从最强向中心平滑衰减，
+      // 不再只限制在外层壳带（那会让核心区位移场为 0 → 中间完全无折射）。
+      // minRatio 保证中心也保留非零位移（0 = 只边缘、1 = 全域满磁）。
+      if (edgeDist >= 0 && edgeDist <= refractionHeight) {
+        const ft = edgeDist / refractionHeight // 0=边缘 → 1=中心(作用域边缘)
+        const mag = maxMag * (minRatio + (1 - minRatio) * Math.sqrt(1 - ft * ft))
         ox = nx * mag
         oy = ny * mag
       }

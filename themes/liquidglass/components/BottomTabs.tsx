@@ -20,8 +20,7 @@ const SVG_LENS_ENABLED = true
 // 容器透镜环带宽度（px）与最大位移（px）
 const LENS_REFRACTION_H = 18
 const LENS_MAX_MAG = 14
-// 指示器透镜（原版 refractionHeight 10 / refractionAmount -14，乘以 pressProgress）
-const IND_REFRACTION_H = 10
+// 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）全幅凸透镜，不做外壳带限制
 const IND_MAX_MAG = 14
 // 原版强调色：light #0088FF / dark #0091FF
 const ACCENT_LIGHT = '#0088FF'
@@ -188,9 +187,11 @@ const BottomTabs = (props) => {
     () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
     [canvasW, CONTAINER_H]
   )
-  // 指示器透镜：胶囊位移图（原版 refractionHeight 10 / refractionAmount -14 / 无模糊 / 饱和 1）
+  // 指示器透镜：胶囊凸透镜位移图（原版 refractionHeight 10 / refractionAmount -14，
+  // 位移贯穿全幅：refractionHeight=胶囊半径覆盖到中心，minRatio=0.45 保证中心
+  // 也保留非零位移而不只是边缘壳带 —— 原版按住时整个胶囊内部都折射，非仅外层）
   const indMap = React.useMemo(
-    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, IND_REFRACTION_H, IND_MAX_MAG) : ''),
+    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, GLASS_H / 2, IND_MAX_MAG, 0.45) : ''),
     [svgLens, indW, GLASS_H]
   )
   const indFilterId = React.useMemo(
@@ -608,7 +609,7 @@ const BottomTabs = (props) => {
                 {/* 震背去锯齿：原版把文字渲染成双线性采样纹理再折射，位移后笔划平滑；
                     CSS 直接位移硬 AA 文字会在位移梯度处出现台阶/断裂。加一个亚像素
                     模糊（≈原版 LINEAR sampling 的软化）抹平位移采样锯齿，不伤折射。 */}
-                <feGaussianBlur stdDeviation={0.6} />
+                <feGaussianBlur stdDeviation={0.8} />
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
