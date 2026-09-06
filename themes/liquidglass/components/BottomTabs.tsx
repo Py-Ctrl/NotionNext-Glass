@@ -609,7 +609,7 @@ const BottomTabs = (props) => {
                 {/* 震背去锯齿：原版把文字渲染成双线性采样纹理再折射，位移后笔划平滑；
                     CSS 直接位移硬 AA 文字会在位移梯度处出现台阶/断裂。加一个亚像素
                     模糊（≈原版 LINEAR sampling 的软化）抹平位移采样锯齿，不伤折射。 */}
-                <feGaussianBlur stdDeviation={0.8} />
+                <feGaussianBlur stdDeviation={0.6} />
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
@@ -684,9 +684,35 @@ const BottomTabs = (props) => {
                   opacity: 0,
                 }}
               />
+              {/* 原版 fgTexture tint 掩膜：胶囊内部颜色为该 tab 的 icon+label 副本。
+                  胶囊滑动（transform translateX）时副本随之移动，始终显示当前选中
+                  tab 的蓝色内容 —— 不是直接改外层文字颜色，而是胶囊里画一份蓝色副本 */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 2,
+                  color: accent,
+                  pointerEvents: 'none',
+                }}>
+                <svg
+                  style={{ width: ICON_SIZE, height: ICON_SIZE, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+                  viewBox='0 0 24 24'
+                  fill='currentColor'>
+                  <path d={tabs[visualIdxState]?.icon || ''} />
+                </svg>
+                <span style={{ fontSize: FONT_SIZE, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  {tabs[visualIdxState]?.label || ''}
+                </span>
+              </div>
             </div>
-            {/* tab 内容层：盖在指示器之上（原版蓝色内容由掩膜画在折射层上方，不折射）。
-                选中项图标+文字染 accent 蓝（原版 fgTexture tint 掩膜），其余黑/白 */}
+            {/* tab 内容层：所有 tab 外层文字统一为普通 contentColor（原版胶囊内部
+                单独画蓝色模板，外层 tab 不直接变蓝 —— 选中 tab 的文字/图标由
+                胶囊顶部的蓝色模板呈现，正好盖住它） */}
             <div className='absolute inset-0 flex h-full' style={{ zIndex: 3 }}>
               {tabs.map((tab, i) => {
                 const isActive = visualIdxState === i
@@ -697,7 +723,7 @@ const BottomTabs = (props) => {
                     onClick={() => handleTabSelect(i)}
                     className='flex-1 flex flex-col items-center justify-center gap-1 relative cursor-pointer'
                     style={{
-                      color: isActive ? accent : contentColor,
+                      color: contentColor,
                       textShadow: textHalo,
                       WebkitTapHighlightColor: 'transparent',
                       transformOrigin: 'center center',
@@ -707,7 +733,6 @@ const BottomTabs = (props) => {
                       style={{
                         width: ICON_SIZE,
                         height: ICON_SIZE,
-                        filter: isActive ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' : 'none',
                       }}
                       viewBox='0 0 24 24'
                       fill='currentColor'>
@@ -716,7 +741,6 @@ const BottomTabs = (props) => {
                     <span
                       style={{
                         fontSize: FONT_SIZE,
-                        fontWeight: isActive ? 600 : 400,
                         whiteSpace: 'nowrap',
                         transition: 'color 0.15s',
                       }}>
