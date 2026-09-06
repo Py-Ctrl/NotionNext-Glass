@@ -22,9 +22,6 @@ const LENS_REFRACTION_H = 18
 const LENS_MAX_MAG = 14
 // 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）边缘壳带折射
 const IND_MAX_MAG = 14
-// 原版指示器 lens(refractionHeight=10dp)：位移只在边缘壳带，中心不折射；
-// 壳带宽度取 18px 使边缘→中心过渡更柔和（太窄会在文字边缘产生生硬放大条带）
-const IND_REFRACTION_H = 18
 // 原版强调色：light #0088FF / dark #0091FF
 const ACCENT_LIGHT = '#0088FF'
 const ACCENT_DARK = '#0091FF'
@@ -191,11 +188,11 @@ const BottomTabs = (props) => {
     () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
     [canvasW, CONTAINER_H]
   )
-  // 指示器透镜：胶囊凸透镜位移图（原版 refractionHeight 10 / refractionAmount -14）：
-  // 位移只在边缘壳带（refractionHeight≈10px），方向指向内部 → 边缘放大折射；
-  // 中心区 edgeDist>refractionHeight 位移=0，文字原样不折射（边缘折射、中间不折射）
+  // 指示器透镜：胶囊凸透镜位移图（原版 refractionHeight 10 / refractionAmount -14），
+  // 满幅折射贯穿到中心：refractionHeight=胶囊半径覆盖到中心，minRatio=0.45 保证
+  // 中心也保留非零位移而不只是边缘壳带 → 整个胶囊内部文字都折射弯折
   const indMap = React.useMemo(
-    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, IND_REFRACTION_H, IND_MAX_MAG, 0) : ''),
+    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, GLASS_H / 2, IND_MAX_MAG, 0.45) : ''),
     [svgLens, indW, GLASS_H]
   )
   const indFilterId = React.useMemo(
