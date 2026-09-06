@@ -67,6 +67,7 @@ const BottomTabs = (props) => {
   const indDimRef = React.useRef(null)
   const indDarkRef = React.useRef(null)
   const indHiRef = React.useRef(null)
+  const indBlurRef = React.useRef(null)
   // applyFrame 必须读到最新几何值：useCallback([]) 会捕获首帧（isDesktop=false、
   // canvasW 初值）的尺寸，按压/路由动画落定后会把指示器写回错误的小尺寸
   const geoRef = React.useRef(null)
@@ -296,9 +297,16 @@ const BottomTabs = (props) => {
     // 原版 Highlight.Default.copy(alpha=0.5*p)：白色 45° 方向性高光
     const hi = indHiRef.current
     if (hi) hi.style.opacity = (0.5 * p).toFixed(3)
+    // 去锯齿模糊遮罩：随按压淡入（静止 p=0 → 无模糊），模拟原版 LINEAR 采样软化
+    const blur = indBlurRef.current
+    if (blur) blur.style.opacity = (0.85 * p).toFixed(3)
+    // 被按 tab 内容放大（原版 LocalLiquidBottomTabScale=lerp(1,1.2,pressProgress)）。
+    // 只在"原地长按"时放大；一旦识别为拖动（拖动跟手走指示器位置），立即清空，
+    // 避免放大后的 tab 滑动到别处也不缩回
+    const st = pressRef.current
     const btn = pressedBtnRef.current
     if (btn) {
-      btn.style.transform = p > 0 ? `scale(${1 + 0.2 * p})` : ''
+      btn.style.transform = p > 0 && !st.dragging ? `scale(${1 + 0.2 * p})` : ''
     }
   }, [])
 
@@ -606,10 +614,6 @@ const BottomTabs = (props) => {
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
-                {/* 震背去锯齿：原版把文字渲染成双线性采样纹理再折射，位移后笔划平滑；
-                    CSS 直接位移硬 AA 文字会在位移梯度处出现台阶/断裂。加一个亚像素
-                    模糊（≈原版 LINEAR sampling 的软化）抹平位移采样锯齿，不伤折射。 */}
-                <feGaussianBlur stdDeviation={0.6} />
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
@@ -682,6 +686,21 @@ const BottomTabs = (props) => {
                   background:
                     'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.2) 42%, rgba(255,255,255,0) 72%)',
                   opacity: 0,
+                }}
+              />
+              {/* 去锯齿模糊遮罩：backdropFilter 软化解锯齿。独立层 opacity 随按压
+                  （applyFrame 里 indBlurRef.opacity=0.85*p），原版 LINEAR 采样软化 ——
+                  不能写死在 SVG filter 里（否则静止时也模糊内容，见 bug：未长按就开始模糊） */}
+              <div
+                ref={indBlurRef}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 'inherit',
+                  backdropFilter: 'blur(0.6px)',
+                  WebkitBackdropFilter: 'blur(0.6px)',
+                  opacity: 0,
+                  pointerEvents: 'none',
                 }}
               />
               {/* 原版 fgTexture tint 掩膜：胶囊内部颜色为该 tab 的 icon+label 副本。
