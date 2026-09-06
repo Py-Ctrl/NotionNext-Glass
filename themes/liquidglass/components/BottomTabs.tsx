@@ -605,6 +605,10 @@ const BottomTabs = (props) => {
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
+                {/* 震背去锯齿：原版把文字渲染成双线性采样纹理再折射，位移后笔划平滑；
+                    CSS 直接位移硬 AA 文字会在位移梯度处出现台阶/断裂。加一个亚像素
+                    模糊（≈原版 LINEAR sampling 的软化）抹平位移采样锯齿，不伤折射。 */}
+                <feGaussianBlur stdDeviation={0.6} />
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
