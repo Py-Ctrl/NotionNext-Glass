@@ -20,8 +20,10 @@ const SVG_LENS_ENABLED = true
 // 容器透镜环带宽度（px）与最大位移（px）
 const LENS_REFRACTION_H = 18
 const LENS_MAX_MAG = 14
-// 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）全幅凸透镜，不做外壳带限制
+// 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）边缘壳带折射
 const IND_MAX_MAG = 14
+// 原版指示器 lens(refractionHeight=10dp)：位移只在边缘壳带，中心不折射
+const IND_REFRACTION_H = 10
 // 原版强调色：light #0088FF / dark #0091FF
 const ACCENT_LIGHT = '#0088FF'
 const ACCENT_DARK = '#0091FF'
@@ -59,7 +61,6 @@ const BottomTabs = (props) => {
   const indicatorRef = React.useRef(null)
   const indXRef = React.useRef(0)
   const visualIdxRef = React.useRef(0)
-  const pressedBtnRef = React.useRef(null)
   const suppressClickUntilRef = React.useRef(0)
   // SVG filter 元素引用：按帧更新位移强度 / 位移图尺寸
   const indDispRef = React.useRef(null)
@@ -67,6 +68,7 @@ const BottomTabs = (props) => {
   const indDimRef = React.useRef(null)
   const indDarkRef = React.useRef(null)
   const indHiRef = React.useRef(null)
+  // feGaussianBlur 元素（指示器 filter 内，去锯齿）：stdDeviation 随按压 ramp
   const indBlurRef = React.useRef(null)
   // applyFrame 必须读到最新几何值：useCallback([]) 会捕获首帧（isDesktop=false、
   // canvasW 初值）的尺寸，按压/路由动画落定后会把指示器写回错误的小尺寸
@@ -188,11 +190,11 @@ const BottomTabs = (props) => {
     () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
     [canvasW, CONTAINER_H]
   )
-  // 指示器透镜：胶囊凸透镜位移图（原版 refractionHeight 10 / refractionAmount -14，
-  // 位移贯穿全幅：refractionHeight=胶囊半径覆盖到中心，minRatio=0.45 保证中心
-  // 也保留非零位移而不只是边缘壳带 —— 原版按住时整个胶囊内部都折射，非仅外层）
+  // 指示器透镜：胶囊凸透镜位移图（原版 refractionHeight 10 / refractionAmount -14）：
+  // 位移只在边缘壳带（refractionHeight≈10px），方向指向内部 → 边缘放大折射；
+  // 中心区 edgeDist>refractionHeight 位移=0，文字原样不折射（边缘折射、中间不折射）
   const indMap = React.useMemo(
-    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, GLASS_H / 2, IND_MAX_MAG, 0.45) : ''),
+    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, IND_REFRACTION_H, IND_MAX_MAG, 0) : ''),
     [svgLens, indW, GLASS_H]
   )
   const indFilterId = React.useMemo(
@@ -297,16 +299,12 @@ const BottomTabs = (props) => {
     // 原版 Highlight.Default.copy(alpha=0.5*p)：白色 45° 方向性高光
     const hi = indHiRef.current
     if (hi) hi.style.opacity = (0.5 * p).toFixed(3)
-    // 去锯齿模糊遮罩：随按压淡入（静止 p=0 → 无模糊），模拟原版 LINEAR 采样软化
+    // 去锯齿模糊（原版 fgTexture LINEAR 采样的软化）：feGaussianBlur 随按压 ramp，
+    // 静止 p=0 时 stdDeviation=0 完全无模糊。不能放独立 div —— 半透明模糊层
+    // 是"未模糊内容+模糊内容"的重影，不是真模糊
     const blur = indBlurRef.current
-    if (blur) blur.style.opacity = (0.85 * p).toFixed(3)
-    // 被按 tab 内容放大（原版 LocalLiquidBottomTabScale=lerp(1,1.2,pressProgress)）。
-    // 只在"原地长按"时放大；一旦识别为拖动（拖动跟手走指示器位置），立即清空，
-    // 避免放大后的 tab 滑动到别处也不缩回
-    const st = pressRef.current
-    const btn = pressedBtnRef.current
-    if (btn) {
-      btn.style.transform = p > 0 && !st.dragging ? `scale(${1 + 0.2 * p})` : ''
+    if (blur) {
+      blur.setAttribute('stdDeviation', (0.8 * p).toFixed(2))
     }
   }, [])
 
@@ -406,11 +404,6 @@ const BottomTabs = (props) => {
       st.pxTarget = idx * tabW
       st.indX0 = idx * tabW
       setVisualIdx(idx)
-      pressedBtnRef.current =
-        (e.target.closest && e.target.closest('button')) ||
-        (containerRef.current.querySelectorAll('button')[idx] ?? null)
-    } else {
-      pressedBtnRef.current = e.target.closest && e.target.closest('button')
     }
     startPressLoop()
 
@@ -422,11 +415,8 @@ const BottomTabs = (props) => {
         // 横向主导且超过 14px 才算拖动：按住时的微漂移不取消长按（原版行为）
         if (Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 1.5) return
         st.dragging = true
-        // 拖动时保持放大跟手（原版：指示器随手指移动且持续放大，不缩回）；
-        // 内容层不放大，避免按住按钮跟随移动产生错位
+        // 拖动时保持放大跟手（原版：指示器随手指移动且持续放大，不缩回）
         st.target = 1
-        const btn = pressedBtnRef.current
-        if (btn) btn.style.transform = ''
         startPressLoop()
       }
       const maxX = (n - 1) * tabW
@@ -443,7 +433,6 @@ const BottomTabs = (props) => {
       st.pointerId = null
       st.release = null
       st.move = null
-      const btn = pressedBtnRef.current
       if (st.dragging) {
         // 拖动结束：snap 到最近的 tab 并导航；抑制随后的原生 click
         // 用时间戳而非布尔：拖动后 click 可能落在祖先元素上不触发 handler，布尔会遗留误吞下次点击
@@ -461,8 +450,6 @@ const BottomTabs = (props) => {
           }
         }
       }
-      pressedBtnRef.current = null
-      if (btn) btn.style.transform = ''
       st.target = 0
       startPressLoop()
     }
@@ -614,6 +601,9 @@ const BottomTabs = (props) => {
                   xChannelSelector='R'
                   yChannelSelector='G'
                 />
+                {/* 去锯齿（原版 fgTexture LINEAR 采样的软化）：stdDeviation 随按压
+                    ramp（applyFrame），静止 0 = 完全无模糊 */}
+                <feGaussianBlur ref={indBlurRef} stdDeviation={0} />
                 <feColorMatrix type='saturate' values='1.0' />
               </filter>
             </svg>
@@ -633,11 +623,49 @@ const BottomTabs = (props) => {
                   : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.18)',
               }}
             />
-            {/* 透明透镜指示器（原版 Layer 3）。必须在内容层之上（z=4 > 内容 z=3）：
-                原版 element.ts 用 refractedScreen（位移后坐标）调 sampleIndicatorBackdrop，
-                而蓝色 tab 文字被 mix 进该采样层（element-utils.ts 第 4 步）——
-                即原版的文字随镜头一起折射弯折。CSS 等价 = 透镜盖在文字上，
-                backdrop-filter 把玻璃+文字一起采样位移；静止 scale=0 时文字原样清晰 */}
+            {/* 固定文字层（原版 Layer 2 tab content，z=1）：所有 tab 的 icon+label
+                固定在各自槽位，永不移动 —— 指示器与文字完全独立（原版 fgTexture
+                绑定固定 rect）。选中项 accent 蓝，其余 contentColor。位于折射
+                指示器（z=2）之下，被其 backdrop 采样 → 指示器滑到哪、折射哪里的
+                文字（原版 sampleIndicatorBackdrop 步骤 4 按固定 rect mix 蓝色）。
+                backdrop-filter 输出替代原背景 → 指示器区域单份折射文字，无重影 */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+              {tabs.map((tab, i) => {
+                const isActive = visualIdxState === i
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      top: GLASS_PAD,
+                      left: GLASS_PAD + i * indW,
+                      width: indW,
+                      height: GLASS_H,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 2,
+                      color: isActive ? accent : contentColor,
+                      textShadow: textHalo,
+                    }}>
+                    <svg
+                      style={{ width: ICON_SIZE, height: ICON_SIZE, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+                      viewBox='0 0 24 24'
+                      fill='currentColor'>
+                      <path d={tab.icon} />
+                    </svg>
+                    <span style={{ fontSize: FONT_SIZE, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      {tab.label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            {/* 透明透镜指示器（原版 Layer 3，z=2）：独立滑动/放大（文字层不动）。
+                backdrop = 玻璃底板 + 固定文字层，折射位移作用于被覆盖的文字 ——
+                长按放大时文字随镜头放大弯折；静止时透镜无位移（scale=0），文字
+                原样透出。backdrop-filter 输出覆盖原背景 → 无黑蓝重影 */}
             <div
               ref={indicatorRef}
               style={{
@@ -649,7 +677,7 @@ const BottomTabs = (props) => {
                 borderRadius: `${GLASS_H / 2}px`,
                 background: 'transparent',
                 backdropFilter: `url(#${indFilterId})`,
-                zIndex: 4,
+                zIndex: 2,
                 pointerEvents: 'none',
                 transformOrigin: 'center',
                 willChange: 'transform',
@@ -688,86 +716,20 @@ const BottomTabs = (props) => {
                   opacity: 0,
                 }}
               />
-              {/* 去锯齿模糊遮罩：backdropFilter 软化解锯齿。独立层 opacity 随按压
-                  （applyFrame 里 indBlurRef.opacity=0.85*p），原版 LINEAR 采样软化 ——
-                  不能写死在 SVG filter 里（否则静止时也模糊内容，见 bug：未长按就开始模糊） */}
-              <div
-                ref={indBlurRef}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: 'inherit',
-                  backdropFilter: 'blur(0.6px)',
-                  WebkitBackdropFilter: 'blur(0.6px)',
-                  opacity: 0,
-                  pointerEvents: 'none',
-                }}
-              />
-              {/* 原版 fgTexture tint 掩膜：胶囊内部颜色为该 tab 的 icon+label 副本。
-                  胶囊滑动（transform translateX）时副本随之移动，始终显示当前选中
-                  tab 的蓝色内容 —— 不是直接改外层文字颜色，而是胶囊里画一份蓝色副本 */}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 2,
-                  color: accent,
-                  pointerEvents: 'none',
-                }}>
-                <svg
-                  style={{ width: ICON_SIZE, height: ICON_SIZE, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
-                  viewBox='0 0 24 24'
-                  fill='currentColor'>
-                  <path d={tabs[visualIdxState]?.icon || ''} />
-                </svg>
-                <span style={{ fontSize: FONT_SIZE, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                  {tabs[visualIdxState]?.label || ''}
-                </span>
-              </div>
             </div>
-            {/* tab 内容层：所有 tab 外层文字统一为普通 contentColor（原版胶囊内部
-                单独画蓝色模板，外层 tab 不直接变蓝 —— 选中 tab 的文字/图标由
-                胶囊顶部的蓝色模板呈现，正好盖住它） */}
+            {/* 点击层（z=3）：纯透明按钮，仅承载点击区域与手势 —— 文字渲染全部
+                在固定文字层（z=1），点击元素不含任何可见内容 */}
             <div className='absolute inset-0 flex h-full' style={{ zIndex: 3 }}>
-              {tabs.map((tab, i) => {
-                const isActive = visualIdxState === i
-                return (
-                  <button
-                    key={i}
-                    type='button'
-                    onClick={() => handleTabSelect(i)}
-                    className='flex-1 flex flex-col items-center justify-center gap-1 relative cursor-pointer'
-                    style={{
-                      color: contentColor,
-                      textShadow: textHalo,
-                      WebkitTapHighlightColor: 'transparent',
-                      transformOrigin: 'center center',
-                      willChange: 'transform',
-                    }}>
-                    <svg
-                      style={{
-                        width: ICON_SIZE,
-                        height: ICON_SIZE,
-                      }}
-                      viewBox='0 0 24 24'
-                      fill='currentColor'>
-                      <path d={tab.icon} />
-                    </svg>
-                    <span
-                      style={{
-                        fontSize: FONT_SIZE,
-                        whiteSpace: 'nowrap',
-                        transition: 'color 0.15s',
-                      }}>
-                      {tab.label}
-                    </span>
-                  </button>
-                )
-              })}
+              {tabs.map((tab, i) => (
+                <button
+                  key={i}
+                  type='button'
+                  onClick={() => handleTabSelect(i)}
+                  aria-label={tab.label}
+                  className='flex-1 relative cursor-pointer'
+                  style={{ background: 'transparent', border: 'none', padding: 0, WebkitTapHighlightColor: 'transparent' }}
+                />
+              ))}
             </div>
           </div>
         )}
