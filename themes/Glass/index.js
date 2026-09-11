@@ -40,8 +40,8 @@ const AlgoliaSearchModal = dynamic(
   { ssr: false }
 )
 
-const ThemeGlobalLiquidGlass = createContext()
-export const useLiquidGlassGlobal = () => React.useContext(ThemeGlobalLiquidGlass)
+const ThemeGlassGlobal = createContext()
+export const useThemeGlassGlobal = () => React.useContext(ThemeGlassGlobal)
 
 const LayoutBase = props => {
   const { children, headerSlot, rightAreaSlot, post } = props
@@ -162,9 +162,9 @@ const LayoutBase = props => {
   const searchModal = useRef(null)
 
   return (
-    <ThemeGlobalLiquidGlass.Provider value={{ searchModal }}>
+    <ThemeGlassGlobal.Provider value={{ searchModal }}>
       <div
-        id='theme-liquidglass'
+        id='theme-glass'
         className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth`}>
         <Style />
 
@@ -184,7 +184,7 @@ const LayoutBase = props => {
           className={
             (JSON.parse(siteConfig('LAYOUT_SIDEBAR_REVERSE'))
               ? 'flex-row-reverse'
-              : '') + ' liquidglass relative flex justify-center flex-1 pb-28 lg:pb-28 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
+              : '') + ' relative flex justify-center flex-1 pb-28 lg:pb-28 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
           }>
           {/* 左侧栏 */}
           <SideAreaLeft targetRef={targetRef} {...props} />
@@ -240,7 +240,7 @@ const LayoutBase = props => {
         {/* 页脚 */}
         <Footer title={siteConfig('TITLE')} />
       </div>
-    </ThemeGlobalLiquidGlass.Provider>
+    </ThemeGlassGlobal.Provider>
   )
 }
 

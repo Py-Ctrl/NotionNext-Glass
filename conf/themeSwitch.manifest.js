@@ -11,7 +11,7 @@
 
 /** @type {Record<string, { name?: string, summary?: string, cover?: string, coverWebp?: string, rootId?: string, tier?: 'free' | 'paid', settings?: Array<{ key: string, label: string, type: 'boolean' | 'text' | 'number' | 'select', defaultValue: string | number | boolean, options?: Array<{ label: string, value: string | number | boolean }> }>, palette?: Array<{ key: string, cssVar: string, label: string, defaultValue: string }> }>} */
 export const THEME_SWITCH_MANIFEST = {
-  liquidglass: {
+  Glass: {
     name: 'Glass',
     summary: '玻璃质感与丰富的特效',
     settings: [

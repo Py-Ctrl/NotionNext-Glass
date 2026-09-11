@@ -17,7 +17,7 @@ module.exports = {
     'heo',
     'hexo',
     'landing',
-    'liquidglass',
+    'Glass',
     'magzine',
     'matery',
     'medium',

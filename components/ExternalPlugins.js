@@ -50,7 +50,6 @@ const ExternalPlugin = props => {
   const FIREWORKS = siteConfig('FIREWORKS', null, NOTION_CONFIG)
   const SAKURA = siteConfig('SAKURA', null, NOTION_CONFIG)
   const STARRY_SKY = siteConfig('STARRY_SKY', null, NOTION_CONFIG)
-  const MUSIC_PLAYER = siteConfig('MUSIC_PLAYER', null, NOTION_CONFIG)
   const NEST = siteConfig('NEST', null, NOTION_CONFIG)
   const FLUTTERINGRIBBON = siteConfig('FLUTTERINGRIBBON', null, NOTION_CONFIG)
   const COMMENT_TWIKOO_COUNT_ENABLE = siteConfig(
@@ -268,7 +267,6 @@ const ExternalPlugin = props => {
       {FIREWORKS && <Fireworks />}
       {SAKURA && <Sakura />}
       {STARRY_SKY && <StarrySky />}
-      {MUSIC_PLAYER && theme !== 'liquidglass' && <MusicPlayer />}
       {NEST && <Nest />}
       {FLUTTERINGRIBBON && <FlutteringRibbon />}
       {COMMENT_TWIKOO_COUNT_ENABLE && <TwikooCommentCounter {...props} />}
@@ -552,7 +550,6 @@ const Analytics = dynamic(
     }),
   { ssr: false }
 )
-const MusicPlayer = dynamic(() => import('@/components/Player'), { ssr: false })
 const Ackee = dynamic(() => import('@/components/Ackee'), { ssr: false })
 const Gtag = dynamic(() => import('@/components/Gtag'), { ssr: false })
 const Busuanzi = dynamic(() => import('@/components/Busuanzi'), { ssr: false })

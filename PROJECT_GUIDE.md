@@ -1,12 +1,12 @@
 # Glass 主题项目结构与编辑指南
 
 ## 项目概述
-NotionNext 博客的 Glass 主题（目录名 `liquidglass`），基于 `martin65536/liquid-glass-webgl` 项目的液态玻璃效果，用 CSS + SVG feDisplacementMap 实现真实折射。主题介绍见 `themes/liquidglass/README.md`。
+NotionNext 博客的 Glass 主题（目录名 `Glass`），基于 `martin65536/liquid-glass-webgl` 项目的液态玻璃效果，用 CSS + SVG feDisplacementMap 实现真实折射。主题介绍见 `themes/Glass/README.md`。
 
 ## 目录结构
 
 ```
-themes/liquidglass/
+themes/Glass/
 ├── index.js                    # 主布局（LayoutBase / LayoutSlug / LayoutSearch 等）
 ├── style.js                    # 全局样式（styled-jsx），所有 CSS 类定义在此
 ├── config.js                   # 主题配置项
@@ -75,8 +75,8 @@ themes/liquidglass/
 
 ### 修改页面背景渐变
 文件：`style.js` 第 9-39 行
-- 亮色：`#theme-liquidglass` 的 `background` 属性
-- 暗色：`.dark #theme-liquidglass` 的 `background` 属性
+- 亮色：`#theme-glass` 的 `background` 属性
+- 暗色：`.dark #theme-glass` 的 `background` 属性
 - 同时需要更新 `liquidGlassWallpaper.js` 中的 `buildBottomBarSVG()` 和 `buildGradientSVG()` 颜色
 
 ### 修改底栏玻璃效果

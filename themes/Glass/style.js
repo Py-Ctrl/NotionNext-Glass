@@ -6,7 +6,7 @@ const Style = () => {
   return <style jsx global>{`
 
     /* ========== 全局背景 — 玻璃效果可见的关键 ========== */
-    #theme-liquidglass {
+    #theme-glass {
       --glass-bg: rgba(255, 255, 255, 0.25);
       --glass-bg-dark: rgba(15, 15, 25, 0.55);
       --glass-border: rgba(255, 255, 255, 0.18);
@@ -25,7 +25,7 @@ const Style = () => {
       background-attachment: fixed;
     }
 
-    .dark #theme-liquidglass {
+    .dark #theme-glass {
       --glass-bg: rgba(20, 20, 35, 0.55);
       --glass-border: rgba(255, 255, 255, 0.08);
       --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -39,7 +39,7 @@ const Style = () => {
     }
 
     /* ========== 玻璃卡片 ========== */
-    #theme-liquidglass .glass-card {
+    #theme-glass .glass-card {
       position: relative;
       overflow: hidden;
       background: var(--glass-bg);
@@ -53,16 +53,16 @@ const Style = () => {
 
     /* ========== 卡片交互光晕（Win10 21H2 任务栏风格） ========== */
     /* Algolia 搜索弹窗 */
-    #theme-liquidglass .algolia-glass-card {
+    #theme-glass .algolia-glass-card {
       position: relative;
       overflow: hidden;
     }
 
     /* 边框光晕：跟随鼠标，只在边框区域显示 */
-    #theme-liquidglass .glass-card::before,
-    #theme-liquidglass .glass-post-item::before,
-    #theme-liquidglass .glass-sidebar::before,
-    #theme-liquidglass .algolia-glass-card::before {
+    #theme-glass .glass-card::before,
+    #theme-glass .glass-post-item::before,
+    #theme-glass .glass-sidebar::before,
+    #theme-glass .algolia-glass-card::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -84,10 +84,10 @@ const Style = () => {
     }
 
     /* 内部聚光：跟随鼠标，卡片内部淡光 */
-    #theme-liquidglass .glass-card::after,
-    #theme-liquidglass .glass-post-item::after,
-    #theme-liquidglass .glass-sidebar::after,
-    #theme-liquidglass .algolia-glass-card::after {
+    #theme-glass .glass-card::after,
+    #theme-glass .glass-post-item::after,
+    #theme-glass .glass-sidebar::after,
+    #theme-glass .algolia-glass-card::after {
       content: '';
       position: absolute;
       inset: 0;
@@ -105,40 +105,40 @@ const Style = () => {
 
     /* 仅在支持 hover 的设备（非触摸）上启用鼠标聚光 */
     @media (hover: hover) {
-      #theme-liquidglass .glass-card:hover::before,
-      #theme-liquidglass .glass-post-item:hover::before,
-      #theme-liquidglass .glass-sidebar:hover::before,
-      #theme-liquidglass .algolia-glass-card:hover::before {
+      #theme-glass .glass-card:hover::before,
+      #theme-glass .glass-post-item:hover::before,
+      #theme-glass .glass-sidebar:hover::before,
+      #theme-glass .algolia-glass-card:hover::before {
         opacity: 1;
       }
 
-      #theme-liquidglass .glass-card:hover::after,
-      #theme-liquidglass .glass-post-item:hover::after,
-      #theme-liquidglass .glass-sidebar:hover::after,
-      #theme-liquidglass .algolia-glass-card:hover::after {
+      #theme-glass .glass-card:hover::after,
+      #theme-glass .glass-post-item:hover::after,
+      #theme-glass .glass-sidebar:hover::after,
+      #theme-glass .algolia-glass-card:hover::after {
         opacity: 1;
       }
     }
 
     /* 触摸设备完全禁用 ::before/::after 伪元素，节省资源 */
     @media (pointer: coarse) {
-      #theme-liquidglass .glass-card::before,
-      #theme-liquidglass .glass-post-item::before,
-      #theme-liquidglass .glass-sidebar::before,
-      #theme-liquidglass .algolia-glass-card::before,
-      #theme-liquidglass .glass-card::after,
-      #theme-liquidglass .glass-post-item::after,
-      #theme-liquidglass .glass-sidebar::after,
-      #theme-liquidglass .algolia-glass-card::after {
+      #theme-glass .glass-card::before,
+      #theme-glass .glass-post-item::before,
+      #theme-glass .glass-sidebar::before,
+      #theme-glass .algolia-glass-card::before,
+      #theme-glass .glass-card::after,
+      #theme-glass .glass-post-item::after,
+      #theme-glass .glass-sidebar::after,
+      #theme-glass .algolia-glass-card::after {
         display: none;
       }
     }
 
     /* 暗色模式 */
-    .dark #theme-liquidglass .glass-card::before,
-    .dark #theme-liquidglass .glass-post-item::before,
-    .dark #theme-liquidglass .glass-sidebar::before,
-    .dark #theme-liquidglass .algolia-glass-card::before {
+    .dark #theme-glass .glass-card::before,
+    .dark #theme-glass .glass-post-item::before,
+    .dark #theme-glass .glass-sidebar::before,
+    .dark #theme-glass .algolia-glass-card::before {
       background: radial-gradient(
         200px circle at var(--glow-x, -1000px) var(--glow-y, -1000px),
         rgba(129, 140, 248, 0.9),
@@ -147,10 +147,10 @@ const Style = () => {
       );
     }
 
-    .dark #theme-liquidglass .glass-card::after,
-    .dark #theme-liquidglass .glass-post-item::after,
-    .dark #theme-liquidglass .glass-sidebar::after,
-    .dark #theme-liquidglass .algolia-glass-card::after {
+    .dark #theme-glass .glass-card::after,
+    .dark #theme-glass .glass-post-item::after,
+    .dark #theme-glass .glass-sidebar::after,
+    .dark #theme-glass .algolia-glass-card::after {
       background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         rgba(129, 140, 248, 0.12),
@@ -158,24 +158,24 @@ const Style = () => {
       );
     }
 
-    .dark #theme-liquidglass .glass-card {
+    .dark #theme-glass .glass-card {
       background: var(--glass-bg-dark);
       border-color: var(--glass-border-dark);
       box-shadow: var(--glass-shadow-dark);
     }
 
-    #theme-liquidglass .glass-card:hover {
+    #theme-glass .glass-card:hover {
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
       border-color: rgba(255, 255, 255, 0.3);
     }
 
-    .dark #theme-liquidglass .glass-card:hover {
+    .dark #theme-glass .glass-card:hover {
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
       border-color: rgba(255, 255, 255, 0.15);
     }
 
     /* ========== 玻璃导航栏 ========== */
-    #theme-liquidglass .glass-nav {
+    #theme-glass .glass-nav {
       background: var(--glass-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -183,13 +183,13 @@ const Style = () => {
       transition: all 0.3s ease;
     }
 
-    .dark #theme-liquidglass .glass-nav {
+    .dark #theme-glass .glass-nav {
       background: rgba(15, 15, 25, 0.7);
       border-bottom-color: rgba(255, 255, 255, 0.06);
     }
 
     /* ========== 玻璃按钮 ========== */
-    #theme-liquidglass .glass-btn {
+    #theme-glass .glass-btn {
       background: var(--glass-bg);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
@@ -201,26 +201,26 @@ const Style = () => {
       font-size: 14px;
     }
 
-    #theme-liquidglass .glass-btn:hover {
+    #theme-glass .glass-btn:hover {
       background: rgba(255, 255, 255, 0.35);
       border-color: rgba(255, 255, 255, 0.35);
       transform: translateY(-1px);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
 
-    .dark #theme-liquidglass .glass-btn {
+    .dark #theme-glass .glass-btn {
       background: rgba(255, 255, 255, 0.06);
       border-color: rgba(255, 255, 255, 0.08);
       color: #e5e7eb;
     }
 
-    .dark #theme-liquidglass .glass-btn:hover {
+    .dark #theme-glass .glass-btn:hover {
       background: rgba(255, 255, 255, 0.12);
       border-color: rgba(255, 255, 255, 0.15);
     }
 
     /* ========== 玻璃搜索框（CSS 回退） ========== */
-    #theme-liquidglass .glass-search {
+    #theme-glass .glass-search {
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -229,13 +229,13 @@ const Style = () => {
       transition: all 0.3s ease;
     }
 
-    #theme-liquidglass .glass-search:focus-within {
+    #theme-glass .glass-search:focus-within {
       border-color: #6366f1;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
     }
 
     /* ========== 玻璃标签 ========== */
-    #theme-liquidglass .glass-tag {
+    #theme-glass .glass-tag {
       background: var(--glass-bg);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
@@ -247,14 +247,14 @@ const Style = () => {
       cursor: pointer;
     }
 
-    #theme-liquidglass .glass-tag:hover {
+    #theme-glass .glass-tag:hover {
       background: rgba(99, 102, 241, 0.15);
       border-color: rgba(99, 102, 241, 0.3);
       color: #6366f1;
     }
 
     /* ========== 文章列表项玻璃效果 ========== */
-    #theme-liquidglass .glass-post-item {
+    #theme-glass .glass-post-item {
       position: relative;
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
@@ -266,25 +266,25 @@ const Style = () => {
       overflow: hidden;
     }
 
-    .dark #theme-liquidglass .glass-post-item {
+    .dark #theme-glass .glass-post-item {
       background: var(--glass-bg-dark);
       border-color: var(--glass-border-dark);
       box-shadow: var(--glass-shadow-dark);
     }
 
-    #theme-liquidglass .glass-post-item:hover {
+    #theme-glass .glass-post-item:hover {
       transform: translateY(-3px);
       box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
       border-color: rgba(255, 255, 255, 0.3);
     }
 
-    .dark #theme-liquidglass .glass-post-item:hover {
+    .dark #theme-glass .glass-post-item:hover {
       box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
       border-color: rgba(255, 255, 255, 0.12);
     }
 
     /* ========== 侧边栏玻璃 ========== */
-    #theme-liquidglass .glass-sidebar {
+    #theme-glass .glass-sidebar {
       position: relative;
       overflow: hidden;
       background: var(--glass-bg);
@@ -295,26 +295,26 @@ const Style = () => {
       box-shadow: var(--glass-shadow);
     }
 
-    .dark #theme-liquidglass .glass-sidebar {
+    .dark #theme-glass .glass-sidebar {
       background: var(--glass-bg-dark);
       border-color: var(--glass-border-dark);
     }
 
     /* ========== 底部栏玻璃 ========== */
-    #theme-liquidglass .glass-footer {
+    #theme-glass .glass-footer {
       background: var(--glass-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid var(--glass-border);
     }
 
-    .dark #theme-liquidglass .glass-footer {
+    .dark #theme-glass .glass-footer {
       background: rgba(15, 15, 25, 0.6);
       border-top-color: rgba(255, 255, 255, 0.06);
     }
 
     /* ========== 悬浮按钮玻璃 ========== */
-    #theme-liquidglass .glass-float-btn {
+    #theme-glass .glass-float-btn {
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -330,61 +330,61 @@ const Style = () => {
       box-shadow: var(--glass-shadow);
     }
 
-    #theme-liquidglass .glass-float-btn:hover {
+    #theme-glass .glass-float-btn:hover {
       transform: scale(1.1);
       border-color: rgba(255, 255, 255, 0.35);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     }
 
-    .dark #theme-liquidglass .glass-float-btn {
+    .dark #theme-glass .glass-float-btn {
       background: rgba(30, 30, 50, 0.6);
     }
 
     /* ========== 链接样式 ========== */
-    #theme-liquidglass .glass-link {
+    #theme-glass .glass-link {
       color: #6366f1;
       text-decoration: none;
       transition: color 0.2s ease;
     }
 
-    #theme-liquidglass .glass-link:hover {
+    #theme-glass .glass-link:hover {
       color: #4f46e5;
     }
 
-    .dark #theme-liquidglass .glass-link {
+    .dark #theme-glass .glass-link {
       color: #818cf8;
     }
 
-    .dark #theme-liquidglass .glass-link:hover {
+    .dark #theme-glass .glass-link:hover {
       color: #a5b4fc;
     }
 
     /* ========== 滚动条 ========== */
-    #theme-liquidglass ::-webkit-scrollbar {
+    #theme-glass ::-webkit-scrollbar {
       width: 6px;
     }
 
-    #theme-liquidglass ::-webkit-scrollbar-track {
+    #theme-glass ::-webkit-scrollbar-track {
       background: transparent;
     }
 
-    #theme-liquidglass ::-webkit-scrollbar-thumb {
+    #theme-glass ::-webkit-scrollbar-thumb {
       background: rgba(99, 102, 241, 0.2);
       border-radius: 3px;
     }
 
-    #theme-liquidglass ::-webkit-scrollbar-thumb:hover {
+    #theme-glass ::-webkit-scrollbar-thumb:hover {
       background: rgba(99, 102, 241, 0.4);
     }
 
     /* ========== 选中文字 ========== */
-    #theme-liquidglass ::selection {
+    #theme-glass ::selection {
       background: rgba(99, 102, 241, 0.2);
       color: inherit;
     }
 
     /* ========== 旧版 glassmorphism 兼容 ========== */
-    #theme-liquidglass .glassmorphism {
+    #theme-glass .glassmorphism {
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -393,12 +393,12 @@ const Style = () => {
     }
 
     /* ========== Live2D 宠物挂件 ========== */
-    #theme-liquidglass #live2d {
+    #theme-glass #live2d {
       max-width: 100%;
       height: auto;
     }
 
-    #theme-liquidglass .animate-spin-slow {
+    #theme-glass .animate-spin-slow {
       animation: spin-slow 8s linear infinite;
     }
 
@@ -416,7 +416,7 @@ const Style = () => {
     /* ========== Algolia 搜索弹窗美化 ========== */
 
     /* 弹窗主体 */
-    #theme-liquidglass #search-wrapper > div:first-child {
+    #theme-glass #search-wrapper > div:first-child {
       background: rgba(255, 255, 255, 0.72) !important;
       backdrop-filter: blur(28px) saturate(180%) !important;
       -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
@@ -425,14 +425,14 @@ const Style = () => {
       box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper > div:first-child {
+    .dark #theme-glass #search-wrapper > div:first-child {
       background: rgba(18, 18, 32, 0.78) !important;
       border-color: rgba(255, 255, 255, 0.1) !important;
       box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
     }
 
     /* 标题渐变 */
-    #theme-liquidglass #search-wrapper .text-2xl {
+    #theme-glass #search-wrapper .text-2xl {
       background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) !important;
       -webkit-background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
@@ -440,17 +440,17 @@ const Style = () => {
     }
 
     /* 关闭按钮 */
-    #theme-liquidglass #search-wrapper .fa-xmark {
+    #theme-glass #search-wrapper .fa-xmark {
       transition: all 0.25s ease !important;
     }
 
-    #theme-liquidglass #search-wrapper .fa-xmark:hover {
+    #theme-glass #search-wrapper .fa-xmark:hover {
       transform: rotate(90deg) scale(1.15) !important;
       color: #6366f1 !important;
     }
 
     /* 搜索输入框 */
-    #theme-liquidglass #search-wrapper input[type='text'] {
+    #theme-glass #search-wrapper input[type='text'] {
       background: rgba(255, 255, 255, 0.5) !important;
       border: 1px solid rgba(255, 255, 255, 0.3) !important;
       border-radius: 12px !important;
@@ -458,35 +458,35 @@ const Style = () => {
       transition: all 0.3s ease !important;
     }
 
-    #theme-liquidglass #search-wrapper input[type='text']::placeholder {
+    #theme-glass #search-wrapper input[type='text']::placeholder {
       color: rgba(107, 114, 128, 0.6) !important;
     }
 
-    #theme-liquidglass #search-wrapper input[type='text']:focus {
+    #theme-glass #search-wrapper input[type='text']:focus {
       border-color: #6366f1 !important;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
       background: rgba(255, 255, 255, 0.7) !important;
       outline: none !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper input[type='text'] {
+    .dark #theme-glass #search-wrapper input[type='text'] {
       background: rgba(255, 255, 255, 0.06) !important;
       border-color: rgba(255, 255, 255, 0.1) !important;
       color: #e5e7eb !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper input[type='text']::placeholder {
+    .dark #theme-glass #search-wrapper input[type='text']::placeholder {
       color: rgba(156, 163, 175, 0.5) !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper input[type='text']:focus {
+    .dark #theme-glass #search-wrapper input[type='text']:focus {
       border-color: #818cf8 !important;
       box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15) !important;
       background: rgba(255, 255, 255, 0.1) !important;
     }
 
     /* 标签组 */
-    #theme-liquidglass #search-wrapper #tags-group > a > div {
+    #theme-glass #search-wrapper #tags-group > a > div {
       background: rgba(255, 255, 255, 0.3) !important;
       backdrop-filter: blur(8px) !important;
       -webkit-backdrop-filter: blur(8px) !important;
@@ -495,52 +495,52 @@ const Style = () => {
       transition: all 0.2s ease !important;
     }
 
-    #theme-liquidglass #search-wrapper #tags-group > a > div:hover {
+    #theme-glass #search-wrapper #tags-group > a > div:hover {
       background: rgba(99, 102, 241, 0.18) !important;
       border-color: rgba(99, 102, 241, 0.4) !important;
       color: #6366f1 !important;
       transform: scale(1.08) !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper #tags-group > a > div {
+    .dark #theme-glass #search-wrapper #tags-group > a > div {
       background: rgba(255, 255, 255, 0.05) !important;
       border-color: rgba(255, 255, 255, 0.08) !important;
       color: #d1d5db !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper #tags-group > a > div:hover {
+    .dark #theme-glass #search-wrapper #tags-group > a > div:hover {
       background: rgba(129, 140, 248, 0.15) !important;
       border-color: rgba(129, 140, 248, 0.3) !important;
       color: #a5b4fc !important;
     }
 
     /* 搜索结果项 */
-    #theme-liquidglass #search-wrapper ul li {
+    #theme-glass #search-wrapper ul li {
       background: transparent !important;
       border: 1px solid transparent !important;
       transition: all 0.2s ease !important;
     }
 
-    #theme-liquidglass #search-wrapper ul li:hover {
+    #theme-glass #search-wrapper ul li:hover {
       background: rgba(99, 102, 241, 0.08) !important;
       border-color: rgba(99, 102, 241, 0.2) !important;
       transform: translateX(4px) !important;
     }
 
-    #theme-liquidglass #search-wrapper ul li.bg-blue-600,
-    .dark #theme-liquidglass #search-wrapper ul li.bg-blue-600 {
+    #theme-glass #search-wrapper ul li.bg-blue-600,
+    .dark #theme-glass #search-wrapper ul li.bg-blue-600 {
       background: linear-gradient(135deg, rgba(99, 102, 241, 0.92), rgba(139, 92, 246, 0.92)) !important;
       border-color: rgba(99, 102, 241, 0.5) !important;
       box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper ul li:hover {
+    .dark #theme-glass #search-wrapper ul li:hover {
       background: rgba(129, 140, 248, 0.1) !important;
       border-color: rgba(129, 140, 248, 0.2) !important;
     }
 
     /* 分页按钮 */
-    #theme-liquidglass #search-wrapper .cursor-pointer.w-6 {
+    #theme-glass #search-wrapper .cursor-pointer.w-6 {
       background: rgba(255, 255, 255, 0.2) !important;
       backdrop-filter: blur(8px) !important;
       border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -551,31 +551,31 @@ const Style = () => {
       justify-content: center !important;
     }
 
-    #theme-liquidglass #search-wrapper .cursor-pointer.w-6:hover {
+    #theme-glass #search-wrapper .cursor-pointer.w-6:hover {
       background: rgba(99, 102, 241, 0.15) !important;
       border-color: rgba(99, 102, 241, 0.3) !important;
     }
 
-    #theme-liquidglass #search-wrapper .cursor-pointer.w-6.font-bold {
+    #theme-glass #search-wrapper .cursor-pointer.w-6.font-bold {
       background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
       border-color: rgba(99, 102, 241, 0.5) !important;
       color: white !important;
       box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper .cursor-pointer.w-6 {
+    .dark #theme-glass #search-wrapper .cursor-pointer.w-6 {
       background: rgba(255, 255, 255, 0.05) !important;
       border-color: rgba(255, 255, 255, 0.08) !important;
       color: #d1d5db !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper .cursor-pointer.w-6.font-bold {
+    .dark #theme-glass #search-wrapper .cursor-pointer.w-6.font-bold {
       background: linear-gradient(135deg, #818cf8, #a78bfa) !important;
       color: white !important;
     }
 
     /* 遮罩层 */
-    #theme-liquidglass #search-wrapper > .glassmorphism {
+    #theme-glass #search-wrapper > .glassmorphism {
       background: rgba(10, 10, 20, 0.25) !important;
       backdrop-filter: blur(8px) !important;
       -webkit-backdrop-filter: blur(8px) !important;
@@ -584,64 +584,64 @@ const Style = () => {
     }
 
     /* 底部信息栏 */
-    #theme-liquidglass #search-wrapper .fa-algolia {
+    #theme-glass #search-wrapper .fa-algolia {
       color: #6366f1 !important;
     }
 
-    .dark #theme-liquidglass #search-wrapper .fa-algolia {
+    .dark #theme-glass #search-wrapper .fa-algolia {
       color: #818cf8 !important;
     }
 
     /* ========== 移动端响应式 ========== */
     @media (max-width: 640px) {
-      #theme-liquidglass {
+      #theme-glass {
         --glass-blur: 10px;
         --glass-radius: 12px;
       }
 
-      #theme-liquidglass .glass-card {
+      #theme-glass .glass-card {
         border-radius: 12px;
       }
 
-      #theme-liquidglass .glass-post-item {
+      #theme-glass .glass-post-item {
         border-radius: 12px;
       }
 
-      #theme-liquidglass .glass-sidebar {
+      #theme-glass .glass-sidebar {
         border-radius: 12px;
       }
 
-      #theme-liquidglass .glass-nav {
+      #theme-glass .glass-nav {
         padding: 0.5rem 0.75rem;
       }
 
-      #theme-liquidglass .glass-btn {
+      #theme-glass .glass-btn {
         padding: 6px 12px;
         font-size: 13px;
       }
 
-      #theme-liquidglass .glass-float-btn {
+      #theme-glass .glass-float-btn {
         width: 36px;
         height: 36px;
       }
 
       /* ponytail: 移动端禁用 background-attachment:fixed（iOS Safari 严重掉帧元凶） */
-      #theme-liquidglass,
-      .dark #theme-liquidglass {
+      #theme-glass,
+      .dark #theme-glass {
         background-attachment: scroll !important;
       }
     }
 
     /* ========== 平板适配 ========== */
     @media (min-width: 641px) and (max-width: 1023px) {
-      #theme-liquidglass .glass-card {
+      #theme-glass .glass-card {
         border-radius: 14px;
       }
     }
 
     /* ========== 大屏适配 ========== */
     @media (min-width: 1280px) {
-      #theme-liquidglass {
+      #theme-glass {
         --glass-blur: 20px;
         --glass-radius: 20px;
       }
@@ -649,14 +649,14 @@ const Style = () => {
 
     /* ========== 减少动画偏好 ========== */
     @media (prefers-reduced-motion: reduce) {
-      #theme-liquidglass * {
+      #theme-glass * {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
       }
     }
 
     /* ========== Liquid Glass 切换按钮 ========== */
-    #theme-liquidglass .liquid-glass-toggle {
+    #theme-glass .liquid-glass-toggle {
       width: 44px;
       height: 44px;
       border-radius: 50%;
@@ -673,7 +673,7 @@ const Style = () => {
       overflow: hidden;
     }
 
-    #theme-liquidglass .liquid-glass-toggle::before {
+    #theme-glass .liquid-glass-toggle::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -682,7 +682,7 @@ const Style = () => {
       pointer-events: none;
     }
 
-    #theme-liquidglass .liquid-glass-toggle:hover {
+    #theme-glass .liquid-glass-toggle:hover {
       transform: scale(1.08);
       box-shadow:
         0 8px 24px rgba(99, 102, 241, 0.15),
@@ -691,11 +691,11 @@ const Style = () => {
       border-color: rgba(99, 102, 241, 0.3);
     }
 
-    #theme-liquidglass .liquid-glass-toggle:active {
+    #theme-glass .liquid-glass-toggle:active {
       transform: scale(0.95);
     }
 
-    #theme-liquidglass .liquid-glass-toggle-inner {
+    #theme-glass .liquid-glass-toggle-inner {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -705,7 +705,7 @@ const Style = () => {
       z-index: 1;
     }
 
-    .dark #theme-liquidglass .liquid-glass-toggle {
+    .dark #theme-glass .liquid-glass-toggle {
       background: rgba(30, 30, 50, 0.5);
       border-color: rgba(255, 255, 255, 0.1);
       box-shadow:
@@ -714,11 +714,11 @@ const Style = () => {
         inset 0 -1px 1px rgba(0, 0, 0, 0.2);
     }
 
-    .dark #theme-liquidglass .liquid-glass-toggle::before {
+    .dark #theme-glass .liquid-glass-toggle::before {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%);
     }
 
-    .dark #theme-liquidglass .liquid-glass-toggle:hover {
+    .dark #theme-glass .liquid-glass-toggle:hover {
       box-shadow:
         0 8px 24px rgba(129, 140, 248, 0.2),
         inset 0 1px 1px rgba(255, 255, 255, 0.12),
@@ -727,7 +727,7 @@ const Style = () => {
     }
 
     /* ========== Liquid Glass 卡片按钮（文章导航等） ========== */
-    #theme-liquidglass .liquid-glass-card {
+    #theme-glass .liquid-glass-card {
       display: block;
       padding: 12px 16px;
       border-radius: 16px;
@@ -744,7 +744,7 @@ const Style = () => {
       text-decoration: none;
     }
 
-    #theme-liquidglass .liquid-glass-card::before {
+    #theme-glass .liquid-glass-card::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -754,7 +754,7 @@ const Style = () => {
       opacity: 0.8;
     }
 
-    #theme-liquidglass .liquid-glass-card:hover {
+    #theme-glass .liquid-glass-card:hover {
       transform: translateY(-2px);
       box-shadow:
         0 12px 32px rgba(99, 102, 241, 0.12),
@@ -762,7 +762,7 @@ const Style = () => {
       border-color: rgba(99, 102, 241, 0.25);
     }
 
-    .dark #theme-liquidglass .liquid-glass-card {
+    .dark #theme-glass .liquid-glass-card {
       background: rgba(25, 25, 40, 0.5);
       border-color: rgba(255, 255, 255, 0.08);
       box-shadow:
@@ -770,11 +770,11 @@ const Style = () => {
         inset 0 1px 1px rgba(255, 255, 255, 0.05);
     }
 
-    .dark #theme-liquidglass .liquid-glass-card::before {
+    .dark #theme-glass .liquid-glass-card::before {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.02) 100%);
     }
 
-    .dark #theme-liquidglass .liquid-glass-card:hover {
+    .dark #theme-glass .liquid-glass-card:hover {
       box-shadow:
         0 12px 32px rgba(129, 140, 248, 0.15),
         inset 0 1px 1px rgba(255, 255, 255, 0.08);
@@ -782,7 +782,7 @@ const Style = () => {
     }
 
     /* ========== Liquid Glass 按钮（阅读更多等） ========== */
-    #theme-liquidglass .liquid-glass-btn {
+    #theme-glass .liquid-glass-btn {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -797,7 +797,7 @@ const Style = () => {
       -webkit-backdrop-filter: blur(12px) saturate(180%);
     }
 
-    #theme-liquidglass .liquid-glass-btn::before {
+    #theme-glass .liquid-glass-btn::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -806,13 +806,13 @@ const Style = () => {
       pointer-events: none;
     }
 
-    #theme-liquidglass .liquid-glass-btn-surface {
+    #theme-glass .liquid-glass-btn-surface {
       background: rgba(255, 255, 255, 0.15);
       color: #374151;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.25);
     }
 
-    #theme-liquidglass .liquid-glass-btn-blue {
+    #theme-glass .liquid-glass-btn-blue {
       background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(139, 92, 246, 0.35));
       color: #4338ca;
       border-color: rgba(99, 102, 241, 0.3);
@@ -824,16 +824,16 @@ const Style = () => {
         inset 0 -1px 1px rgba(0, 0, 0, 0.05);
     }
 
-    #theme-liquidglass .liquid-glass-btn:hover {
+    #theme-glass .liquid-glass-btn:hover {
       transform: translateY(-1px) scale(1.02);
     }
 
-    #theme-liquidglass .liquid-glass-btn-surface:hover {
+    #theme-glass .liquid-glass-btn-surface:hover {
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.35);
       border-color: rgba(99, 102, 241, 0.25);
     }
 
-    #theme-liquidglass .liquid-glass-btn-blue:hover {
+    #theme-glass .liquid-glass-btn-blue:hover {
       box-shadow:
         0 8px 24px rgba(99, 102, 241, 0.25),
         inset 0 1px 1px rgba(255, 255, 255, 0.5),
@@ -841,14 +841,14 @@ const Style = () => {
       border-color: rgba(99, 102, 241, 0.4);
     }
 
-    .dark #theme-liquidglass .liquid-glass-btn-surface {
+    .dark #theme-glass .liquid-glass-btn-surface {
       background: rgba(25, 25, 40, 0.5);
       color: #d1d5db;
       border-color: rgba(255, 255, 255, 0.08);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.05);
     }
 
-    .dark #theme-liquidglass .liquid-glass-btn-blue {
+    .dark #theme-glass .liquid-glass-btn-blue {
       background: linear-gradient(135deg, rgba(129, 140, 248, 0.35), rgba(167, 139, 250, 0.35));
       color: #c7d2fe;
       border-color: rgba(129, 140, 248, 0.25);
@@ -860,12 +860,12 @@ const Style = () => {
         inset 0 -1px 1px rgba(0, 0, 0, 0.15);
     }
 
-    .dark #theme-liquidglass .liquid-glass-btn::before {
+    .dark #theme-glass .liquid-glass-btn::before {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
     }
 
     /* ========== Liquid Glass 分享按钮 ========== */
-    #theme-liquidglass .liquid-glass-share button {
+    #theme-glass .liquid-glass-share button {
       background: rgba(255, 255, 255, 0.12) !important;
       backdrop-filter: blur(14px) saturate(180%);
       -webkit-backdrop-filter: blur(14px) saturate(180%);
@@ -879,7 +879,7 @@ const Style = () => {
       overflow: visible !important;
     }
 
-    #theme-liquidglass .liquid-glass-share button::before {
+    #theme-glass .liquid-glass-share button::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -888,20 +888,20 @@ const Style = () => {
       pointer-events: none;
     }
 
-    #theme-liquidglass .liquid-glass-share button i {
+    #theme-glass .liquid-glass-share button i {
       color: #6b7280 !important;
       position: relative;
       z-index: 1;
     }
 
     /* 覆盖 CSDN/掘金内联背景色 */
-    #theme-liquidglass .liquid-glass-share button > div[style*='background'] {
+    #theme-glass .liquid-glass-share button > div[style*='background'] {
       background: transparent !important;
     }
 
     /* 微信二维码弹窗不受玻璃效果影响 */
-    #theme-liquidglass .liquid-glass-share button > div.absolute,
-    #theme-liquidglass .liquid-glass-share button #pop {
+    #theme-glass .liquid-glass-share button > div.absolute,
+    #theme-glass .liquid-glass-share button #pop {
       background: white !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
@@ -909,7 +909,7 @@ const Style = () => {
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
     }
 
-    #theme-liquidglass .liquid-glass-share button:hover {
+    #theme-glass .liquid-glass-share button:hover {
       transform: scale(1.12);
       background: rgba(255, 255, 255, 0.2) !important;
       box-shadow:
@@ -919,15 +919,15 @@ const Style = () => {
       border-color: rgba(99, 102, 241, 0.28) !important;
     }
 
-    #theme-liquidglass .liquid-glass-share button:hover i {
+    #theme-glass .liquid-glass-share button:hover i {
       color: #4f46e5 !important;
     }
 
-    #theme-liquidglass .liquid-glass-share button:active {
+    #theme-glass .liquid-glass-share button:active {
       transform: scale(0.95);
     }
 
-    .dark #theme-liquidglass .liquid-glass-share button {
+    .dark #theme-glass .liquid-glass-share button {
       background: rgba(30, 30, 50, 0.4) !important;
       border-color: rgba(255, 255, 255, 0.08) !important;
       box-shadow:
@@ -936,15 +936,15 @@ const Style = () => {
         inset 0 -1px 1px rgba(0, 0, 0, 0.18);
     }
 
-    .dark #theme-liquidglass .liquid-glass-share button::before {
+    .dark #theme-glass .liquid-glass-share button::before {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
     }
 
-    .dark #theme-liquidglass .liquid-glass-share button i {
+    .dark #theme-glass .liquid-glass-share button i {
       color: #d1d5db !important;
     }
 
-    .dark #theme-liquidglass .liquid-glass-share button:hover {
+    .dark #theme-glass .liquid-glass-share button:hover {
       background: rgba(50, 50, 80, 0.5) !important;
       box-shadow:
         0 4px 18px rgba(129, 140, 248, 0.18),
@@ -953,12 +953,12 @@ const Style = () => {
       border-color: rgba(129, 140, 248, 0.22) !important;
     }
 
-    .dark #theme-liquidglass .liquid-glass-share button:hover i {
+    .dark #theme-glass .liquid-glass-share button:hover i {
       color: #a5b4fc !important;
     }
 
     /* ========== 列表排列切换按钮 ========== */
-    #theme-liquidglass .glass-layout-toggle {
+    #theme-glass .glass-layout-toggle {
       display: inline-flex;
       gap: 4px;
       padding: 4px;
@@ -969,12 +969,12 @@ const Style = () => {
       -webkit-backdrop-filter: blur(8px);
     }
 
-    .dark #theme-liquidglass .glass-layout-toggle {
+    .dark #theme-glass .glass-layout-toggle {
       background: rgba(15, 15, 25, 0.35);
       border-color: rgba(255, 255, 255, 0.08);
     }
 
-    #theme-liquidglass .glass-layout-btn {
+    #theme-glass .glass-layout-btn {
       width: 34px;
       height: 34px;
       border: none;
@@ -989,28 +989,28 @@ const Style = () => {
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    #theme-liquidglass .glass-layout-btn:hover {
+    #theme-glass .glass-layout-btn:hover {
       color: #4f46e5;
       background: rgba(99, 102, 241, 0.08);
     }
 
-    #theme-liquidglass .glass-layout-btn.active {
+    #theme-glass .glass-layout-btn.active {
       background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(139, 92, 246, 0.85));
       color: #fff;
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
     }
 
-    .dark #theme-liquidglass .glass-layout-btn {
+    .dark #theme-glass .glass-layout-btn {
       color: #9ca3af;
     }
 
-    .dark #theme-liquidglass .glass-layout-btn.active {
+    .dark #theme-glass .glass-layout-btn.active {
       background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
       color: #e0e7ff;
     }
 
     /* ========== 网格悬停展开布局：指针靠近的卡片展开、其余模糊 ========== */
-    #theme-liquidglass .glass-hover-grid .glass-post-item {
+    #theme-glass .glass-hover-grid .glass-post-item {
       position: relative;
       transition:
         transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -1019,21 +1019,21 @@ const Style = () => {
         box-shadow 0.35s ease;
     }
 
-    #theme-liquidglass .glass-hover-grid .glass-post-item:hover {
+    #theme-glass .glass-hover-grid .glass-post-item:hover {
       transform: translateY(-6px) scale(1.05);
       z-index: 10;
       box-shadow: 0 24px 48px -12px rgba(99, 102, 241, 0.32);
       border-color: rgba(99, 102, 241, 0.4);
     }
 
-    #theme-liquidglass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
+    #theme-glass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
       filter: blur(10px) saturate(0.8);
       opacity: 0.42;
       transform: scale(0.97);
     }
 
     @media (hover: none) {
-      #theme-liquidglass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
+      #theme-glass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
         filter: none;
         opacity: 1;
         transform: none;
@@ -1043,7 +1043,7 @@ const Style = () => {
     /* ========== 滚动容器（原版 scroll-container）==========
        外层面板不能带 backdrop-filter —— 会成为 backdrop root，
        内部卡片的透镜就采样不到页面背景，实时折射会失效 */
-    #theme-liquidglass .glass-scroll-container {
+    #theme-glass .glass-scroll-container {
       position: relative;
       overflow: hidden;
       border-radius: 28px;
@@ -1054,14 +1054,14 @@ const Style = () => {
       box-shadow: var(--glass-shadow);
     }
 
-    .dark #theme-liquidglass .glass-scroll-container {
+    .dark #theme-glass .glass-scroll-container {
       border-color: var(--glass-border-dark);
       background:
         radial-gradient(ellipse 90% 50% at 50% 0%, rgba(99, 102, 241, 0.1), transparent),
         var(--glass-bg-dark);
     }
 
-    #theme-liquidglass .glass-scroll-head {
+    #theme-glass .glass-scroll-head {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -1073,16 +1073,16 @@ const Style = () => {
       text-transform: uppercase;
     }
 
-    #theme-liquidglass .glass-scroll-head i {
+    #theme-glass .glass-scroll-head i {
       color: #6366f1;
       font-size: 12px;
     }
 
-    .dark #theme-liquidglass .glass-scroll-head {
+    .dark #theme-glass .glass-scroll-head {
       color: #9ca3af;
     }
 
-    #theme-liquidglass .glass-scroll-viewport {
+    #theme-glass .glass-scroll-viewport {
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-width: none;
@@ -1093,11 +1093,11 @@ const Style = () => {
       padding: 8px 14px 14px;
     }
 
-    #theme-liquidglass .glass-scroll-viewport::-webkit-scrollbar {
+    #theme-glass .glass-scroll-viewport::-webkit-scrollbar {
       display: none;
     }
 
-    #theme-liquidglass .glass-scroll-card {
+    #theme-glass .glass-scroll-card {
       position: relative;
       display: flex;
       flex-direction: column;
@@ -1116,13 +1116,13 @@ const Style = () => {
       transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
     }
 
-    #theme-liquidglass .glass-scroll-card:hover {
+    #theme-glass .glass-scroll-card:hover {
       transform: scale(1.015);
       border-color: rgba(99, 102, 241, 0.35);
       box-shadow: 0 8px 22px rgba(99, 102, 241, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.3);
     }
 
-    #theme-liquidglass .glass-scroll-card-title {
+    #theme-glass .glass-scroll-card-title {
       font-size: 14px;
       font-weight: 600;
       color: #374151;
@@ -1132,12 +1132,12 @@ const Style = () => {
       max-width: 100%;
     }
 
-    #theme-liquidglass .glass-scroll-card-subtitle {
+    #theme-glass .glass-scroll-card-subtitle {
       font-size: 12px;
       color: #6b7280;
     }
 
-    #theme-liquidglass .glass-scroll-card-link {
+    #theme-glass .glass-scroll-card-link {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -1146,34 +1146,34 @@ const Style = () => {
       color: #4f46e5;
     }
 
-    #theme-liquidglass .glass-scroll-card-link i {
+    #theme-glass .glass-scroll-card-link i {
       font-size: 10px;
       transition: transform 0.25s ease;
     }
 
-    #theme-liquidglass .glass-scroll-card:hover .glass-scroll-card-link i {
+    #theme-glass .glass-scroll-card:hover .glass-scroll-card-link i {
       transform: translateX(3px);
     }
 
-    .dark #theme-liquidglass .glass-scroll-card {
+    .dark #theme-glass .glass-scroll-card {
       border-color: var(--glass-border-dark);
       background: rgba(25, 25, 40, 0.4);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.05);
     }
 
-    .dark #theme-liquidglass .glass-scroll-card-title {
+    .dark #theme-glass .glass-scroll-card-title {
       color: #e5e7eb;
     }
 
-    .dark #theme-liquidglass .glass-scroll-card-subtitle {
+    .dark #theme-glass .glass-scroll-card-subtitle {
       color: #9ca3af;
     }
 
-    .dark #theme-liquidglass .glass-scroll-card-link {
+    .dark #theme-glass .glass-scroll-card-link {
       color: #a5b4fc;
     }
 
-    ${themeConsoleStyle('liquidglass', CONFIG)}
+    ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}
   `}</style>
 }
 
