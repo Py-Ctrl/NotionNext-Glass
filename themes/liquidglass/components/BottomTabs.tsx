@@ -5,21 +5,22 @@ import * as React from 'react'
 import { useRouter } from 'next/router'
 import { useGlobal } from '@/lib/global'
 import { siteConfig } from '@/lib/config'
-import { generateCapsuleLensMap, generateRoundedRectLensMap } from './capsuleLensMap'
+import { generateRoundedRectLensMap } from './capsuleLensMap'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
 
 // SVG 透镜底栏（backdrop-filter: url(#feDisplacementMap)，折射真实页面内容）。
 // 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 回退到 CSS 玻璃底栏。
-// 容器玻璃参数为长期调校值（blur 1.4 / band 18 / mag 14 / saturate 1.35），
+// 容器玻璃参数为长期调校值（saturate 1.35 / 满幅贯穿 mag 10 / minRatio 0.45），
 // 指示器按压 ramp 1:1 对齐原版 liquid-glass-webgl：
 //   lens(10dp*p, 14dp*p) 折射随按压 ramp（静止为 0），表面全透明，
 //   静止仅 10% 暗化层；蓝色 = 选中 tab 图标+文字染 accent(#0088FF/#0091FF)。
 const SVG_LENS_ENABLED = true
-// 容器透镜环带宽度（px）与最大位移（px）
-const LENS_REFRACTION_H = 18
-const LENS_MAX_MAG = 14
+// 容器玻璃位移（px）：满幅贯穿（minRatio=0.45 中心不空心）但强度取 10，偏温和。
+//  指示器（z=2）叠加其上并按需再折射；容器若也满 14px，重叠区域会
+//  双重位移（容器 + 指示器叠加）在胶囊边缘"打架"——容器克制、指示器长按时主导。
+const LENS_MAX_MAG = 10
 // 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）边缘壳带折射
 const IND_MAX_MAG = 14
 // 原版强调色：light #0088FF / dark #0091FF
