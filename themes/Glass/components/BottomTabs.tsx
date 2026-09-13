@@ -17,10 +17,11 @@ import CONFIG from '../config'
 //   lens(10dp*p, 14dp*p) 折射随按压 ramp（静止为 0），表面全透明，
 //   静止仅 10% 暗化层；蓝色 = 选中 tab 图标+文字染 accent(#0088FF/#0091FF)。
 const SVG_LENS_ENABLED = true
-// 容器透镜环带宽度（px）与最大位移（px）
-const LENS_REFRACTION_H = 18
-const LENS_MAX_MAG = 14
-// 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）边缘壳带折射
+// 容器玻璃：径向满幅场，refractionHeight=CONTAINER_H/2 覆盖到中心、minRatio=0.35
+// 让中间也保留非零折射（不再有"中心完全不折射的空心椭圆"）；中心强度弱
+//（0.35*10≈3.5px），避免满幅强位移把整条内容朝圆心内压成"被压/发糊"。
+const LENS_MAX_MAG = 10
+// 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）满幅折射到中心
 const IND_MAX_MAG = 14
 // 原版强调色：light #0088FF / dark #0091FF
 const ACCENT_LIGHT = '#0088FF'
@@ -181,7 +182,7 @@ const BottomTabs = (props) => {
   // 位移图只随几何尺寸变化重建（Canvas2D 光栅，客户端才有 DOM canvas）
   const indW = tabs.length > 0 ? (canvasW - 2 * GLASS_PAD) / tabs.length : 0
   const lensMap = React.useMemo(
-    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
+    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, CONTAINER_H / 2, LENS_MAX_MAG, 0.35) : ''),
     [svgLens, canvasW, CONTAINER_H]
   )
   const lensFilterId = React.useMemo(
