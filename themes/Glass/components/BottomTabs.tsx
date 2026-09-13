@@ -5,7 +5,7 @@ import * as React from 'react'
 import { useRouter } from 'next/router'
 import { useGlobal } from '@/lib/global'
 import { siteConfig } from '@/lib/config'
-import { generateCapsuleLensMap } from './capsuleLensMap'
+import { generateCapsuleLensMap, generateRoundedRectLensMap } from './capsuleLensMap'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
@@ -17,11 +17,10 @@ import CONFIG from '../config'
 //   lens(10dp*p, 14dp*p) 折射随按压 ramp（静止为 0），表面全透明，
 //   静止仅 10% 暗化层；蓝色 = 选中 tab 图标+文字染 accent(#0088FF/#0091FF)。
 const SVG_LENS_ENABLED = true
-// 容器玻璃：径向满幅场，refractionHeight=CONTAINER_H/2 覆盖到中心、minRatio=0.35
-// 让中间也保留非零折射（不再有"中心完全不折射的空心椭圆"）；中心强度弱
-//（0.35*10≈3.5px），避免满幅强位移把整条内容朝圆心内压成"被压/发糊"。
-const LENS_MAX_MAG = 10
-// 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）满幅折射到中心
+// 容器透镜环带宽度（px）与最大位移（px）
+const LENS_REFRACTION_H = 18
+const LENS_MAX_MAG = 14
+// 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）边缘壳带折射
 const IND_MAX_MAG = 14
 // 原版强调色：light #0088FF / dark #0091FF
 const ACCENT_LIGHT = '#0088FF'
@@ -182,22 +181,18 @@ const BottomTabs = (props) => {
   // 位移图只随几何尺寸变化重建（Canvas2D 光栅，客户端才有 DOM canvas）
   const indW = tabs.length > 0 ? (canvasW - 2 * GLASS_PAD) / tabs.length : 0
   const lensMap = React.useMemo(
-    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, CONTAINER_H / 2, LENS_MAX_MAG, 0.35) : ''),
+    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
     [svgLens, canvasW, CONTAINER_H]
   )
   const lensFilterId = React.useMemo(
     () => `liquid-tabs-lens-${Math.round(canvasW)}-${CONTAINER_H}`,
     [canvasW, CONTAINER_H]
   )
-  // 指示器透镜：径向凸透镜场（原版 refractionHeight 10 / refractionAmount -14），
-  // 位移从边缘向中心平滑衰减；refractionHeight=GLASS_H/2 覆盖到中心且
-  // minRatio=0.45 保证中心保留非零折射 → 消除核心盒模型胶囊退化成中心线
-  // 造成的"中心完全不折射的空心椭圆"。中心强度 0.45*14≈6.3px，温和不内压。
+  // 指示器透镜：胶囊凸透镜位移图（原版 refractionHeight 10 / refractionAmount -14），
+  // 满幅折射贯穿到中心：refractionHeight=胶囊半径覆盖到中心，minRatio=0.45 保证
+  // 中心也保留非零位移而不只是边缘壳带 → 整个胶囊内部文字都折射弯折
   const indMap = React.useMemo(
-    () =>
-      svgLens && indW > 4
-        ? generateCapsuleLensMap(indW, GLASS_H, GLASS_H / 2, IND_MAX_MAG, 0.45)
-        : '',
+    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, GLASS_H / 2, IND_MAX_MAG, 0.45) : ''),
     [svgLens, indW, GLASS_H]
   )
   const indFilterId = React.useMemo(
