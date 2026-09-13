@@ -67,7 +67,9 @@ export function useLensBackdrop({
   }, [supported, size, radius, refractionHeight, maxMag])
 
   // 强制重绘：feImage 的 data URL 加载完成后 Chromium 不会自动重跑
-  // backdrop-filter，必须等图加载完再关-开切换（过早切换位移不生效）
+  // backdrop-filter，必须等图加载完再关-开切换（过早切换位移不生效）。
+  // Chrome 中 -webkit- 与标准 backdrop-filter 是同一属性的别名，必须两者一起
+  // 切 'none'→url()，避免样式系统只认到 .glass-card 的 -webkit blur 覆盖位移
   useEffect(() => {
     if (!mapUrl || !elRef.current) return
     const el = elRef.current
@@ -75,15 +77,19 @@ export function useLensBackdrop({
     let cancelled = false
     let t1 = 0
     let t2 = 0
+    const setFilter = v => {
+      el.style.backdropFilter = v
+      el.style.webkitBackdropFilter = v
+    }
     const img = new Image()
     img.onload = () => {
       if (cancelled) return
       t1 = window.setTimeout(() => {
         if (cancelled) return
-        el.style.backdropFilter = 'none'
+        setFilter('none')
         t2 = window.setTimeout(() => {
           if (cancelled) return
-          el.style.backdropFilter = url
+          setFilter(url)
         }, 100)
       }, 50)
     }
@@ -128,7 +134,14 @@ export function useLensBackdrop({
   }, [mapUrl, size, filterId, maxMag, blur, saturate])
 
   const style = useMemo(
-    () => (mapUrl ? { backdropFilter: `url(#${filterId})` } : null),
+    () =>
+      mapUrl
+        ? {
+            backdropFilter: `url(#${filterId})`,
+            // 与标准属性同值一起写，覆盖 .glass-card 等类的 -webkit blur，确保位移生效
+            WebkitBackdropFilter: `url(#${filterId})`
+          }
+        : null,
     [mapUrl, filterId]
   )
 

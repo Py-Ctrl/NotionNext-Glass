@@ -1,6 +1,7 @@
 import { siteConfig } from '@/lib/config'
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
+import { useLensBackdrop } from './useLensBackdrop'
 
 /**
  * 解析建站时间：支持年份数字（2021）或日期字符串
@@ -25,12 +26,15 @@ function parseSinceDate (since) {
  */
 function LatestPostsCard ({ latestPosts, allPosts }) {
   const { locale } = useGlobal()
+  // "最新发布"卡片：SVG 透镜折射（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
   const recentPosts = (latestPosts || allPosts || []).slice(0, 5)
 
   if (recentPosts.length === 0) return null
 
   return (
-    <div className='glass-card p-4 mb-4'>
+    <div ref={lens.elRef} className='glass-card p-4 mb-4' style={lens.style || undefined}>
+      {lens.filterNode}
       <h3 className='text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3'>
         <i className='mr-1.5 fas fa-history' />
         {locale.COMMON.LATEST_POSTS || '最新发布'}
@@ -66,6 +70,8 @@ function LatestPostsCard ({ latestPosts, allPosts }) {
  * 站点统计卡片：文章数、建站天数、访问量、访客数
  */
 function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
+  // 站点统计卡片：SVG 透镜折射
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
   // 建站天数
   const since = siteConfig('SINCE')
   const sinceDate = parseSinceDate(since)
@@ -93,7 +99,8 @@ function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
   count = count || 0
 
   return (
-    <div className='glass-card p-4'>
+    <div ref={lens.elRef} className='glass-card p-4' style={lens.style || undefined}>
+      {lens.filterNode}
       <h3 className='text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3'>
         <i className='mr-1.5 fas fa-chart-bar' />
         站点统计

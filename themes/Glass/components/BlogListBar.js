@@ -10,7 +10,8 @@ const BlogListBar = (props) => {
     <div className='glass-card p-3 sm:p-4 mb-4 sm:mb-6 overflow-hidden'>
       <div className='flex items-center gap-2'>
         {router.asPath !== '/search' && (
-          <div className='flex-1 min-w-0'>
+          // 大屏（≥xl）右侧栏已提供唯一搜索框，此处的搜索框隐藏，避免同时出现两个
+          <div className='flex-1 min-w-0 xl:hidden'>
             <SearchInput {...props} />
           </div>
         )}

@@ -39,7 +39,8 @@ const CONFIG = {
   LIQUID_GLASS_OPACITY: '0.65',
 
   // 翻页模式每页文章数（优先级：Notion 配置 > 此处 > conf/post.config.js）
-  POSTS_PER_PAGE: 12,
+  // 站点文章较少时把它调小，保证能翻页（例如 12 篇 → 6/页 → 2 页）
+  POSTS_PER_PAGE: 6,
 
   // 文章列表默认排列：'list' 纵向列表 | 'hover' 网格悬停展开（其余卡片模糊）
   POST_LIST_LAYOUT: 'list',

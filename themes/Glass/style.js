@@ -813,15 +813,14 @@ const Style = () => {
     }
 
     #theme-glass .liquid-glass-btn-blue {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(139, 92, 246, 0.35));
-      color: #4338ca;
-      border-color: rgba(99, 102, 241, 0.3);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      box-shadow:
-        0 4px 16px rgba(99, 102, 241, 0.15),
-        inset 0 1px 1px rgba(255, 255, 255, 0.4),
-        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+      background: #000000;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    #theme-glass .liquid-glass-btn-blue::before {
+      background: none;
     }
 
     #theme-glass .liquid-glass-btn:hover {
@@ -834,11 +833,10 @@ const Style = () => {
     }
 
     #theme-glass .liquid-glass-btn-blue:hover {
-      box-shadow:
-        0 8px 24px rgba(99, 102, 241, 0.25),
-        inset 0 1px 1px rgba(255, 255, 255, 0.5),
-        inset 0 -1px 1px rgba(0, 0, 0, 0.08);
-      border-color: rgba(99, 102, 241, 0.4);
+      background: #111111;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
     }
 
     .dark #theme-glass .liquid-glass-btn-surface {
@@ -849,15 +847,20 @@ const Style = () => {
     }
 
     .dark #theme-glass .liquid-glass-btn-blue {
-      background: linear-gradient(135deg, rgba(129, 140, 248, 0.35), rgba(167, 139, 250, 0.35));
-      color: #c7d2fe;
-      border-color: rgba(129, 140, 248, 0.25);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      box-shadow:
-        0 4px 16px rgba(129, 140, 248, 0.15),
-        inset 0 1px 1px rgba(255, 255, 255, 0.15),
-        inset 0 -1px 1px rgba(0, 0, 0, 0.15);
+      background: #000000;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .dark #theme-glass .liquid-glass-btn-blue::before {
+      background: none;
+    }
+
+    .dark #theme-glass .liquid-glass-btn-blue:hover {
+      background: #1a1a1a;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.4);
     }
 
     .dark #theme-glass .liquid-glass-btn::before {
@@ -995,9 +998,9 @@ const Style = () => {
     }
 
     #theme-glass .glass-layout-btn.active {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(139, 92, 246, 0.85));
+      background: #000000;
       color: #fff;
-      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .dark #theme-glass .glass-layout-btn {
@@ -1005,8 +1008,8 @@ const Style = () => {
     }
 
     .dark #theme-glass .glass-layout-btn.active {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
-      color: #e0e7ff;
+      background: #000000;
+      color: #ffffff;
     }
 
     /* ========== 网格悬停展开布局：指针靠近的卡片展开、其余模糊 ========== */

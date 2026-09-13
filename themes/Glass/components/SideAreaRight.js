@@ -8,15 +8,19 @@ import CategoryGroup from './CategoryGroup'
 import SmartLink from '@/components/SmartLink'
 import Announcement from './Announcement'
 import SiteStatsCard from './SiteStatsCard'
+import { useLensBackdrop } from './useLensBackdrop'
 
 const SideAreaRight = (props) => {
   const { tags, currentTag, categories, currentCategory, slot, notice, latestPosts, allPosts, postCount, categoryOptions, posts } = props
   const { locale } = useGlobal()
   const router = useRouter()
+  // 右侧栏卡片：SVG 透镜折射（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
 
   return (
     <aside className='hidden xl:block w-72 shrink-0 ml-4 xl:ml-8'>
-      <div className='glass-sidebar p-5 sticky top-6'>
+      <div ref={lens.elRef} className='glass-sidebar p-5 sticky top-6' style={lens.style || undefined}>
+        {lens.filterNode}
         {/* 搜索框 */}
         {siteConfig('LIQUID_MENU_SEARCH', null, CONFIG) && (
           <div className='mb-5'>

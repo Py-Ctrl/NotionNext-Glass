@@ -7,6 +7,7 @@ import DarkModeButton from './DarkModeButton'
 import SocialButton from './SocialButton'
 import RandomPostButton from './RandomPostButton'
 import dynamic from 'next/dynamic'
+import { useLensBackdrop } from './useLensBackdrop'
 
 const Live2D = dynamic(() => import('@/components/Live2D'), { ssr: false })
 
@@ -14,10 +15,13 @@ const SideAreaLeft = (props) => {
   const { locale } = useGlobal()
   const { siteInfo } = props
   const router = useRouter()
+  // 左侧栏卡片：SVG 透镜折射（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
 
   return (
     <aside className='hidden lg:block w-56 xl:w-60 shrink-0 mr-1 xl:mr-2'>
-      <div className='glass-sidebar p-5 sticky top-6'>
+      <div ref={lens.elRef} className='glass-sidebar p-5 sticky top-6' style={lens.style || undefined}>
+        {lens.filterNode}
         {/* 头像 + 标题 */}
         <div className='flex flex-col items-center mb-6'>
           <div className='w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/40 dark:ring-white/10 mb-3 hover:rotate-12 hover:scale-110 transition-transform duration-300 cursor-pointer'

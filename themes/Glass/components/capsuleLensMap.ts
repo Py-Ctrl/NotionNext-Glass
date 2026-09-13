@@ -87,12 +87,20 @@ export function generateRoundedRectLensMap(
   return canvas.toDataURL('image/png')
 }
 
-/** 胶囊（radius = h/2）特例，底栏用 */
+/** 胶囊（radius = h/2）特例，底栏用；minRatio>0 时满幅贯穿到中心，消除空心 */
 export function generateCapsuleLensMap(
   w: number,
   h: number,
   refractionHeight: number,
-  maxMag: number
+  maxMag: number,
+  minRatio: number = 0
 ): string {
-  return generateRoundedRectLensMap(w, h, Math.min(h / 2, w / 2), refractionHeight, maxMag)
+  return generateRoundedRectLensMap(
+    w,
+    h,
+    Math.min(h / 2, w / 2),
+    refractionHeight,
+    maxMag,
+    minRatio
+  )
 }

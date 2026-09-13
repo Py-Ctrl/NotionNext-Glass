@@ -5,22 +5,26 @@ import * as React from 'react'
 import { useRouter } from 'next/router'
 import { useGlobal } from '@/lib/global'
 import { siteConfig } from '@/lib/config'
-import { generateRoundedRectLensMap } from './capsuleLensMap'
+import {
+  generateCapsuleLensMap,
+  generateRoundedRectLensMap
+} from './capsuleLensMap'
 import { getIconPath } from './iconMap'
 import SmartLink from '@/components/SmartLink'
 import CONFIG from '../config'
 
 // SVG 透镜底栏（backdrop-filter: url(#feDisplacementMap)，折射真实页面内容）。
 // 仅 Chromium 支持 url() 引用 SVG filter；Safari/Firefox 回退到 CSS 玻璃底栏。
-// 容器玻璃参数为长期调校值（saturate 1.35 / 满幅贯穿 mag 10 / minRatio 0.45），
+// 容器玻璃参数为长期调校值（saturate 1.35 / 边缘带 band 18 / mag 14），
 // 指示器按压 ramp 1:1 对齐原版 liquid-glass-webgl：
 //   lens(10dp*p, 14dp*p) 折射随按压 ramp（静止为 0），表面全透明，
 //   静止仅 10% 暗化层；蓝色 = 选中 tab 图标+文字染 accent(#0088FF/#0091FF)。
 const SVG_LENS_ENABLED = true
-// 容器玻璃位移（px）：满幅贯穿（minRatio=0.45 中心不空心）但强度取 10，偏温和。
-//  指示器（z=2）叠加其上并按需再折射；容器若也满 14px，重叠区域会
-//  双重位移（容器 + 指示器叠加）在胶囊边缘"打架"——容器克制、指示器长按时主导。
-const LENS_MAX_MAG = 10
+// 容器玻璃位移（px）：只做薄边缘带（refractionHeight=18、minRatio=0），
+// 仅边缘环带凸透镜折射、中心保持清晰 —— 满幅贯穿（minRatio>0）的径向凸透镜
+// 场会让整条胶囊的内容朝圆心内压，肉眼表现为"中心被压缩、折射发糊"。
+//  指示器（z=2）叠加其上并按需再折射；容器边缘带克制，指示器长按时主导。
+const LENS_MAX_MAG = 14
 // 指示器透镜（原版 refractionAmount -14，乘以 pressProgress）边缘壳带折射
 const IND_MAX_MAG = 14
 // 原版强调色：light #0088FF / dark #0091FF
@@ -181,8 +185,11 @@ const BottomTabs = (props) => {
 
   // 位移图只随几何尺寸变化重建（Canvas2D 光栅，客户端才有 DOM canvas）
   const indW = tabs.length > 0 ? (canvasW - 2 * GLASS_PAD) / tabs.length : 0
+  // 容器玻璃：只做薄边缘带（refractionHeight=18、minRatio=0），边缘环带凸透镜
+  // 折射、中心保持清晰 —— 满幅贯穿（minRatio>0）会让整条胶囊内容朝圆心内压，
+  // 表现为"中心被压缩、折射发糊"，故回归原版边缘带语义。
   const lensMap = React.useMemo(
-    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG) : ''),
+    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, 18, LENS_MAX_MAG, 0) : ''),
     [svgLens, canvasW, CONTAINER_H]
   )
   const lensFilterId = React.useMemo(
@@ -190,10 +197,10 @@ const BottomTabs = (props) => {
     [canvasW, CONTAINER_H]
   )
   // 指示器透镜：胶囊凸透镜位移图（原版 refractionHeight 10 / refractionAmount -14），
-  // 满幅折射贯穿到中心：refractionHeight=胶囊半径覆盖到中心，minRatio=0.45 保证
-  // 中心也保留非零位移而不只是边缘壳带 → 整个胶囊内部文字都折射弯折
+  // 薄边缘带（refractionHeight=12、minRatio=0）：边缘弯折清晰、中心不内压。
+  // 径向凸透镜场保证方向连续（旧 box 核心退化成线导致的"中心空心"已随径向重构消除）。
   const indMap = React.useMemo(
-    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, GLASS_H / 2, IND_MAX_MAG, 0.45) : ''),
+    () => (svgLens && indW > 4 ? generateRoundedRectLensMap(indW, GLASS_H, GLASS_H / 2, 12, IND_MAX_MAG, 0) : ''),
     [svgLens, indW, GLASS_H]
   )
   const indFilterId = React.useMemo(
