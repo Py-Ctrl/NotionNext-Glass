@@ -38,41 +38,59 @@ export function generateRoundedRectLensMap(
   const hx = W / 2
   const hy = H / 2
   const r = Math.max(0, Math.min(radius, Math.min(hx, hy)))
-  // 椭圆近似胶囊/圆角矩形的径向轮廓半径（a=水平半轴，b=垂直半轴）。
-  // 全用"指向圆心"的径向凸透镜场：方向随角度连续，位移按到轮廓径向距离
-  // 从边缘向中心平滑衰减 —— 消除旧实现 center 区轴向方向在胶囊(radius=h/2、
-  // 核心盒退化为一条水平线)时产生的正中心断层/空心带。
-  // minRatio=0 时仍等于纯外壳带（兼容 useLensBackdrop 等外围调用）；>0 时满幅贯穿。
-  const a = Math.max(1, hx)
-  const b = Math.max(1, Math.min(hy, r))
+  // 核心盒：圆角矩形向内缩 r 后的直边区域（胶囊时退化为线段）
+  const coreX = hx - r
+  const coreY = hy - r
 
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const dx = x + 0.5 - hx
       const dy = y + 0.5 - hy
-      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      let nx = 0
+      let ny = 0
+      let edgeDist = 0
+
+      // 最近核心盒点（clamp 到 [-core, core]）
+      const qx = Math.max(-coreX, Math.min(coreX, dx))
+      const qy = Math.max(-coreY, Math.min(coreY, dy))
+
+      if (qx !== dx || qy !== dy) {
+        // 边带（直边或圆角弧）：边界点 = q + r * normalize(p - q)
+        const ux = dx - qx
+        const uy = dy - qy
+        const u = Math.sqrt(ux * ux + uy * uy) || 1e-6
+        edgeDist = r - u
+        nx = -ux / u
+        ny = -uy / u
+      } else {
+        // 中心区：最近的是四条直边，法线为轴向
+        const dL = dx + hx
+        const dR = hx - dx
+        const dT = dy + hy
+        const dB = hy - dy
+        edgeDist = Math.min(dL, dR, dT, dB)
+        if (edgeDist === dL) {
+          nx = 1
+        } else if (edgeDist === dR) {
+          nx = -1
+        } else if (edgeDist === dT) {
+          ny = 1
+        } else {
+          ny = -1
+        }
+      }
 
       let ox = 0
       let oy = 0
-      if (dist < 1e-3) {
-        // 正中心：方向无定义，位移置 0（避免奇点，凸透镜中心本就该收敛）
-        data[(y * W + x) * 4 + 3] = 255
-        data[(y * W + x) * 4 + 2] = 0
-        data[(y * W + x) * 4 + 1] = 128
-        data[(y * W + x) * 4] = 128
-        continue
-      }
-      const cosT = dx / dist
-      const sinT = dy / dist
-      // 该方向从中心到（近似）胶囊轮廓的距离；edgeDist = 到轮廓的最短径向距离
-      const re = (a * b) / Math.sqrt(b * b * cosT * cosT + a * a * sinT * sinT)
-      let edgeDist = re - dist
+      // 原版凸透镜折射贯穿全幅：位移随到边缘距离从最强向中心平滑衰减，
+      // 不再只限制在外层壳带（那会让核心区位移场为 0 → 中间完全无折射）。
+      // minRatio 保证中心也保留非零位移（0 = 只边缘、1 = 全域满磁）。
       if (edgeDist >= 0 && edgeDist <= refractionHeight) {
-        const ft = edgeDist / refractionHeight // 0=边缘 → 1=中心(作用域内缘)
+        const ft = edgeDist / refractionHeight // 0=边缘 → 1=中心(作用域边缘)
         const mag = maxMag * (minRatio + (1 - minRatio) * Math.sqrt(1 - ft * ft))
-        // 指向圆心 = 向内采样 = 边缘放大（凸透镜）；正中心 dist→0 处 mag→0 收敛
-        ox = cosT * mag
-        oy = sinT * mag
+        ox = nx * mag
+        oy = ny * mag
       }
 
       const i = (y * W + x) * 4
@@ -87,20 +105,12 @@ export function generateRoundedRectLensMap(
   return canvas.toDataURL('image/png')
 }
 
-/** 胶囊（radius = h/2）特例，底栏用；minRatio>0 时满幅贯穿到中心，消除空心 */
+/** 胶囊（radius = h/2）特例，底栏用 */
 export function generateCapsuleLensMap(
   w: number,
   h: number,
   refractionHeight: number,
-  maxMag: number,
-  minRatio: number = 0
+  maxMag: number
 ): string {
-  return generateRoundedRectLensMap(
-    w,
-    h,
-    Math.min(h / 2, w / 2),
-    refractionHeight,
-    maxMag,
-    minRatio
-  )
+  return generateRoundedRectLensMap(w, h, Math.min(h / 2, w / 2), refractionHeight, maxMag)
 }
