@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { generateRoundedRectLensMap } from './capsuleLensMap'
 
 let uidCounter = 0
@@ -26,7 +26,10 @@ export function useLensBackdrop({
   blur = 0,
   saturate = 1.5,
 } = {}) {
-  const elRef = useRef(null)
+  // 回调 ref + state：卡片折叠/展开时目标元素会整体换掉，
+  // useRef 只在首次挂载时被 effect 读到，换元素后透镜会静默失效
+  const [el, setEl] = useState(null)
+  const elRef = useCallback(node => setEl(node), [])
   const [supported] = useState(() => {
     if (typeof window === 'undefined' || typeof CSS === 'undefined' || !CSS.supports) return false
     // 触屏设备不启用：滚动时逐帧重跑位移滤镜的开销过大
@@ -42,8 +45,7 @@ export function useLensBackdrop({
   const [filterId] = useState(() => `lens-card-${++uidCounter}`)
 
   useEffect(() => {
-    if (!supported || !elRef.current) return
-    const el = elRef.current
+    if (!supported || !el) return
     const update = () => {
       const w = Math.round(el.offsetWidth)
       const h = Math.round(el.offsetHeight)
@@ -59,7 +61,7 @@ export function useLensBackdrop({
     const ro = new ResizeObserver(update)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [supported])
+  }, [supported, el])
 
   const mapUrl = useMemo(() => {
     if (!supported || !size) return ''
@@ -71,8 +73,7 @@ export function useLensBackdrop({
   // Chrome 中 -webkit- 与标准 backdrop-filter 是同一属性的别名，必须两者一起
   // 切 'none'→url()，避免样式系统只认到 .glass-card 的 -webkit blur 覆盖位移
   useEffect(() => {
-    if (!mapUrl || !elRef.current) return
-    const el = elRef.current
+    if (!mapUrl || !el) return
     const url = `url(#${filterId})`
     let cancelled = false
     let t1 = 0
@@ -99,7 +100,7 @@ export function useLensBackdrop({
       clearTimeout(t1)
       clearTimeout(t2)
     }
-  }, [mapUrl, filterId])
+  }, [mapUrl, filterId, el])
 
   const filterNode = useMemo(() => {
     if (!mapUrl || !size) return null
