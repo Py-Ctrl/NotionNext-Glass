@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { siteConfig } from '@/lib/config'
 import MusicPlayer from './MusicPlayer'
+import { useLensBackdrop } from './useLensBackdrop'
 
 /**
  * 全局悬浮音乐播放器
@@ -46,6 +47,11 @@ const FloatingMusicPlayer = () => {
   const [useTransform, setUseTransform] = useState(false)
 
   const currentTrack = audioList?.[currentIdx]
+
+  // 卡片折射透镜：展开面板 = 普通卡片参数；折叠胶囊 = 底栏同款（band 18 / mag 14），
+  // 尺寸小、位移小，避免 32px 位移把 56px 高的胶囊整块扯变形
+  const expandedLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+  const compactLens = useLensBackdrop({ refractionHeight: 18, maxMag: 14, blur: 0, saturate: 1.35 })
 
   // 延迟显示
   useEffect(() => {
@@ -325,7 +331,11 @@ const FloatingMusicPlayer = () => {
       >
         {/* 展开模式 */}
         {isExpanded && (
-          <div className='glass-card p-4 w-72 sm:w-80 mb-2 shadow-2xl'>
+          <div
+            ref={expandedLens.elRef}
+            className='glass-card p-4 w-72 sm:w-80 mb-2 shadow-2xl'
+            style={expandedLens.style || undefined}>
+            {expandedLens.filterNode}
             <div
               className='flex justify-between items-center mb-3 cursor-grab active:cursor-grabbing'
               onPointerDown={startDrag}
@@ -371,11 +381,13 @@ const FloatingMusicPlayer = () => {
         {/* 折叠模式 */}
         {!isExpanded && (
           <div
+            ref={compactLens.elRef}
             className='glass-card rounded-2xl shadow-xl cursor-grab active:cursor-grabbing transition-shadow hover:shadow-2xl relative'
             onPointerDown={startDrag}
             onClick={handleCompactClick}
-            style={{ touchAction: 'none' }}
+            style={{ touchAction: 'none', ...(compactLens.style || undefined) }}
           >
+            {compactLens.filterNode}
             <div className='flex items-center gap-2 p-2'>
               <div
                 className='relative w-10 h-10 shrink-0 ring-1 ring-white/10 shadow-md'
