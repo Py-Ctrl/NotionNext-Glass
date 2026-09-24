@@ -25,6 +25,16 @@ const Style = () => {
       background-attachment: fixed;
     }
 
+    /* 图片壁纸：Notion 站点封面（或 LIQUID_BG_IMAGE）当全站壁纸，Hexo 主题 banner 的做法。
+       --glass-bg-image / --glass-veil* 由 themes/Glass/index.js 内联注入；
+       蒙版压住图片对比度，保证玻璃卡片上的文字仍然可读。 */
+    #theme-glass.glass-bg-image {
+      background:
+        linear-gradient(var(--glass-veil), var(--glass-veil)),
+        var(--glass-bg-image) center / cover no-repeat;
+      background-attachment: fixed;
+    }
+
     .dark #theme-glass {
       --glass-bg: rgba(20, 20, 35, 0.55);
       --glass-border: rgba(255, 255, 255, 0.08);
@@ -35,6 +45,13 @@ const Style = () => {
         radial-gradient(ellipse 70% 50% at 80% 20%, rgba(139, 92, 246, 0.1), transparent),
         radial-gradient(ellipse 60% 40% at 50% 80%, rgba(6, 182, 212, 0.08), transparent),
         linear-gradient(135deg, #0a0a1a 0%, #0f0f23 30%, #0a1a1f 70%, #0a0f0a 100%);
+      background-attachment: fixed;
+    }
+
+    .dark #theme-glass.glass-bg-image {
+      background:
+        linear-gradient(var(--glass-veil-dark), var(--glass-veil-dark)),
+        var(--glass-bg-image) center / cover no-repeat;
       background-attachment: fixed;
     }
 

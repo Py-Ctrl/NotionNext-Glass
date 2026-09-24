@@ -161,11 +161,25 @@ const LayoutBase = props => {
   const tocRef = isBrowser ? document.getElementById('article-wrapper') : null
   const searchModal = useRef(null)
 
+  // 全站壁纸：优先手动配置的 URL，其次 Notion 站点封面（数据库 cover / 页面 page_cover）
+  const { siteInfo } = useGlobal()
+  const bgImage =
+    CONFIG.LIQUID_BG_IMAGE ||
+    (siteConfig('LIQUID_BG_FROM_NOTION', true, CONFIG) ? siteInfo?.pageCover : '')
+  const bgStyle = bgImage
+    ? {
+        '--glass-bg-image': `url("${bgImage}")`,
+        '--glass-veil': CONFIG.LIQUID_BG_VEIL,
+        '--glass-veil-dark': CONFIG.LIQUID_BG_VEIL_DARK
+      }
+    : undefined
+
   return (
     <ThemeGlassGlobal.Provider value={{ searchModal }}>
       <div
         id='theme-glass'
-        className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth`}>
+        style={bgStyle}
+        className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth${bgImage ? ' glass-bg-image' : ''}`}>
         <Style />
 
         {/* 移动端顶部导航 */}
