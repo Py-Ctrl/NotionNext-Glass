@@ -47,9 +47,10 @@ const CONFIG = {
   // 注意：透镜折射采样的是这块背景，纯色/纯渐变背景本身没有细节可折射，
   // 只有文字和卡片边缘能看出折射；有纹理的图能让整条底栏的折射更明显。
   LIQUID_BG_IMAGE: process.env.NEXT_PUBLIC_THEME_LIQUID_BG_IMAGE || '',
-  // 壁纸蒙版：图片模式下叠在图片之上（渐变光斑之下），压低图片对比度，
-  // 保证玻璃卡片上的文字仍然可读。不想要蒙版就设成 transparent。
-  LIQUID_BG_VEIL: process.env.NEXT_PUBLIC_THEME_LIQUID_BG_VEIL || 'rgba(255,255,255,0.55)',
+  // 壁纸蒙版：图片模式下叠在图片之上，压低图片对比度，保证玻璃卡片上的文字仍然可读。
+  // 注意这是"白色蒙版"——值越大照片越淡、越像灰底（0.55 时整张图会被洗成中灰），
+  // 浅色模式给 0.2 左右既能压住高光又不削平对比度；不想要蒙版就设成 transparent。
+  LIQUID_BG_VEIL: process.env.NEXT_PUBLIC_THEME_LIQUID_BG_VEIL || 'rgba(255,255,255,0.2)',
   LIQUID_BG_VEIL_DARK: process.env.NEXT_PUBLIC_THEME_LIQUID_BG_VEIL_DARK || 'rgba(8,8,18,0.6)',
 
   // 翻页模式每页文章数（优先级：Notion 配置 > 此处 > conf/post.config.js）
