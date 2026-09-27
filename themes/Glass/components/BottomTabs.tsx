@@ -159,9 +159,6 @@ const BottomTabs = (props) => {
   React.useEffect(() => { subMenuOpenRef.current = subMenuOpen }, [subMenuOpen])
 
   const menuItems = React.useMemo(() => {
-    if (siteConfig('CUSTOM_MENU') && customMenu && customMenu.length > 0) {
-      return customMenu.filter(m => m && m.show !== false)
-    }
     const defaults = []
     if (siteConfig('LIQUID_MENU_CATEGORY', null, CONFIG) !== false) {
       defaults.push({ name: locale.COMMON.CATEGORY, href: '/category', icon: 'fa-folder', subMenus: [] })
@@ -176,7 +173,13 @@ const BottomTabs = (props) => {
       { name: locale.NAV?.HOME || '首页', href: '/', icon: 'fa-house', subMenus: [] },
       ...defaults
     ]
-    if (customNav) {
+    // 自定义 Menu 追加在默认 tab 之后，与主题内 MenuList 的语义一致。
+    // 早前这里是整体替换：Notion 里出现任意一个 Menu 页面，首页/分类/标签/归档
+    // 就会全部消失，只剩新增的那一个。开启 CUSTOM_MENU 时由 Menu 取代
+    // Page 类型的 customNav（两者同时追加会重复），未开启则沿用 customNav。
+    if (siteConfig('CUSTOM_MENU') && customMenu && customMenu.length > 0) {
+      links = links.concat(customMenu.filter(m => m && m.show !== false))
+    } else if (customNav) {
       links = links.concat(customNav.filter(n => n && n.show !== false))
     }
     return links
@@ -715,9 +718,12 @@ const BottomTabs = (props) => {
 
   React.useEffect(() => {
     const handleClickOutside = (e) => {
-      if (subMenuRef.current && !subMenuRef.current.contains(e.target)) {
-        setSubMenuOpen(null)
-      }
+      if (!subMenuRef.current || subMenuRef.current.contains(e.target)) return
+      // 点在底栏上时交给 handleTabSelect 决定（切换面板 / 收起 / 导航）：
+      // 同一次点击里 button 的 onClick 先执行、document 的监听后执行，
+      // 若这里也清空，就会把刚设好的新面板覆盖掉 —— 切换父级 tab 要点两次
+      if (containerRef.current && containerRef.current.contains(e.target)) return
+      setSubMenuOpen(null)
     }
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
@@ -725,20 +731,35 @@ const BottomTabs = (props) => {
 
   const widthStyle = `min(calc(100% - ${isDesktop ? '4rem' : '2rem'}), ${tabs.length * TAB_WIDTH}px)`
 
+  // 子菜单面板：锚在选中 tab 正上方。
+  // 定位必须走内联样式：面板带 glass-card，而 `#theme-glass .glass-card` 里的
+  // position: relative（id + class 选择器）会压过 Tailwind 的 .fixed（单类选择器），
+  // 面板因此掉回文档流、被挤到页面最底部。内联样式优先级最高，不受那条规则影响。
   const renderSubMenu = () => {
     if (subMenuOpen === null || !tabs[subMenuOpen]?.subMenus.length) return null
+    // 底栏整体在视口水平居中，所以 tab 中心相对视口中心的偏移 =
+    // 槽位中心（GLASS_PAD + (i + 0.5) * indW）减去容器半宽
+    const offset = GLASS_PAD + (subMenuOpen + 0.5) * indW - canvasW / 2
     return (
       <div
         ref={subMenuRef}
-        className='fixed bottom-24 left-1/2 -translate-x-1/2 z-40 glass-card p-2 min-w-[160px]'
-      >
+        className='glass-card p-2'
+        style={{
+          position: 'fixed',
+          // 底栏 bottom 16px、高 CONTAINER_H，再留 8px 间隙
+          bottom: `${CONTAINER_H + 16 + 8}px`,
+          left: '50%',
+          transform: `translateX(calc(-50% + ${offset.toFixed(2)}px))`,
+          zIndex: 40,
+          minWidth: 160,
+          maxWidth: 'calc(100vw - 16px)'
+        }}>
         {tabs[subMenuOpen].subMenus.map((s, i) => (
           <SmartLink
             key={i}
             href={s.href}
-            className='block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg'
-            onClick={() => setSubMenuOpen(null)}
-          >
+            className='block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/10 dark:hover:bg-white/5 rounded-lg whitespace-nowrap'
+            onClick={() => setSubMenuOpen(null)}>
             {s.icon && <i className={s.icon + ' mr-2'} />}
             {s.name}
           </SmartLink>
@@ -1017,7 +1038,7 @@ const BottomTabs = (props) => {
   return (
     <>
       {renderSubMenu()}
-      <nav className='fixed bottom-4 left-0 right-0 z-30 glass-nav'>
+      <nav ref={containerRef} className='fixed bottom-4 left-0 right-0 z-30 glass-nav'>
         <div className='flex justify-around items-center mx-auto py-2' style={{ width: widthStyle }}>
           {tabs.map((tab, idx) => (
             <button
