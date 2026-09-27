@@ -1,6 +1,8 @@
 import { siteConfig } from '@/lib/config'
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
+import busuanzi from '@/lib/plugins/busuanzi'
+import { useEffect, useState } from 'react'
 import { useLensBackdrop } from './useLensBackdrop'
 
 /**
@@ -72,6 +74,11 @@ function LatestPostsCard ({ latestPosts, allPosts }) {
 function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
   // 站点统计卡片：SVG 透镜折射
   const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+  const { NOTION_CONFIG } = useGlobal()
+  // 不蒜子开关与数据（与 ExternalPlugins 里的判定保持一致）
+  const busuanziEnabled = siteConfig('ANALYTICS_BUSUANZI_ENABLE', null, NOTION_CONFIG)
+  const [busuanziData, setBusuanziData] = useState(null)
+  useEffect(() => busuanzi.subscribe(setBusuanziData), [])
   // 建站天数
   const since = siteConfig('SINCE')
   const sinceDate = parseSinceDate(since)
@@ -128,27 +135,31 @@ function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
           </div>
         </div>
 
-        {/* 访问量 */}
-        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
-          <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
-            <span className='busuanzi_value_site_pv'>--</span>
+        {/* 访问量（不蒜子） */}
+        {busuanziEnabled && (
+          <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
+            <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
+              {busuanziData?.site_pv ?? '--'}
+            </div>
+            <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
+              <i className='fas fa-eye mr-1' />
+              访问量
+            </div>
           </div>
-          <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
-            <i className='fas fa-eye mr-1' />
-            访问量
-          </div>
-        </div>
+        )}
 
-        {/* 访客数 */}
-        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
-          <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
-            <span className='busuanzi_value_site_uv'>--</span>
+        {/* 访客数（不蒜子） */}
+        {busuanziEnabled && (
+          <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
+            <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
+              {busuanziData?.site_uv ?? '--'}
+            </div>
+            <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
+              <i className='fas fa-users mr-1' />
+              访客数
+            </div>
           </div>
-          <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
-            <i className='fas fa-users mr-1' />
-            访客数
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )
