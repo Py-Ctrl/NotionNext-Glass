@@ -2,6 +2,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { siteConfig } from '@/lib/config'
+import CONFIG from '../config'
 import { generateRoundedRectLensMap } from './capsuleLensMap'
 
 let uidCounter = 0
@@ -25,6 +27,10 @@ export function useLensBackdrop({
   maxMag = 32,
   blur = 0,
   saturate = 1.5,
+  // 内部下限位移比例：>0 时整块卡片都在折射（径向场，中心平滑归零），
+  // 而非只有边缘一圈薄环。底栏 LENS_FLOOR=0.25 是同一套参数，
+  // 卡片此前漏传导致 floor=0 —— 内部零位移，观感退化成「纯 Blur」。
+  floor = 0.25,
 } = {}) {
   // 回调 ref + state：卡片折叠/展开时目标元素会整体换掉，
   // useRef 只在首次挂载时被 effect 读到，换元素后透镜会静默失效
@@ -32,10 +38,23 @@ export function useLensBackdrop({
   const elRef = useCallback(node => setEl(node), [])
   const [supported] = useState(() => {
     if (typeof window === 'undefined' || typeof CSS === 'undefined' || !CSS.supports) return false
-    // 触屏设备不启用：滚动时逐帧重跑位移滤镜的开销过大
-    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return false
+    // 减少动画偏好：直接退回 CSS blur
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+    // 触屏端默认【也启用】折射 —— 移动端要的是真折射，不是只有 Blur。
+    // 只有把 LIQUID_LENS_TOUCH 显式设为 false 才在触屏退回 CSS blur（低端机省电用）。
+    // 注：不用 (pointer: coarse) 判定，触屏笔记本 / 桌面触控屏的主指针也可能是 coarse，
+    // 会把整个桌面端误退回模糊。
+    if (
+      window.matchMedia &&
+      window.matchMedia('(hover: none)').matches &&
+      !siteConfig('LIQUID_LENS_TOUCH', true, CONFIG)
+    ) {
+      return false
+    }
     try {
-      return CSS.supports('backdrop-filter', 'url(#lens-card-probe)')
+      // 用最朴素的 #probe 探测：带具体长 id 的 value 在部分 Chromium 的 CSS.supports
+      // 中会返回 false（误判为不支持 → 永远回退 CSS 模糊）。与 BottomTabs 保持一致。
+      return CSS.supports('backdrop-filter', 'url(#probe)')
     } catch (e) {
       return false
     }
@@ -43,10 +62,31 @@ export function useLensBackdrop({
   const [size, setSize] = useState(null)
   const [radius, setRadius] = useState(16)
   const [filterId] = useState(() => `lens-card-${++uidCounter}`)
+  // 可见性门控（PERF.md P0-3）：进视口才挂 url(#...)，离视口置 none。
+  // 首页同时存活的透镜从 ~11 降到 2-4，滚出视口的卡片零开销。
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     if (!supported || !el) return
-    const update = () => {
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true)
+      return
+    }
+    // 提前 200px 预挂：回滚进视口时舞步来不及跑完也不会露出无折射的卡片
+    const io = new IntersectionObserver(
+      entries => {
+        for (const e of entries) setVisible(e.isIntersecting)
+      },
+      { rootMargin: '200px 0px 200px 0px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [supported, el])
+
+  useEffect(() => {
+    if (!supported || !el) return
+    let timer = 0
+    const measure = () => {
       const w = Math.round(el.offsetWidth)
       const h = Math.round(el.offsetHeight)
       if (w < 8 || h < 8) return
@@ -57,16 +97,36 @@ export function useLensBackdrop({
       })
       setRadius(prev => (Math.abs(prev - r) < 0.5 ? prev : r))
     }
-    update()
+    // 尺寸变化防抖 120ms（与底栏口径一致）：拖窗口时 ResizeObserver 每帧触发，
+    // 无防抖会反复重光栅位移图并重跑 repaint 舞步，每张卡各跑各的 timer 链（PERF.md P1-3）
+    const update = () => {
+      if (timer) clearTimeout(timer)
+      timer = window.setTimeout(measure, 120)
+    }
+    measure() // 首测立即执行，避免首屏空窗
     const ro = new ResizeObserver(update)
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => {
+      if (timer) clearTimeout(timer)
+      ro.disconnect()
+    }
   }, [supported, el])
 
+  // 位移图光栅倍率：0.5 → 像素数降到 1/4（位移场平滑，降采样视觉无损，
+  // 见 capsuleLensMap.ts 文件头）。卡片此前落到默认 1，是白付的光栅/采样成本。
+  const rasterScale = Number(siteConfig('LIQUID_LENS_RASTER_SCALE', 0.5, CONFIG)) || 0.5
   const mapUrl = useMemo(() => {
-    if (!supported || !size) return ''
-    return generateRoundedRectLensMap(size.w, size.h, radius, refractionHeight, maxMag)
-  }, [supported, size, radius, refractionHeight, maxMag])
+    if (!supported || !size || !visible) return ''
+    return generateRoundedRectLensMap(
+      size.w,
+      size.h,
+      radius,
+      refractionHeight,
+      maxMag,
+      floor,
+      rasterScale
+    )
+  }, [supported, size, radius, refractionHeight, maxMag, floor, visible, rasterScale])
 
   // 强制重绘：feImage 的 data URL 加载完成后 Chromium 不会自动重跑
   // backdrop-filter，必须等图加载完再关-开切换（过早切换位移不生效）。

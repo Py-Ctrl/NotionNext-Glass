@@ -38,6 +38,15 @@ const CONFIG = {
   // 玻璃透明度
   LIQUID_GLASS_OPACITY: '0.65',
 
+  // ===== 折射（SVG 透镜）=====
+  // 触屏端是否启用折射。默认 true —— 移动端也要真折射（不是只有 Blur）。
+  // 触屏逐帧位移滤镜开销更大，若在低端机上明显掉帧，把这里改成 false 即整体退回 CSS blur。
+  LIQUID_LENS_TOUCH: true,
+  // 位移图光栅分辨率倍率：位移场平滑，降采样只是换更粗的采样网格，编码值仍是
+  // 「元素 px」单位，feImage 拉伸铺满后视觉无损，光栅像素数按平方下降。
+  // 0.5 → 像素数降到 1/4。想更清晰调到 1，想更省调到 0.35。
+  LIQUID_LENS_RASTER_SCALE: 0.5,
+
   // ===== 全站背景壁纸（themes/Glass/style.js 里的 #theme-glass background）=====
   // 默认直接拿 Notion 站点封面当全站壁纸（和 Hexo 主题的 banner 一个路子）：
   // 取值优先级 = Notion 数据库 cover > 数据库页面 page_cover > HOME_BANNER_IMAGE。

@@ -191,6 +191,23 @@ const Style = () => {
       border-color: rgba(255, 255, 255, 0.15);
     }
 
+    /* ========== 评论区卡片：不吃 backdrop-filter ==========
+       backdrop-filter（非 none）会为 fixed/absolute 后代建立「包含块」并成为 backdrop root，
+       嵌入式评论组件（Twikoo / Waline 等）的动态内容会因此错位甚至完全不渲染 —— 触屏端
+       尤其明显（移动端触屏禁用透镜后这里回退成 blur()，Android WebView 上会整块空掉）。
+       去掉 backdrop-filter，用不透明度更高的背景保住玻璃观感。 */
+    @media (hover: none), (pointer: coarse) {
+      #theme-glass .glass-card.glass-comment {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .dark #theme-glass .glass-card.glass-comment {
+        background: rgba(18, 18, 32, 0.72);
+      }
+    }
+
     /* ========== 玻璃导航栏 ========== */
     #theme-glass .glass-nav {
       background: var(--glass-bg);

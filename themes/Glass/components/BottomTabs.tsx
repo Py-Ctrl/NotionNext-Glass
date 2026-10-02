@@ -60,6 +60,34 @@ const LENS_FLOOR = 0.25
 // 原版强调色：light #0088FF / dark #0091FF
 const ACCENT_LIGHT = '#0088FF'
 const ACCENT_DARK = '#0091FF'
+
+// --- 性能开关（PERF.md P0）---
+// 容器位移图降采样倍率：位移场本身平滑，降采样只是换更粗的采样网格，编码值仍是
+// 「元素 px」单位，feImage 拉伸铺满后视觉无损，光栅像素数 ↓75%（P0-4）
+const LENS_MAP_RASTER_SCALE = 0.5
+// 触屏端是否启用 SVG 透镜：由 themes/Glass/config.js 的 LIQUID_LENS_TOUCH 决定
+// （默认 true —— 移动端也要真折射，不是只有 Blur；低端机可设为 false 退回 CSS）
+// 低端设备 / 减少动画偏好：直接走 CSS 回退分支，零 SVG 透镜
+const LENS_LOW_END_MEMORY = 2 // deviceMemory <= 2GB 视为低端
+const LENS_LOW_END_CORES = 2 // hardwareConcurrency <= 2 视为低端
+
+/** 设备是否适合常驻 SVG 透镜（能力探测之外的第二道闸）。touchEnabled 来自配置 */
+function lensDeviceOk(touchEnabled) {
+  if (typeof window === 'undefined') return false
+  try {
+    const mm = window.matchMedia
+    if (mm && mm('(prefers-reduced-motion: reduce)').matches) return false
+    if (mm && mm('(hover: none)').matches && !touchEnabled) return false
+    const mem = navigator.deviceMemory
+    if (typeof mem === 'number' && mem > 0 && mem <= LENS_LOW_END_MEMORY) return false
+    const cores = navigator.hardwareConcurrency
+    if (typeof cores === 'number' && cores > 0 && cores <= LENS_LOW_END_CORES) return false
+  } catch (e) {
+    // 探测失败不拦：宁可开着透镜，也不要因探测异常整块退回
+  }
+  return true
+}
+
 // 静止态几何要在首帧绘制前写好（否则指示器会先闪在错误槽位）；
 // useLayoutEffect 在服务端渲染会告警，按环境二选一
 const useLayoutSync = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect
@@ -131,7 +159,11 @@ const BottomTabs = (props) => {
   // applyFrame 必须读到最新几何值：useCallback([]) 会捕获首帧（isDesktop=false、
   // canvasW 初值）的尺寸，按压/路由动画落定后会把指示器写回错误的小尺寸
   const geoRef = React.useRef(null)
-  const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, sc: 1, sv: 0, scTarget: 1, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null })
+  const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, sc: 1, sv: 0, scTarget: 1, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null, dragVel: 0, dragRaf: 0 })
+  // applyFrame 的 DOM 写入缓存：值没变就不写。拖动时 scale 恒为 1.393，
+  // w/h/left/top/boxShadow 全都不变 —— 去掉这些冗余写入可省掉每帧的样式失效与
+  // backdrop 采样区重算（PERF.md B2/B3）
+  const frameCacheRef = React.useRef({ w: 0, h: 0, left: NaN, top: NaN, tx: NaN, shadow: null, mapW: 0, mapH: 0, dispScale: null })
   const [canvasW, setCanvasW] = React.useState(380)
   const [svgLens, setSvgLens] = React.useState(false)
   const [subMenuOpen, setSubMenuOpen] = React.useState(null)
@@ -243,13 +275,16 @@ const BottomTabs = (props) => {
     // svgLens 切换会更换承载 containerRef 的 DOM 节点，需重新挂载 observer
   }, [svgLens])
 
-  // 检测 backdrop-filter: url(#svgFilter) 支持（仅 Chromium）
+  // 检测 backdrop-filter: url(#svgFilter) 支持（仅 Chromium）+ 设备分级
   React.useEffect(() => {
     try {
-      if (SVG_LENS_ENABLED && typeof CSS !== 'undefined' && CSS.supports) {
+      const touchEnabled = siteConfig('LIQUID_LENS_TOUCH', true, CONFIG)
+      if (SVG_LENS_ENABLED && lensDeviceOk(touchEnabled) && typeof CSS !== 'undefined' && CSS.supports) {
         // 用最朴素 #probe 探测：带具体长 id 的 value 在移动端 Chromium 的 CSS.supports
         // 中可能返回 false（误判为不支持 → 永远回退 CSS 模糊）
         setSvgLens(CSS.supports('backdrop-filter', 'url(#probe)'))
+      } else {
+        setSvgLens(false)
       }
     } catch (e) {
       setSvgLens(false)
@@ -261,7 +296,10 @@ const BottomTabs = (props) => {
   // 容器位移图：静止也在用（底栏玻璃本体），挂载即建。模块级缓存让 resize /
   // 路由切换 / 重挂载复用同一张图，不重复光栅
   const lensMap = React.useMemo(
-    () => (svgLens ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG, LENS_FLOOR) : ''),
+    () =>
+      svgLens
+        ? generateCapsuleLensMap(canvasW, CONTAINER_H, LENS_REFRACTION_H, LENS_MAX_MAG, LENS_FLOOR, LENS_MAP_RASTER_SCALE)
+        : '',
     [svgLens, canvasW, CONTAINER_H]
   )
   const lensFilterId = React.useMemo(
@@ -452,31 +490,63 @@ const BottomTabs = (props) => {
       h = GLASS_H * (1 + grow)
       dl = (w - indW) / 2
       dt = (h - GLASS_H) / 2
-      ind.style.left = `${GLASS_PAD - dl}px`
-      ind.style.top = `${GLASS_PAD - dt}px`
-      ind.style.width = `${w}px`
-      ind.style.height = `${h}px`
-      ind.style.borderRadius = `${h / 2}px`
-      ind.style.transform = `translateX(${x}px)`
+      const left = GLASS_PAD - dl
+      const top = GLASS_PAD - dt
+      const c = frameCacheRef.current
+      // —— 以下全部「值变了才写」——
+      // 拖动期 progress 已 ramp 到 1、scale 恒定，这些几何量逐帧完全相同，
+      // 无条件重写会触发样式失效 + backdrop 采样区重算（PERF.md B2/B3 的主要开销）
+      if (c.w !== w) {
+        ind.style.width = `${w}px`
+        c.w = w
+      }
+      if (c.h !== h) {
+        ind.style.height = `${h}px`
+        ind.style.borderRadius = `${h / 2}px`
+        c.h = h
+      }
+      if (c.left !== left) {
+        ind.style.left = `${left}px`
+        c.left = left
+      }
+      if (c.top !== top) {
+        ind.style.top = `${top}px`
+        c.top = top
+      }
+      if (c.tx !== x) {
+        ind.style.transform = `translateX(${x}px)`
+        c.tx = x
+      }
       // 原版外阴影 Shadow.Default(radius 24dp, offsetY 4dp, Black@0.1)，只有 alpha 随按压
       // 内阴影 InnerShadow(radius 8dp, offsetY 8dp, Black@0.15)，radius/offset/alpha 全随按压
-      ind.style.boxShadow =
+      const shadow =
         p > 0.004
           ? `0 4px 24px rgba(0,0,0,${(0.1 * p).toFixed(3)}), inset 0 ${(8 * p).toFixed(1)}px ${(8 * p).toFixed(1)}px rgba(0,0,0,${(0.15 * p).toFixed(3)})`
           : 'none'
+      if (c.shadow !== shadow) {
+        ind.style.boxShadow = shadow
+        c.shadow = shadow
+      }
       // 位移图铺满放大区域；7 张色散图的归一化都是 indMag*(1+|dispersion|)，
       // 所以 7 个 feDisplacementMap 共用同一个 scale = 2*norm*p
       // （每张图里已烘焙好自己的 base*(1 + I*f)，见 generateDispersedLensMaps）
-      indMapImgRefs.current.forEach(img => {
-        if (img) {
-          img.setAttribute('width', w)
-          img.setAttribute('height', h)
-        }
-      })
+      if (c.mapW !== w || c.mapH !== h) {
+        c.mapW = w
+        c.mapH = h
+        indMapImgRefs.current.forEach(img => {
+          if (img) {
+            img.setAttribute('width', w)
+            img.setAttribute('height', h)
+          }
+        })
+      }
       const dispScale = (2 * indMag * (1 + IND_DISPERSION) * p).toFixed(2)
-      indDispRefs.current.forEach(el => {
-        if (el) el.setAttribute('scale', dispScale)
-      })
+      if (c.dispScale !== dispScale) {
+        c.dispScale = dispScale
+        indDispRefs.current.forEach(el => {
+          if (el) el.setAttribute('scale', dispScale)
+        })
+      }
     }
     // 固定标签层：原版 containerScale = 1 + 16dp/containerW * pressProgress，
     // 围绕容器中心整体轻微放大
@@ -573,10 +643,14 @@ const BottomTabs = (props) => {
     applyFrame(st.progress, x, st.sc)
   }, [applyFrame])
 
-  // 弹簧动画到目标位置（拖动 snap / 路由切换）
-  const animateIndicatorTo = React.useCallback((x) => {
+  // 弹簧动画到目标位置（拖动 snap / 路由切换）。
+  // v0 = 可选初速度（px/s）：拖动松手时把指针速度注入位置弹簧，指示器带着惯性
+  // 飞向目标槽位并过冲回弹 —— 这就是原版 DampedDragAnimation 的「Q弹」来源。
+  // 不传则保持既有行为（路由切换等从静止起弹）。
+  const animateIndicatorTo = React.useCallback((x, v0 = 0) => {
     const st = pressRef.current
     st.pxTarget = x
+    if (v0) st.pv = v0
     startPressLoop()
   }, [startPressLoop])
 
@@ -634,6 +708,18 @@ const BottomTabs = (props) => {
     }
     startPressLoop()
 
+    // 指针速度估计（px/s，一阶低通）：松手时注入位置弹簧做「甩出 → 过冲回弹」
+    let lastX = 0
+    let lastT = 0
+    let pendingX = null
+    const flushDrag = () => {
+      st.dragRaf = 0
+      if (pendingX == null) return
+      const x = pendingX
+      pendingX = null
+      followIndicator(x)
+    }
+
     const move = (ev) => {
       if (ev.pointerId !== st.pointerId) return
       const dx = ev.clientX - st.startX
@@ -645,10 +731,23 @@ const BottomTabs = (props) => {
         // 拖动时保持放大跟手（原版：指示器随手指移动且持续放大，不缩回）
         st.target = 1
         startPressLoop()
+        lastX = ev.clientX
+        lastT = performance.now()
+        st.dragVel = 0
+      }
+      const now = performance.now()
+      const dtms = now - lastT
+      if (dtms > 0) {
+        const v = ((ev.clientX - lastX) / dtms) * 1000
+        st.dragVel = st.dragVel * 0.6 + v * 0.4
+        lastX = ev.clientX
+        lastT = now
       }
       const maxX = (n - 1) * tabW
-      const x = Math.max(0, Math.min(maxX, st.indX0 + dx))
-      followIndicator(x)
+      pendingX = Math.max(0, Math.min(maxX, st.indX0 + dx))
+      // rAF 合并：pointermove 在 120/240Hz 设备上一帧可触发多次，每次都跑
+      // applyFrame（写几何 + 重采样 backdrop）会成倍放大开销。合并到每帧至多一次。
+      if (!st.dragRaf) st.dragRaf = requestAnimationFrame(flushDrag)
     }
 
     const release = (ev) => {
@@ -656,6 +755,11 @@ const BottomTabs = (props) => {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', release)
       window.removeEventListener('pointercancel', release)
+      if (st.dragRaf) {
+        cancelAnimationFrame(st.dragRaf)
+        st.dragRaf = 0
+      }
+      pendingX = null
       st.pointerId = null
       st.release = null
       st.move = null
@@ -664,7 +768,12 @@ const BottomTabs = (props) => {
         // 用时间戳而非布尔：拖动后 click 可能落在祖先元素上不触发 handler，布尔会遗留误吞下次点击
         suppressClickUntilRef.current = performance.now() + 300
         const idx = Math.max(0, Math.min(n - 1, Math.round(indXRef.current / tabW)))
-        animateIndicatorTo(idx * tabW)
+        // Q弹：把拖拽速度注入位置弹簧（限幅）。ζ=0.5 的欠阻尼弹簧对初速度的响应
+        // 幅度 ≈ v0/ωd = v0/15，限幅 tabW*6（≈576px/s → 约 38px 过冲）——
+        // 视觉上是"甩出去再弹回来"的明显手感，又不会甩过一个 tab 宽
+        const vClamp = tabW * 6
+        const v0 = Math.max(-vClamp, Math.min(vClamp, st.dragVel || 0))
+        animateIndicatorTo(idx * tabW, v0)
         const tab = tabsRef.current[idx]
         if (tab) {
           if (tab.subMenus && tab.subMenus.length > 0) {
@@ -675,6 +784,7 @@ const BottomTabs = (props) => {
           }
         }
       }
+      st.dragVel = 0
       st.target = 0
       st.scTarget = 1
       startPressLoop()
@@ -693,6 +803,10 @@ const BottomTabs = (props) => {
       if (st.raf) {
         cancelAnimationFrame(st.raf)
         st.raf = 0
+      }
+      if (st.dragRaf) {
+        cancelAnimationFrame(st.dragRaf)
+        st.dragRaf = 0
       }
       if (st.release) {
         window.removeEventListener('pointermove', st.move)

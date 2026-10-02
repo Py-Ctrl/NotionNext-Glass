@@ -94,10 +94,11 @@ const ArticleDetail = (props) => {
         </div>
       )}
 
-      {/* 评论区 — overflow:visible 避免 backdrop-filter+overflow:hidden 阻断 Twikoo 动态渲染 */}
+      {/* 评论区 — overflow:visible 避免 backdrop-filter+overflow:hidden 阻断 Twikoo 动态渲染；
+          glass-comment 见 style.js：触屏端进一步去掉 backdrop-filter（见该处注释） */}
       <div
         ref={commentLens.elRef}
-        className='glass-card p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28'
+        className='glass-card glass-comment p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28'
         style={{ overflow: 'visible', ...(commentLens.style || undefined) }}>
         {commentLens.filterNode}
         <Comment frontMatter={post} />
