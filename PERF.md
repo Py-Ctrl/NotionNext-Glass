@@ -26,7 +26,7 @@
 
 > **与参考实现的差异（有意保留）**：原版 `DampedDragAnimation` 的**位置**是临界阻尼 `spring(1f, 1000f)`（不过冲），"弹"全部来自 scaleX / scaleY 两条欠阻尼弹簧 + 速度形变。本实现的位置弹簧仍是 ζ=0.5，且松手时额外注入指针速度 —— 位置也会过冲，Q弹更明显。若要 1:1 复刻：把位置那步换成临界阻尼，并去掉 `animateIndicatorTo(x, v0)` 的 `v0`。
 >
-> 参考实现：`themes/Glass/lib/renderer/methods-animation.ts`（五条弹簧的循环）、`methods-render-glass-transform.ts:99-111`（形变公式）、`helpers.ts:412`（`DampedDragAnimation` 说明）。
+> 参考实现（原 `themes/Glass/lib`，**已删除**，需查 git 历史）：`renderer/methods-animation.ts`（五条弹簧的循环）、`methods-render-glass-transform.ts:99-111`（形变公式）、`helpers.ts:412`（`DampedDragAnimation` 说明）。
 
 ### 未实现（按收益排序）1. **P0-2 滚动期降级为纯 CSS** —— 收益最大的一条，仍是空白。当前滚动时底栏容器透镜与视口内卡片透镜会逐帧重跑。建议下一步做：`#wrapper` scroll（passive + rAF 节流）→ 滚动中把容器切 `blur(1.4px) saturate(1.35)`，停稳 150ms 后走跨帧 repaint 舞步切回 `url(#lens)`。
 2. **P0-5 色散 7 → 3 抽样** —— 按压期图元 27 → 11。可在「拖动中」用 3 抽样、静止按压用 7 抽样，兼顾手感与成本。
@@ -44,7 +44,9 @@
 | `LENS_LOW_END_MEMORY` / `LENS_LOW_END_CORES` | `BottomTabs.tsx` | 设备分级阈值 |
 | `LIQUID_LENS_FLOOR` | `themes/Glass/config.js` | 卡片内部位移下限。**默认 `0` = 1:1 对齐原版**：原版 shader 对「离边缘超过 `refractionHeight` 的内部」直接早退，只有边缘环带折射、中间完全不动。设 `>0` 会把内部切成「指向中心」的径向场 —— 整块向中心轻微放大，观感更"有料"但**不再是原版行为** |
 
-> **不要回退的结论**：折射是这个主题的核心观感，**不牺牲折射换性能**。WebGL 版本（`themes/Glass/lib`）没有实时折射，不作为替代方案，代码原样保留。降级为纯 CSS 只适用于**按钮**这一级。
+> **不要回退的结论**：折射是这个主题的核心观感，**不牺牲折射换性能**。降级为纯 CSS 只适用于**按钮**这一级。
+>
+> **WebGL 路线已废弃并删除**（2026-10-03）：WebGL 画布只能折射它**自己绘制的壁纸纹理**，拿不到画布背后真实的 DOM 内容，无法替代 `backdrop-filter: url()`；且文字必须用 `makeText` 画进画布，与 Notion 正文冲突。`themes/Glass/lib`（55 文件 / 15,016 行）已从仓库移除，需要时从 git 历史取回。
 
 ---
 
@@ -91,7 +93,7 @@
    - 注意当前每帧 `applyFrame` 的 layout 只在按压/拖动出现，滚动期重点看 `Paint`。
 3. **按住底栏 2s**（长按 ramp 期间）：不应出现 > 50ms 的 long task。
 4. **三档基线**：桌面 4 核 / DevTools CPU 4× throttling / 移动端 Chromium（真机或 DevTools 设备模拟）。
-5. 建议加 FPS HUD：`NEXT_PUBLIC_GLASS_PERF_HUD=1` 才渲染，算法可直接借鉴闲置的 `themes/Glass/lib/renderer/perf-monitor.ts`。
+5. 建议加 FPS HUD：`NEXT_PUBLIC_GLASS_PERF_HUD=1` 才渲染。
 
 ---
 
@@ -132,7 +134,7 @@
    - `bar-only`：只有底栏折射，卡片退回 CSS blur（卡片位移在滚动时视觉收益最低）
    - `off`：全 CSS
    让站长按设备/偏好自行选择，避免"性能 vs 观感"的二选一写死在代码里。
-3. **WebGL 自绘底栏**（`themes/Glass/lib` 那 14,195 行的原始路线）：需要把背景与文字作为纹理自己渲染，与 React 文字层冲突、复杂度极高。除非 P0/P1 后仍不达标，否则**不推荐**——那份代码当前也无任何引用。
+3. ~~**WebGL 自绘底栏**~~：**已否决并删除**（2026-10-03）。WebGL 画布只能折射自绘的壁纸纹理，无法折射画布背后的真实 DOM；文字也必须画进画布，与 Notion 正文冲突。原 `themes/Glass/lib` 已从仓库移除。
 4. **边缘环带分片**：折射实际只在 18px 环带（`LENS_REFRACTION_H`），可拆成 4 条边各自挂小 `url(#)`，采样面积 ↓ 约 55%。但元素数翻 4 倍、圆角处要重叠，复杂度收益比不高，列为备选。
 
 ---
