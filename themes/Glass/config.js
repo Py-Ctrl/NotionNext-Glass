@@ -42,7 +42,6 @@ const CONFIG = {
   LIQUID_LENS_TOUCH: true, // 触屏是否启用折射（低端机掉帧可设 false，退回 CSS blur）
   LIQUID_LENS_RASTER_SCALE: 0.5, // 位移图光栅倍率，0.5 → 像素数 1/4，视觉无损
   LIQUID_LENS_FLOOR: 0, // 内部位移下限；0 = 原版（只有边缘折射、中间不动）
-  GLASS_PULL_SEARCH: true, // 任意位置下拉召唤搜索框（页面已在顶部、无选中文字时）
 
   // ===== 全站背景壁纸（themes/Glass/style.js 里的 #theme-glass background）=====
   // 默认直接拿 Notion 站点封面当全站壁纸（和 Hexo 主题的 banner 一个路子）：
