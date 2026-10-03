@@ -32,11 +32,12 @@ import TagItem from './components/TagItem'
 import TocDrawer from './components/TocDrawer'
 import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
+import { usePullDownSearch } from './components/usePullDownSearch'
 import CONFIG from './config'
 import { Style } from './style'
 
-const AlgoliaSearchModal = dynamic(
-  () => import('@/components/AlgoliaSearchModal'),
+const GlassSearchModal = dynamic(
+  () => import('./components/GlassSearchModal'),
   { ssr: false }
 )
 
@@ -161,6 +162,12 @@ const LayoutBase = props => {
   const tocRef = isBrowser ? document.getElementById('article-wrapper') : null
   const searchModal = useRef(null)
 
+  // 下拉召唤搜索：任意位置向下拖（页面已在顶部、无选中文字）时打开
+  const openSearchByPull = React.useCallback(() => {
+    searchModal.current?.openSearch()
+  }, [])
+  usePullDownSearch(openSearchByPull, siteConfig('GLASS_PULL_SEARCH', true, CONFIG))
+
   // 全站壁纸：优先手动配置的 URL，其次 Notion 站点封面（数据库 cover / 页面 page_cover）
   const { siteInfo } = useGlobal()
   const bgImage =
@@ -185,7 +192,7 @@ const LayoutBase = props => {
         {/* 移动端顶部导航 */}
         <TopNav {...props} searchModal={searchModal} />
 
-        <AlgoliaSearchModal cRef={searchModal} {...props} />
+        <GlassSearchModal cRef={searchModal} {...props} />
 
         <>{headerSlot}</>
 
