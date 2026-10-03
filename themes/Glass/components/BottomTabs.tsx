@@ -120,8 +120,8 @@ const VEL_K = 300
 const VEL_ZETA = 0.5
 const VEL_OMEGA_N = Math.sqrt(VEL_K)
 const VEL_OMEGA_D = VEL_OMEGA_N * Math.sqrt(1 - VEL_ZETA * VEL_ZETA)
-// 原版 pressedScale = 78/56
-const IND_PRESSED_SCALE = 78 / 56
+// 指示器长按放大倍数。原版 pressedScale = 78/56 ≈ 1.393，这里调到 1.5（超出底栏更明显）
+const IND_PRESSED_SCALE = 1.5
 
 /** 通用弹簧步进（springStep1D / springStepScale 的泛化版） */
 function springStepCfg(current, velocity, target, dt, zeta, omegaN, omegaD) {
