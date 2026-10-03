@@ -16,6 +16,7 @@
 | **applyFrame 写入去重**（P0-6 扩展） | `BottomTabs.tsx` `frameCacheRef` | `left/top/width/height/borderRadius/boxShadow/translateX` + 7 张 `feImage` 尺寸 + `feDisplacementMap` scale 全部「值变了才写」。**拖动期 progress 已 ramp 到 1、几何恒定 → 这些写入整段为零**，省掉每帧样式失效与 backdrop 采样区重算 |
 | **Q弹速度注入** | `BottomTabs.tsx` `move`/`release` | 拖动中用一阶低通估计指针速度（px/s），松手时作为位置弹簧初速度注入（限幅 `tabW*6`）。ζ=0.5 欠阻尼 → 快速拖拽时指示器「甩出去再弹回来」。原先 `followIndicator` 每次都把 `pv` 清零，速度被丢掉，只能从静止起弹 |
 | **拖拽形变 squash & stretch**（原版 `DampedDragAnimation` / `LiquidToggle.kt` layerBlock） | `BottomTabs.tsx` | 补齐原版那两行：`velocity = 平滑速度 / 50`，`scaleX /= 1 - clamp(velocity*0.75, ±0.2)`、`scaleY *= 1 - clamp(velocity*0.25, ±0.2)`；X / Y 各用**独立欠阻尼弹簧**（ζ=0.6 / ζ=0.7, k=250），速度本身先过一层 ζ=0.5 / k=300 的弹簧滤掉指针抖动。快速拖拽时指示器**被拉长、垂直收窄**，松手后随速度归零弹回。几何仍走 width/height（不能用 `transform: scale()`，见下方注意事项）。实测：pressed `132.5×94.7` → 拖拽中 `151.5×90.7`（X +14.3% / Y −4.2%，且 velX:velY = 2.98 ≈ 0.75/0.25）→ 落定回 ×1.0 |
+| **折射可见性口径修正**（覆盖上一版） | `useLensBackdrop.js` / `config.js` | 上一版把卡片 `floor` 默认改成 `0.25`（当时把「大部分折射只有 Blur」误判成桌面端问题）。实际那条是**移动端触屏门控**导致的（已由 `LIQUID_LENS_TOUCH` 修掉），而 `floor>0` 会让卡片**内部也位移** → 观感变成"整块向中心放大"，与 WebGL 版（shader 对内部早退、只有边缘动）不一致。**已改回 `floor = 0`**，并把下限提成配置 `LIQUID_LENS_FLOOR` 便于按需调高。实测 `floor=0` 时位移图内部精确为 `128`（零位移），仅边缘环带 ≠128 |
 | **设备分级**（P0-1，口径已修正） | `BottomTabs.tsx` `lensDeviceOk()` / `useLensBackdrop.js` | 只拦 `prefers-reduced-motion` / `deviceMemory<=2` / `hardwareConcurrency<=2`。**触屏默认不拦** —— 移动端要的是真折射，不是只有 Blur（由 `LIQUID_LENS_TOUCH` 控制，默认 `true`）。原 P0-1 建议「触屏一律关」已否决：那正是「移动端大部分折射只有 Blur」的成因 |
 | **卡片位移图降采样** | `useLensBackdrop.js` `LIQUID_LENS_RASTER_SCALE=0.5` | 卡片此前落到默认 `1`（白付 4 倍光栅 + `feImage` 采样成本）；`0.5` → 像素数 1/4，位移场平滑故视觉无损 |
 | **玻璃按钮去透镜** | `GlassButton.js` | 按钮几乎总嵌在带 `backdrop-filter` 的卡片里 → 祖先成为 backdrop root，内层折射**必然失效**；挂着的 `url()` 还把 CSS `blur()` 顶掉。改为纯 CSS：`blur(12px) saturate(180%)` + `::before` 边缘高光 + `transition` 动画（对齐 Apple 的做法：按钮这一级模糊够用） |
@@ -41,7 +42,7 @@
 | `LIQUID_LENS_RASTER_SCALE` | `themes/Glass/config.js` | 卡片位移图光栅倍率，默认 `0.5` |
 | `LENS_MAP_RASTER_SCALE` | `BottomTabs.tsx` | 底栏容器位移图光栅倍率（`0.5`） |
 | `LENS_LOW_END_MEMORY` / `LENS_LOW_END_CORES` | `BottomTabs.tsx` | 设备分级阈值 |
-| `useLensBackdrop({ floor })` | `useLensBackdrop.js` | 折射强度（内部位移下限，默认 0.25） |
+| `LIQUID_LENS_FLOOR` | `themes/Glass/config.js` | 卡片内部位移下限。**默认 `0` = 1:1 对齐原版**：原版 shader 对「离边缘超过 `refractionHeight` 的内部」直接早退，只有边缘环带折射、中间完全不动。设 `>0` 会把内部切成「指向中心」的径向场 —— 整块向中心轻微放大，观感更"有料"但**不再是原版行为** |
 
 > **不要回退的结论**：折射是这个主题的核心观感，**不牺牲折射换性能**。WebGL 版本（`themes/Glass/lib`）没有实时折射，不作为替代方案，代码原样保留。降级为纯 CSS 只适用于**按钮**这一级。
 

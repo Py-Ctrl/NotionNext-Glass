@@ -46,6 +46,12 @@ const CONFIG = {
   // 「元素 px」单位，feImage 拉伸铺满后视觉无损，光栅像素数按平方下降。
   // 0.5 → 像素数降到 1/4。想更清晰调到 1，想更省调到 0.35。
   LIQUID_LENS_RASTER_SCALE: 0.5,
+  // 内部下限位移比例（占 maxMag 的比例）。**默认 0 = 1:1 对齐原版**：
+  // 原版 shader 对「离边缘超过 refractionHeight 的内部」直接早退，只有边缘环带折射，
+  // 中间完全不动。设成 >0 会把内部切成「指向中心」的径向场 —— 整块向中心轻微放大，
+  // 观感更"有料"但**不再是原版行为**（且径向场在中轴会翻转，靠 centerRamp 才平滑归零）。
+  // 底栏玻璃本体是另一套（BottomTabs 的 LENS_FLOOR=0.25），原因见那里的注释。
+  LIQUID_LENS_FLOOR: 0,
 
   // ===== 全站背景壁纸（themes/Glass/style.js 里的 #theme-glass background）=====
   // 默认直接拿 Notion 站点封面当全站壁纸（和 Hexo 主题的 banner 一个路子）：

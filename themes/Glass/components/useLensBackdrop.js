@@ -27,10 +27,11 @@ export function useLensBackdrop({
   maxMag = 32,
   blur = 0,
   saturate = 1.5,
-  // 内部下限位移比例：>0 时整块卡片都在折射（径向场，中心平滑归零），
-  // 而非只有边缘一圈薄环。底栏 LENS_FLOOR=0.25 是同一套参数，
-  // 卡片此前漏传导致 floor=0 —— 内部零位移，观感退化成「纯 Blur」。
-  floor = 0.25,
+  // 内部下限位移比例。不传 = 读 LIQUID_LENS_FLOOR（默认 0）。
+  // floor = 0 → 纯内法线场，**只有边缘 refractionHeight 环带折射，中间完全不动**
+  //   —— 这是原版行为（shader 对内部直接早退），1:1 对齐。
+  // floor > 0 → 内部切到「指向中心」的径向场，整块向中心轻微放大（观感更明显，但非原版）。
+  floor,
 } = {}) {
   // 回调 ref + state：卡片折叠/展开时目标元素会整体换掉，
   // useRef 只在首次挂载时被 effect 读到，换元素后透镜会静默失效
@@ -115,6 +116,9 @@ export function useLensBackdrop({
   // 位移图光栅倍率：0.5 → 像素数降到 1/4（位移场平滑，降采样视觉无损，
   // 见 capsuleLensMap.ts 文件头）。卡片此前落到默认 1，是白付的光栅/采样成本。
   const rasterScale = Number(siteConfig('LIQUID_LENS_RASTER_SCALE', 0.5, CONFIG)) || 0.5
+  // floor：调用方显式传入优先，否则读主题配置（默认 0 = 原版行为）
+  const floorEff =
+    floor == null ? Number(siteConfig('LIQUID_LENS_FLOOR', 0, CONFIG)) || 0 : floor
   const mapUrl = useMemo(() => {
     if (!supported || !size || !visible) return ''
     return generateRoundedRectLensMap(
@@ -123,10 +127,10 @@ export function useLensBackdrop({
       radius,
       refractionHeight,
       maxMag,
-      floor,
+      floorEff,
       rasterScale
     )
-  }, [supported, size, radius, refractionHeight, maxMag, floor, visible, rasterScale])
+  }, [supported, size, radius, refractionHeight, maxMag, floorEff, visible, rasterScale])
 
   // 强制重绘：feImage 的 data URL 加载完成后 Chromium 不会自动重跑
   // backdrop-filter，必须等图加载完再关-开切换（过早切换位移不生效）。
