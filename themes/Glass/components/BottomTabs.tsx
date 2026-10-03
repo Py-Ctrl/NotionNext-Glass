@@ -61,17 +61,14 @@ const LENS_FLOOR = 0.25
 const ACCENT_LIGHT = '#0088FF'
 const ACCENT_DARK = '#0091FF'
 
-// --- 性能开关（PERF.md P0）---
-// 容器位移图降采样倍率：位移场本身平滑，降采样只是换更粗的采样网格，编码值仍是
-// 「元素 px」单位，feImage 拉伸铺满后视觉无损，光栅像素数 ↓75%（P0-4）
+// --- 性能开关 ---
+// 容器位移图降采样倍率（位移场平滑，降采样视觉无损）
 const LENS_MAP_RASTER_SCALE = 0.5
-// 触屏端是否启用 SVG 透镜：由 themes/Glass/config.js 的 LIQUID_LENS_TOUCH 决定
-// （默认 true —— 移动端也要真折射，不是只有 Blur；低端机可设为 false 退回 CSS）
-// 低端设备 / 减少动画偏好：直接走 CSS 回退分支，零 SVG 透镜
-const LENS_LOW_END_MEMORY = 2 // deviceMemory <= 2GB 视为低端
-const LENS_LOW_END_CORES = 2 // hardwareConcurrency <= 2 视为低端
+// 低端设备 / 减少动画偏好：直接走 CSS 回退分支
+const LENS_LOW_END_MEMORY = 2
+const LENS_LOW_END_CORES = 2
 
-/** 设备是否适合常驻 SVG 透镜（能力探测之外的第二道闸）。touchEnabled 来自配置 */
+/** 设备是否适合常驻 SVG 透镜（touchEnabled 来自 LIQUID_LENS_TOUCH 配置） */
 function lensDeviceOk(touchEnabled) {
   if (typeof window === 'undefined') return false
   try {
@@ -83,7 +80,7 @@ function lensDeviceOk(touchEnabled) {
     const cores = navigator.hardwareConcurrency
     if (typeof cores === 'number' && cores > 0 && cores <= LENS_LOW_END_CORES) return false
   } catch (e) {
-    // 探测失败不拦：宁可开着透镜，也不要因探测异常整块退回
+    // 探测失败不拦，宁可开着
   }
   return true
 }
@@ -110,12 +107,11 @@ const SCALE_Y_ZETA = 0.7
 const SCALE_Y_OMEGA_N = Math.sqrt(SCALE_Y_K)
 const SCALE_Y_OMEGA_D = SCALE_Y_OMEGA_N * Math.sqrt(1 - SCALE_Y_ZETA * SCALE_Y_ZETA)
 
-// --- 拖拽形变「Q弹」（原版 DampedDragAnimation.kt / LiquidToggle.kt layerBlock）---
-//   velocity = smoothedVelocity / 50
-//   scaleX  /= 1 - clamp(velocity * 0.75, -0.2, 0.2)   顺向拉长
-//   scaleY  *= 1 - clamp(velocity * 0.25, -0.2, 0.2)   垂直收窄
-// 快速拖拽时指示器被拉长、松手后随速度弹簧归零而弹回 —— 这就是「拉长 0.x 秒又弹回去」。
-// 速度本身还要先过一层欠阻尼弹簧，把指针逐帧抖动滤掉（原版 velocityAnimation）。
+// --- 拖拽形变（原版 DampedDragAnimation.kt layerBlock）---
+//   vel = smoothedVelocity / 50
+//   scaleX /= 1 - clamp(vel * 0.75, ±0.2)   顺向拉长
+//   scaleY *= 1 - clamp(vel * 0.25, ±0.2)   垂直收窄
+// 快速拖拽时指示器被拉长、松手后随速度弹簧归零弹回
 const VELOCITY_DIVISOR = 50
 const VEL_GAIN_X = 0.75
 const VEL_GAIN_Y = 0.25
@@ -127,10 +123,7 @@ const VEL_OMEGA_D = VEL_OMEGA_N * Math.sqrt(1 - VEL_ZETA * VEL_ZETA)
 // 原版 pressedScale = 78/56
 const IND_PRESSED_SCALE = 78 / 56
 
-/**
- * 通用弹簧步进（springStep1D / springStepScale 的泛化版，公式完全一致）。
- * 注意：ωd 必须 > 0，临界阻尼（ζ=1）不适用（那条走 springStep1D 的 ζ=0.5 分支之外的专用式）。
- */
+/** 通用弹簧步进（springStep1D / springStepScale 的泛化版） */
 function springStepCfg(current, velocity, target, dt, zeta, omegaN, omegaD) {
   const x0 = current - target
   const v0 = velocity
@@ -195,9 +188,7 @@ const BottomTabs = (props) => {
   const geoRef = React.useRef(null)
   // sc/sv = scaleX 弹簧；scY/svY = scaleY 弹簧；vel/velV = 平滑拖拽速度弹簧（fraction/s）
   const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, sc: 1, sv: 0, scTarget: 1, scY: 1, svY: 0, scYTarget: 1, vel: 0, velV: 0, velTarget: 0, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null, dragVel: 0, dragRaf: 0 })
-  // applyFrame 的 DOM 写入缓存：值没变就不写。拖动时 scale 恒为 1.393，
-  // w/h/left/top/boxShadow 全都不变 —— 去掉这些冗余写入可省掉每帧的样式失效与
-  // backdrop 采样区重算（PERF.md B2/B3）
+  // applyFrame 的 DOM 写入缓存：值没变就不写（拖动时几何恒定，可省掉每帧样式失效）
   const frameCacheRef = React.useRef({ w: 0, h: 0, left: NaN, top: NaN, tx: NaN, shadow: null, mapW: 0, mapH: 0, dispScale: null })
   const [canvasW, setCanvasW] = React.useState(380)
   const [svgLens, setSvgLens] = React.useState(false)
@@ -522,11 +513,8 @@ const BottomTabs = (props) => {
     let dl = 0
     let dt = 0
     if (ind) {
-      // 放大/形变必须改几何尺寸（width/height/top/left），不能靠 transform: scale()：
-      // Chromium 对带 transform 缩放的 backdrop-filter 按缩放前尺寸裁剪采样区，
-      // 溢出边缘就没有折射。几何尺寸围绕中心缩放，backdrop 采样随平移完整保留。
-      // scaleX / scaleY 分离后，快速拖拽时指示器被拉长（X 变大、Y 变小），
-      // 松手后速度弹簧归零 → 形变回弹。
+      // 必须改几何尺寸而非 transform: scale()——Chromium 对带 transform 缩放的
+      // backdrop-filter 按缩放前尺寸裁剪采样区，溢出边缘就没有折射
       w = indW * scaleX
       h = GLASS_H * scaleY
       dl = (w - indW) / 2
@@ -534,9 +522,7 @@ const BottomTabs = (props) => {
       const left = GLASS_PAD - dl
       const top = GLASS_PAD - dt
       const c = frameCacheRef.current
-      // —— 以下全部「值变了才写」——
-      // 拖动期 progress 已 ramp 到 1、scale 恒定，这些几何量逐帧完全相同，
-      // 无条件重写会触发样式失效 + backdrop 采样区重算（PERF.md B2/B3 的主要开销）
+      // 以下全部「值变了才写」：拖动期这些几何量逐帧相同，无条件重写会触发样式失效
       if (c.w !== w) {
         ind.style.width = `${w}px`
         c.w = w
@@ -608,8 +594,7 @@ const BottomTabs = (props) => {
     if (hi) hi.style.opacity = (0.5 * p).toFixed(3)
   }, [])
 
-  // 五条弹簧逐帧驱动：progress（折射/高光 ramp，ζ=0.5）+ sc/scY（几何缩放，ζ=0.6/0.7 欠阻尼）
-  // + vel（拖拽速度平滑，ζ=0.5）+ px（指示器位置），无 CSS transition，避免互相打断
+  // 五条弹簧逐帧驱动：progress / sc(X) / scY / vel / px，无 CSS transition
   const startPressLoop = React.useCallback(() => {
     const st = pressRef.current
     if (st.raf) return
@@ -696,9 +681,7 @@ const BottomTabs = (props) => {
     setVisualIdxState(i)
   }, [])
 
-  // 拖动跟手：直接设置位置并同步弹簧状态（清速度）。
-  // velFrac = 当前指针速度（tab/秒）—— 原版 velocity 就是 valueRange 单位/秒，
-  // 直接喂给形变弹簧：快速拖拽时指示器被拉长、垂直收窄。
+  // 拖动跟手：直接设置位置并清速度；velFrac（tab/秒）喂给形变弹簧
   const followIndicator = React.useCallback((x, velFrac) => {
     const st = pressRef.current
     st.px = x
@@ -714,10 +697,8 @@ const BottomTabs = (props) => {
     applyFrame(st.progress, x, st.sc, st.scY)
   }, [applyFrame, startPressLoop])
 
-  // 弹簧动画到目标位置（拖动 snap / 路由切换）。
-  // v0 = 可选初速度（px/s）：拖动松手时把指针速度注入位置弹簧，指示器带着惯性
-  // 飞向目标槽位并过冲回弹 —— 这就是原版 DampedDragAnimation 的「Q弹」来源。
-  // 不传则保持既有行为（路由切换等从静止起弹）。
+  // 弹簧动画到目标位置（拖动 snap / 路由切换）
+  // v0 = 初速度（px/s）：松手时注入指针速度，指示器带惯性飞向目标槽位并过冲回弹
   const animateIndicatorTo = React.useCallback((x, v0 = 0) => {
     const st = pressRef.current
     st.pxTarget = x
@@ -826,8 +807,7 @@ const BottomTabs = (props) => {
       }
       const maxX = (n - 1) * tabW
       pendingX = Math.max(0, Math.min(maxX, st.indX0 + dx))
-      // rAF 合并：pointermove 在 120/240Hz 设备上一帧可触发多次，每次都跑
-      // applyFrame（写几何 + 重采样 backdrop）会成倍放大开销。合并到每帧至多一次。
+      // rAF 合并：pointermove 在 120/240Hz 上一帧可触发多次，合并到每帧至多一次
       if (!st.dragRaf) st.dragRaf = requestAnimationFrame(flushDrag)
     }
 
@@ -849,9 +829,8 @@ const BottomTabs = (props) => {
         // 用时间戳而非布尔：拖动后 click 可能落在祖先元素上不触发 handler，布尔会遗留误吞下次点击
         suppressClickUntilRef.current = performance.now() + 300
         const idx = Math.max(0, Math.min(n - 1, Math.round(indXRef.current / tabW)))
-        // Q弹：把拖拽速度注入位置弹簧（限幅）。ζ=0.5 的欠阻尼弹簧对初速度的响应
-        // 幅度 ≈ v0/ωd = v0/15，限幅 tabW*6（≈576px/s → 约 38px 过冲）——
-        // 视觉上是"甩出去再弹回来"的明显手感，又不会甩过一个 tab 宽
+        // Q弹：把拖拽速度注入位置弹簧。ζ=0.5 对初速度的响应幅度 ≈ v0/ωd，
+        // 限幅 tabW*6 → 约 38px 过冲（明显能看出回弹，又不甩过一个 tab 宽）
         const vClamp = tabW * 6
         const v0 = Math.max(-vClamp, Math.min(vClamp, st.dragVel || 0))
         animateIndicatorTo(idx * tabW, v0)

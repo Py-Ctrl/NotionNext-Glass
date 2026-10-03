@@ -27,10 +27,7 @@ export function useLensBackdrop({
   maxMag = 32,
   blur = 0,
   saturate = 1.5,
-  // 内部下限位移比例。不传 = 读 LIQUID_LENS_FLOOR（默认 0）。
-  // floor = 0 → 纯内法线场，**只有边缘 refractionHeight 环带折射，中间完全不动**
-  //   —— 这是原版行为（shader 对内部直接早退），1:1 对齐。
-  // floor > 0 → 内部切到「指向中心」的径向场，整块向中心轻微放大（观感更明显，但非原版）。
+  // 内部位移下限，不传则读 LIQUID_LENS_FLOOR。0 = 原版（只有边缘折射）
   floor,
 } = {}) {
   // 回调 ref + state：卡片折叠/展开时目标元素会整体换掉，
@@ -39,12 +36,8 @@ export function useLensBackdrop({
   const elRef = useCallback(node => setEl(node), [])
   const [supported] = useState(() => {
     if (typeof window === 'undefined' || typeof CSS === 'undefined' || !CSS.supports) return false
-    // 减少动画偏好：直接退回 CSS blur
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
-    // 触屏端默认【也启用】折射 —— 移动端要的是真折射，不是只有 Blur。
-    // 只有把 LIQUID_LENS_TOUCH 显式设为 false 才在触屏退回 CSS blur（低端机省电用）。
-    // 注：不用 (pointer: coarse) 判定，触屏笔记本 / 桌面触控屏的主指针也可能是 coarse，
-    // 会把整个桌面端误退回模糊。
+    // 触屏默认也启用（LIQUID_LENS_TOUCH）；不用 pointer:coarse 判定，会误伤触屏笔记本
     if (
       window.matchMedia &&
       window.matchMedia('(hover: none)').matches &&
@@ -53,8 +46,7 @@ export function useLensBackdrop({
       return false
     }
     try {
-      // 用最朴素的 #probe 探测：带具体长 id 的 value 在部分 Chromium 的 CSS.supports
-      // 中会返回 false（误判为不支持 → 永远回退 CSS 模糊）。与 BottomTabs 保持一致。
+      // 用朴素的 #probe：带长 id 的 value 在部分 Chromium 的 CSS.supports 会误判为 false
       return CSS.supports('backdrop-filter', 'url(#probe)')
     } catch (e) {
       return false
@@ -63,8 +55,7 @@ export function useLensBackdrop({
   const [size, setSize] = useState(null)
   const [radius, setRadius] = useState(16)
   const [filterId] = useState(() => `lens-card-${++uidCounter}`)
-  // 可见性门控（PERF.md P0-3）：进视口才挂 url(#...)，离视口置 none。
-  // 首页同时存活的透镜从 ~11 降到 2-4，滚出视口的卡片零开销。
+  // 可见性门控：进视口才挂 url()，离视口置 none（首页同时存活的透镜 ~11 → 2-4）
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -98,8 +89,7 @@ export function useLensBackdrop({
       })
       setRadius(prev => (Math.abs(prev - r) < 0.5 ? prev : r))
     }
-    // 尺寸变化防抖 120ms（与底栏口径一致）：拖窗口时 ResizeObserver 每帧触发，
-    // 无防抖会反复重光栅位移图并重跑 repaint 舞步，每张卡各跑各的 timer 链（PERF.md P1-3）
+    // 尺寸防抖 120ms：拖窗口时 ResizeObserver 每帧触发，无防抖会反复重光栅位移图
     const update = () => {
       if (timer) clearTimeout(timer)
       timer = window.setTimeout(measure, 120)
@@ -113,8 +103,7 @@ export function useLensBackdrop({
     }
   }, [supported, el])
 
-  // 位移图光栅倍率：0.5 → 像素数降到 1/4（位移场平滑，降采样视觉无损，
-  // 见 capsuleLensMap.ts 文件头）。卡片此前落到默认 1，是白付的光栅/采样成本。
+  // 位移图光栅倍率，0.5 → 像素数 1/4（降采样视觉无损，见 capsuleLensMap.ts 文件头）
   const rasterScale = Number(siteConfig('LIQUID_LENS_RASTER_SCALE', 0.5, CONFIG)) || 0.5
   // floor：调用方显式传入优先，否则读主题配置（默认 0 = 原版行为）
   const floorEff =

@@ -95,7 +95,7 @@ const ArticleDetail = (props) => {
       )}
 
       {/* 评论区 — overflow:visible 避免 backdrop-filter+overflow:hidden 阻断 Twikoo 动态渲染；
-          glass-comment 见 style.js：触屏端进一步去掉 backdrop-filter（见该处注释） */}
+          glass-comment 见 style.js */}
       <div
         ref={commentLens.elRef}
         className='glass-card glass-comment p-3 sm:p-4 md:p-6 mt-4 sm:mt-6 mb-24 sm:mb-28'
