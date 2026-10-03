@@ -104,35 +104,69 @@ const SCALE_K = 250
 const SCALE_ZETA = 0.6
 const SCALE_OMEGA_N = Math.sqrt(SCALE_K)
 const SCALE_OMEGA_D = SCALE_OMEGA_N * Math.sqrt(1 - SCALE_ZETA * SCALE_ZETA)
+// scaleY 用独立弹簧（原版 DampedDragAnimation scaleY: spring k=250, ζ=0.7，比 X 收敛更快）
+const SCALE_Y_K = 250
+const SCALE_Y_ZETA = 0.7
+const SCALE_Y_OMEGA_N = Math.sqrt(SCALE_Y_K)
+const SCALE_Y_OMEGA_D = SCALE_Y_OMEGA_N * Math.sqrt(1 - SCALE_Y_ZETA * SCALE_Y_ZETA)
+
+// --- 拖拽形变「Q弹」（原版 DampedDragAnimation.kt / LiquidToggle.kt layerBlock）---
+//   velocity = smoothedVelocity / 50
+//   scaleX  /= 1 - clamp(velocity * 0.75, -0.2, 0.2)   顺向拉长
+//   scaleY  *= 1 - clamp(velocity * 0.25, -0.2, 0.2)   垂直收窄
+// 快速拖拽时指示器被拉长、松手后随速度弹簧归零而弹回 —— 这就是「拉长 0.x 秒又弹回去」。
+// 速度本身还要先过一层欠阻尼弹簧，把指针逐帧抖动滤掉（原版 velocityAnimation）。
+const VELOCITY_DIVISOR = 50
+const VEL_GAIN_X = 0.75
+const VEL_GAIN_Y = 0.25
+const VEL_CLAMP = 0.2
+const VEL_K = 300
+const VEL_ZETA = 0.5
+const VEL_OMEGA_N = Math.sqrt(VEL_K)
+const VEL_OMEGA_D = VEL_OMEGA_N * Math.sqrt(1 - VEL_ZETA * VEL_ZETA)
 // 原版 pressedScale = 78/56
 const IND_PRESSED_SCALE = 78 / 56
 
-function springStep1D(current, velocity, target, dt) {
+/**
+ * 通用弹簧步进（springStep1D / springStepScale 的泛化版，公式完全一致）。
+ * 注意：ωd 必须 > 0，临界阻尼（ζ=1）不适用（那条走 springStep1D 的 ζ=0.5 分支之外的专用式）。
+ */
+function springStepCfg(current, velocity, target, dt, zeta, omegaN, omegaD) {
   const x0 = current - target
   const v0 = velocity
-  const decay = Math.exp(-SPRING_ZETA * SPRING_OMEGA_N * dt)
-  const cosWd = Math.cos(SPRING_OMEGA_D * dt)
-  const sinWd = Math.sin(SPRING_OMEGA_D * dt)
-  const b0 = (v0 + SPRING_ZETA * SPRING_OMEGA_N * x0) / SPRING_OMEGA_D
+  const decay = Math.exp(-zeta * omegaN * dt)
+  const cosWd = Math.cos(omegaD * dt)
+  const sinWd = Math.sin(omegaD * dt)
+  const b0 = (v0 + zeta * omegaN * x0) / omegaD
   const offset = x0 * decay * cosWd + b0 * decay * sinWd
   const newVel =
-    -SPRING_ZETA * SPRING_OMEGA_N * offset +
-    decay * (-x0 * SPRING_OMEGA_D * sinWd + b0 * SPRING_OMEGA_D * cosWd)
+    -zeta * omegaN * offset +
+    decay * (-x0 * omegaD * sinWd + b0 * omegaD * cosWd)
   return { current: target + offset, velocity: newVel }
 }
 
+function springStep1D(current, velocity, target, dt) {
+  return springStepCfg(current, velocity, target, dt, SPRING_ZETA, SPRING_OMEGA_N, SPRING_OMEGA_D)
+}
+
 function springStepScale(current, velocity, target, dt) {
-  const x0 = current - target
-  const v0 = velocity
-  const decay = Math.exp(-SCALE_ZETA * SCALE_OMEGA_N * dt)
-  const cosWd = Math.cos(SCALE_OMEGA_D * dt)
-  const sinWd = Math.sin(SCALE_OMEGA_D * dt)
-  const b0 = (v0 + SCALE_ZETA * SCALE_OMEGA_N * x0) / SCALE_OMEGA_D
-  const offset = x0 * decay * cosWd + b0 * decay * sinWd
-  const newVel =
-    -SCALE_ZETA * SCALE_OMEGA_N * offset +
-    decay * (-x0 * SCALE_OMEGA_D * sinWd + b0 * SCALE_OMEGA_D * cosWd)
-  return { current: target + offset, velocity: newVel }
+  return springStepCfg(current, velocity, target, dt, SCALE_ZETA, SCALE_OMEGA_N, SCALE_OMEGA_D)
+}
+
+function springStepScaleY(current, velocity, target, dt) {
+  return springStepCfg(current, velocity, target, dt, SCALE_Y_ZETA, SCALE_Y_OMEGA_N, SCALE_Y_OMEGA_D)
+}
+
+function springStepVel(current, velocity, target, dt) {
+  return springStepCfg(current, velocity, target, dt, VEL_ZETA, VEL_OMEGA_N, VEL_OMEGA_D)
+}
+
+/** 由平滑速度导出 X/Y 形变系数（原版 layerBlock 的两行） */
+function stretchFactors(smoothedVel) {
+  const v = smoothedVel / VELOCITY_DIVISOR
+  const velX = Math.max(-VEL_CLAMP, Math.min(VEL_CLAMP, v * VEL_GAIN_X))
+  const velY = Math.max(-VEL_CLAMP, Math.min(VEL_CLAMP, v * VEL_GAIN_Y))
+  return { velX, velY }
 }
 
 const BottomTabs = (props) => {
@@ -159,7 +193,8 @@ const BottomTabs = (props) => {
   // applyFrame 必须读到最新几何值：useCallback([]) 会捕获首帧（isDesktop=false、
   // canvasW 初值）的尺寸，按压/路由动画落定后会把指示器写回错误的小尺寸
   const geoRef = React.useRef(null)
-  const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, sc: 1, sv: 0, scTarget: 1, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null, dragVel: 0, dragRaf: 0 })
+  // sc/sv = scaleX 弹簧；scY/svY = scaleY 弹簧；vel/velV = 平滑拖拽速度弹簧（fraction/s）
+  const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, sc: 1, sv: 0, scTarget: 1, scY: 1, svY: 0, scYTarget: 1, vel: 0, velV: 0, velTarget: 0, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null, dragVel: 0, dragRaf: 0 })
   // applyFrame 的 DOM 写入缓存：值没变就不写。拖动时 scale 恒为 1.393，
   // w/h/left/top/boxShadow 全都不变 —— 去掉这些冗余写入可省掉每帧的样式失效与
   // backdrop 采样区重算（PERF.md B2/B3）
@@ -467,10 +502,15 @@ const BottomTabs = (props) => {
   //   innerShadow 8dp*p             内阴影 alpha 0.15*p
   //   暗化 0.1*(1-p) 淡出 + Black@0.03*p 淡入（原版 onDrawSurface）
   //   指示器 ×1.393（56→78dp，超出底栏）；蓝色标签内容 ×1.2；固定标签层 ×containerScale
-  const applyFrame = React.useCallback((p, x, sc) => {
+  const applyFrame = React.useCallback((p, x, sc, scY) => {
     const geo = geoRef.current || { indW: 0, GLASS_H: 56, GLASS_PAD: 4, CONTAINER_H: 64, canvasW: 380, indMag: 14 }
     const { indW, GLASS_H, GLASS_PAD, CONTAINER_H, canvasW, indMag } = geo
     const scale = sc == null ? 1 + (IND_PRESSED_SCALE - 1) * p : sc
+    const scaleYBase = scY == null ? scale : scY
+    // 拖拽形变：把平滑速度转成 X/Y 系数叠在按压缩放之上（原版 layerBlock 两行）
+    const { velX, velY } = stretchFactors(pressRef.current.vel)
+    const scaleX = scale / (1 - velX)
+    const scaleY = scaleYBase * (1 - velY)
     // 容器级缩放（原版 containerScale）：固定文字层与蓝色内容层共用同一个值，
     // 否则按压时两侧标签外移而蓝色层不动 → 蓝色文字看着比邻居偏移
     const glassW = Math.max(1, canvasW - 2 * GLASS_PAD)
@@ -482,12 +522,13 @@ const BottomTabs = (props) => {
     let dl = 0
     let dt = 0
     if (ind) {
-      // 放大必须改几何尺寸（width/height/top/left），不能靠 transform: scale()：
+      // 放大/形变必须改几何尺寸（width/height/top/left），不能靠 transform: scale()：
       // Chromium 对带 transform 缩放的 backdrop-filter 按缩放前尺寸裁剪采样区，
-      // 溢出边缘就没有折射。几何尺寸围绕中心放大，backdrop 采样随平移完整保留。
-      const grow = scale - 1 // 0 → ×1.393（78/56）
-      w = indW * (1 + grow)
-      h = GLASS_H * (1 + grow)
+      // 溢出边缘就没有折射。几何尺寸围绕中心缩放，backdrop 采样随平移完整保留。
+      // scaleX / scaleY 分离后，快速拖拽时指示器被拉长（X 变大、Y 变小），
+      // 松手后速度弹簧归零 → 形变回弹。
+      w = indW * scaleX
+      h = GLASS_H * scaleY
       dl = (w - indW) / 2
       dt = (h - GLASS_H) / 2
       const left = GLASS_PAD - dl
@@ -567,14 +608,16 @@ const BottomTabs = (props) => {
     if (hi) hi.style.opacity = (0.5 * p).toFixed(3)
   }, [])
 
-  // 三条弹簧逐帧驱动：progress（折射/高光 ramp，临界阻尼）+ sc（几何缩放，欠阻尼）
-  // + px（指示器位置），无 CSS transition，避免互相打断
+  // 五条弹簧逐帧驱动：progress（折射/高光 ramp，ζ=0.5）+ sc/scY（几何缩放，ζ=0.6/0.7 欠阻尼）
+  // + vel（拖拽速度平滑，ζ=0.5）+ px（指示器位置），无 CSS transition，避免互相打断
   const startPressLoop = React.useCallback(() => {
     const st = pressRef.current
     if (st.raf) return
     const idle =
       st.progress === st.target && st.velocity === 0 &&
       st.sc === st.scTarget && st.sv === 0 &&
+      st.scY === st.scYTarget && st.svY === 0 &&
+      st.vel === st.velTarget && st.velV === 0 &&
       st.px === st.pxTarget && st.pv === 0
     if (idle) return
     st.last = performance.now()
@@ -588,17 +631,27 @@ const BottomTabs = (props) => {
       const settledScale =
         Math.abs(st.scTarget - st.sc) <= SPRING_THRESHOLD &&
         Math.abs(st.sv) <= SPRING_THRESHOLD
+      const settledScaleY =
+        Math.abs(st.scYTarget - st.scY) <= SPRING_THRESHOLD &&
+        Math.abs(st.svY) <= SPRING_THRESHOLD
+      const settledVel =
+        Math.abs(st.velTarget - st.vel) <= SPRING_THRESHOLD &&
+        Math.abs(st.velV) <= SPRING_THRESHOLD
       const settledPos =
         Math.abs(st.pxTarget - st.px) <= 0.5 && Math.abs(st.pv) <= 0.5
-      if (settledPress && settledScale && settledPos) {
+      if (settledPress && settledScale && settledScaleY && settledVel && settledPos) {
         st.progress = st.target
         st.velocity = 0
         st.sc = st.scTarget
         st.sv = 0
+        st.scY = st.scYTarget
+        st.svY = 0
+        st.vel = st.velTarget
+        st.velV = 0
         st.px = st.pxTarget
         st.pv = 0
         indXRef.current = st.px
-        applyFrame(st.progress, st.px, st.sc)
+        applyFrame(st.progress, st.px, st.sc, st.scY)
         // 回落到静止：摘掉指示器滤镜，滚动时不再为它重跑整条色散链
         if (st.target <= 0) syncIndFilter(false)
         st.raf = 0
@@ -614,13 +667,23 @@ const BottomTabs = (props) => {
         st.sc = r.current
         st.sv = r.velocity
       }
+      if (!settledScaleY) {
+        const r = springStepScaleY(st.scY, st.svY, st.scYTarget, dt)
+        st.scY = r.current
+        st.svY = r.velocity
+      }
+      if (!settledVel) {
+        const r = springStepVel(st.vel, st.velV, st.velTarget, dt)
+        st.vel = r.current
+        st.velV = r.velocity
+      }
       if (!settledPos) {
         const r = springStep1D(st.px, st.pv, st.pxTarget, dt)
         st.px = r.current
         st.pv = r.velocity
         indXRef.current = st.px
       }
-      applyFrame(st.progress, st.px, st.sc)
+      applyFrame(st.progress, st.px, st.sc, st.scY)
       st.raf = requestAnimationFrame(tick)
     }
     st.raf = requestAnimationFrame(tick)
@@ -633,15 +696,23 @@ const BottomTabs = (props) => {
     setVisualIdxState(i)
   }, [])
 
-  // 拖动跟手：直接设置位置并同步弹簧状态（清速度）
-  const followIndicator = React.useCallback((x) => {
+  // 拖动跟手：直接设置位置并同步弹簧状态（清速度）。
+  // velFrac = 当前指针速度（tab/秒）—— 原版 velocity 就是 valueRange 单位/秒，
+  // 直接喂给形变弹簧：快速拖拽时指示器被拉长、垂直收窄。
+  const followIndicator = React.useCallback((x, velFrac) => {
     const st = pressRef.current
     st.px = x
     st.pv = 0
     st.pxTarget = x
     indXRef.current = x
-    applyFrame(st.progress, x, st.sc)
-  }, [applyFrame])
+    if (velFrac != null) {
+      st.velTarget = velFrac
+      // 位置是直写的，但形变靠弹簧推进 —— 必须保证 loop 在跑，
+      // 否则长按放大 settle 后 loop 会停，拉伸就不跟手了
+      startPressLoop()
+    }
+    applyFrame(st.progress, x, st.sc, st.scY)
+  }, [applyFrame, startPressLoop])
 
   // 弹簧动画到目标位置（拖动 snap / 路由切换）。
   // v0 = 可选初速度（px/s）：拖动松手时把指针速度注入位置弹簧，指示器带着惯性
@@ -674,8 +745,12 @@ const BottomTabs = (props) => {
     st.velocity = 0
     st.sc = st.scTarget = 1
     st.sv = 0
+    st.scY = st.scYTarget = 1
+    st.svY = 0
+    st.vel = st.velTarget = 0
+    st.velV = 0
     indXRef.current = st.px
-    applyFrame(0, st.px, 1)
+    applyFrame(0, st.px, 1, 1)
   }, [svgLens, indW, activeTab, applyFrame])
 
   // 底栏指针交互：拖动切换 tab（横向），按住不动触发长按放大
@@ -694,6 +769,11 @@ const BottomTabs = (props) => {
     // 几何缩放走独立弹簧（欠阻尼 ζ=0.6，会轻微过冲），目标必须显式设置：
     // scTarget 恒为 1 时缩放弹簧永远静止，指示器只折射不放大（超出底栏那一下没了）
     st.scTarget = IND_PRESSED_SCALE
+    st.scYTarget = IND_PRESSED_SCALE
+    // 形变弹簧归零：上一次拖拽残留的拉伸/速度不带到本次按压
+    st.vel = st.velTarget = 0
+    st.velV = 0
+    st.dragVel = 0
     // 首次按下时若位移图还没建好（空闲预热尚未跑），立刻补建；
     // 挂滤镜的时机由 syncIndFilter 把关（图没解码好就保持 'none'）
     ensureIndMaps()
@@ -717,7 +797,8 @@ const BottomTabs = (props) => {
       if (pendingX == null) return
       const x = pendingX
       pendingX = null
-      followIndicator(x)
+      // 速度换算成 tab/秒（原版 velocity 单位就是 valueRange/秒）→ 驱动形变弹簧
+      followIndicator(x, st.dragVel / tabW)
     }
 
     const move = (ev) => {
@@ -785,8 +866,11 @@ const BottomTabs = (props) => {
         }
       }
       st.dragVel = 0
+      // 形变回弹：速度目标归零 → vel 弹簧衰减 → 拉伸松开；scY 同步回到 1
+      st.velTarget = 0
       st.target = 0
       st.scTarget = 1
+      st.scYTarget = 1
       startPressLoop()
     }
 
