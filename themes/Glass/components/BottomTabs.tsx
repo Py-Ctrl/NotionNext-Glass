@@ -173,7 +173,6 @@ const BottomTabs = (props) => {
   const glassRef = React.useRef(null)
   const indicatorRef = React.useRef(null)
   const indXRef = React.useRef(0)
-  const visualIdxRef = React.useRef(0)
   const suppressClickUntilRef = React.useRef(0)
   // SVG filter 元素引用：按帧更新位移强度 / 位移图尺寸
   const indMapImgRefs = React.useRef([])
@@ -183,13 +182,17 @@ const BottomTabs = (props) => {
   const indHiRef = React.useRef(null)
   // 固定标签层：随按压做容器级缩放（原版 containerScale）
   const textLayerRef = React.useRef(null)
+  // 蓝色文字层：整层都画成 accent，再被指示器的胶囊形状裁切（原版 accentColor tint 掩膜）。
+  // blueLayerRef = 裁剪框（clip-path 逐帧跟随指示器胶囊）；blueScaleRef = 内容层（跟随 containerScale）
+  const blueLayerRef = React.useRef(null)
+  const blueScaleRef = React.useRef(null)
   // applyFrame 必须读到最新几何值：useCallback([]) 会捕获首帧（isDesktop=false、
   // canvasW 初值）的尺寸，按压/路由动画落定后会把指示器写回错误的小尺寸
   const geoRef = React.useRef(null)
   // sc/sv = scaleX 弹簧；scY/svY = scaleY 弹簧；vel/velV = 平滑拖拽速度弹簧（fraction/s）
   const pressRef = React.useRef({ progress: 0, velocity: 0, target: 0, sc: 1, sv: 0, scTarget: 1, scY: 1, svY: 0, scYTarget: 1, vel: 0, velV: 0, velTarget: 0, px: 0, pv: 0, pxTarget: 0, raf: 0, last: 0, pointerId: null, startX: 0, startY: 0, indX0: 0, dragging: false, release: null, move: null, dragVel: 0, dragRaf: 0 })
   // applyFrame 的 DOM 写入缓存：值没变就不写（拖动时几何恒定，可省掉每帧样式失效）
-  const frameCacheRef = React.useRef({ w: 0, h: 0, left: NaN, top: NaN, tx: NaN, shadow: null, mapW: 0, mapH: 0, dispScale: null })
+  const frameCacheRef = React.useRef({ w: 0, h: 0, left: NaN, top: NaN, tx: NaN, shadow: null, mapW: 0, mapH: 0, dispScale: null, clip: null })
   const [canvasW, setCanvasW] = React.useState(380)
   const [svgLens, setSvgLens] = React.useState(false)
   const [subMenuOpen, setSubMenuOpen] = React.useState(null)
@@ -270,10 +273,6 @@ const BottomTabs = (props) => {
     })
     return idx
   }, [router.asPath, tabs])
-
-  // 蓝色归属 = 指示器实际位置（applyFrame 里按 x 推导，不是点击瞬间的目标槽位）：
-  // 指示器滑到哪一格，那一格的字才染 accent。初值取路由对应的槽位，深链首帧即正确
-  const [visualIdxState, setVisualIdxState] = React.useState(activeTab)
 
   // 尺寸测量做防抖：拖拽窗口时 ResizeObserver 每帧触发，位移图会被反复重光栅
   // （模块缓存按尺寸精确命中不了）。停手 120ms 后再更新一次，避免几十次无效光栅
@@ -574,15 +573,26 @@ const BottomTabs = (props) => {
           if (el) el.setAttribute('scale', dispScale)
         })
       }
+      // 蓝色层：clip-path 裁成指示器当前的胶囊矩形（含按压放大与位移）。
+      // 注意必须加上 translateX(x) —— 指示器的实际左边缘是 left + x，
+      // left 只是静态基准（漏掉 x 会让蓝色停在起始槽位不动）
+      const blueLayer = blueLayerRef.current
+      if (blueLayer) {
+        const clipLeft = left + x
+        const clip = `inset(${top.toFixed(1)}px ${(canvasW - clipLeft - w).toFixed(1)}px ${(CONTAINER_H - top - h).toFixed(1)}px ${clipLeft.toFixed(1)}px round ${(h / 2).toFixed(1)}px)`
+        if (c.clip !== clip) {
+          blueLayer.style.clipPath = clip
+          c.clip = clip
+        }
+      }
     }
     // 固定标签层：原版 containerScale = 1 + 16dp/containerW * pressProgress，
     // 围绕容器中心整体轻微放大
     const textLayer = textLayerRef.current
     if (textLayer) textLayer.style.transform = `scale(${cs.toFixed(4)})`
-    // 蓝色归属由指示器实际位置决定（而不是点击瞬间的目标槽位）：
-    // 指示器滑到哪一格，那一格的字才染 accent。指示器是 backdrop-filter 采样
-    // 这层文字 → 蓝色跟着一起被折射
-    setVisualIdx(Math.round(x / Math.max(1, indW)))
+    // 蓝色层内容同步 containerScale，保证与固定文字层的字形对齐
+    const blueScale = blueScaleRef.current
+    if (blueScale) blueScale.style.transform = `scale(${cs.toFixed(4)})`
     // 原版 onDrawSurface 两层覆盖：暗化淡出 + 按压黑 3% 淡入
     const dim = indDimRef.current
     if (dim) dim.style.opacity = (0.1 * (1 - p)).toFixed(3)
@@ -673,13 +683,6 @@ const BottomTabs = (props) => {
     }
     st.raf = requestAnimationFrame(tick)
   }, [applyFrame, syncIndFilter])
-
-  // 染蓝的槽位：只有真的换了格才 setState（拖动时每帧调用，避免无谓 re-render）
-  const setVisualIdx = React.useCallback((i) => {
-    if (visualIdxRef.current === i) return
-    visualIdxRef.current = i
-    setVisualIdxState(i)
-  }, [])
 
   // 拖动跟手：直接设置位置并清速度；velFrac（tab/秒）喂给形变弹簧
   const followIndicator = React.useCallback((x, velFrac) => {
@@ -1123,27 +1126,48 @@ const BottomTabs = (props) => {
             />
             {/* 固定文字层（原版 Layer 2 tab content，z=1）：所有 tab 的 icon+label
                 固定在各自槽位，永不移动（按压时整层按 containerScale 轻微放大）。
-                选中项 accent 蓝，其余 contentColor —— 指示器是 backdrop-filter
-                采样这层，滑到哪就折射哪一格的字，蓝色跟着一起被折射 */}
+                这一层全部用 contentColor —— 蓝色由下面那层裁切出来 */}
             <div
               ref={textLayerRef}
               style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', transformOrigin: 'center', willChange: 'transform' }}>
-              {tabs.map((tab, i) => {
-                const isActive = visualIdxState === i
-                return (
+              {tabs.map((tab, i) => (
+                <div
+                  key={i}
+                  style={{
+                    ...glyphBox,
+                    top: GLASS_PAD,
+                    left: GLASS_PAD + i * indW,
+                    color: contentColor,
+                    textShadow: textHalo,
+                  }}>
+                  {glyphContent(tab)}
+                </div>
+              ))}
+            </div>
+            {/* 蓝色文字层（原版 accentColor tint 掩膜）：整层都画成 accent，由 applyFrame
+                每帧把 clip-path 设成指示器当前的胶囊矩形。于是蓝色严格等于胶囊轮廓 ——
+                拖到两格之间时两个字各被切一半，和原版一致（不是整格换色）。
+                放在指示器之前、同 zIndex，靠 DOM 顺序画在它下面 → 按压时 backdrop 能采样到 */}
+            <div
+              ref={blueLayerRef}
+              style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
+              <div
+                ref={blueScaleRef}
+                style={{ position: 'absolute', inset: 0, transformOrigin: 'center', willChange: 'transform' }}>
+                {tabs.map((tab, i) => (
                   <div
                     key={i}
                     style={{
                       ...glyphBox,
                       top: GLASS_PAD,
                       left: GLASS_PAD + i * indW,
-                      color: isActive ? accent : contentColor,
+                      color: accent,
                       textShadow: textHalo,
                     }}>
                     {glyphContent(tab)}
                   </div>
-                )
-              })}
+                ))}
+              </div>
             </div>
             {/* 透明透镜指示器（原版 Layer 3，z=2）：独立滑动/放大（文字层不动）。
                 backdrop = 玻璃底板 + 固定文字层，折射位移作用于被覆盖的内容 ——
