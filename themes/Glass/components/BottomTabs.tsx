@@ -1162,7 +1162,8 @@ const BottomTabs = (props) => {
                       top: GLASS_PAD,
                       left: GLASS_PAD + i * indW,
                       color: accent,
-                      textShadow: textHalo,
+                      // 不重复 textShadow：这一层与固定文字层位置完全重合，
+                      // 再画一次 halo 会让胶囊内的字外发光叠成两倍（选中项发白光的根因）
                     }}>
                     {glyphContent(tab)}
                   </div>
