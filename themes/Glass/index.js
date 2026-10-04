@@ -32,6 +32,7 @@ import TagItem from './components/TagItem'
 import TocDrawer from './components/TocDrawer'
 import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
+import LoadingSplash from './components/LoadingSplash'
 import CONFIG from './config'
 import { Style } from './style'
 
@@ -181,6 +182,9 @@ const LayoutBase = props => {
         style={bgStyle}
         className={`${siteConfig('FONT_STYLE')} dark:bg-black min-h-screen scroll-smooth${bgImage ? ' glass-bg-image' : ''}`}>
         <Style />
+
+        {/* 首屏加载动画：液态玻璃汇聚（一次会话只播一次） */}
+        <LoadingSplash />
 
         {/* 移动端顶部导航 */}
         <TopNav {...props} searchModal={searchModal} />

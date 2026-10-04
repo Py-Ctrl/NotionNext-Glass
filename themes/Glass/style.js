@@ -1208,6 +1208,87 @@ const Style = () => {
       color: #a5b4fc;
     }
 
+    /* ========== 首屏加载动画：液态玻璃汇聚 ========== */
+    #theme-glass .glass-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    /* 汇聚：用 SVG goo 滤镜（feColorMatrix 阈值化 alpha）让六滴真正融合 */
+    #theme-glass .glass-splash-goo {
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      filter: url(#glass-splash-goo);
+      transition: opacity 220ms ease;
+    }
+
+    #theme-glass .glass-splash[data-phase='lens'] .glass-splash-goo,
+    #theme-glass .glass-splash[data-phase='out'] .glass-splash-goo {
+      opacity: 0;
+    }
+
+    #theme-glass .glass-splash-goo .glass-drop {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 58px;
+      height: 58px;
+      margin: -29px 0 0 -29px;
+      border-radius: 50%;
+      /* 不能用浅色：goo 的 blur+contrast 会吃掉内部细节，只剩剪影，
+         浅色滴在白底上等于看不见。取中调蓝灰，保证浅色主题下能读出来 */
+      background: #a9b8cd;
+      /* ease-in-out 而不是 ease-out：ease-out 前段位移太快，看不出"从四周汇聚"，
+         到第一帧已经合完了 */
+      animation: glass-drop-in 640ms cubic-bezier(0.55, 0, 0.45, 1) both;
+    }
+
+    .dark #theme-glass .glass-splash-goo .glass-drop {
+      background: #dbe3f0;
+    }
+
+    /* 六滴起点：均匀分布在半径 128px 的圆上，依次延迟入场 */
+    #theme-glass .glass-splash-goo .d0 { --tx: 0; --ty: -128px; animation-delay: 0ms; }
+    #theme-glass .glass-splash-goo .d1 { --tx: 111px; --ty: -64px; animation-delay: 30ms; }
+    #theme-glass .glass-splash-goo .d2 { --tx: 111px; --ty: 64px; animation-delay: 60ms; }
+    #theme-glass .glass-splash-goo .d3 { --tx: 0; --ty: 128px; animation-delay: 90ms; }
+    #theme-glass .glass-splash-goo .d4 { --tx: -111px; --ty: 64px; animation-delay: 120ms; }
+    #theme-glass .glass-splash-goo .d5 { --tx: -111px; --ty: -64px; animation-delay: 150ms; }
+
+    @keyframes glass-drop-in {
+      from { transform: translate(var(--tx), var(--ty)) scale(0.55); }
+      to { transform: translate(0, 0) scale(1); }
+    }
+
+    /* 成镜：真折射。只写 backdrop-filter，不写 -webkit- 别名
+       （Chromium 里两者同一属性，-webkit 在后会把 url() 顶掉）。
+       filter 写在基础规则上而不是按 phase 挂 —— 否则 out 阶段（透镜放大淡出）
+       会丢掉折射，看起来像突然变成一块普通白片 */
+    #theme-glass .glass-splash-lens {
+      position: absolute;
+      opacity: 0;
+      transform: scale(0.16);
+      backdrop-filter: url(#glass-splash-lens);
+      transition: opacity 260ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 10px 44px rgba(0, 0, 0, 0.18);
+    }
+
+    #theme-glass .glass-splash[data-phase='lens'] .glass-splash-lens {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    #theme-glass .glass-splash[data-phase='out'] .glass-splash-lens {
+      opacity: 0;
+      transform: scale(3.4);
+    }
+
     ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}
   `}</style>
 }
