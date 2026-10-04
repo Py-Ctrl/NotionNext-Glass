@@ -1,109 +1,118 @@
 /**
- * 液态玻璃加载动画（首屏一次性）
+ * 首屏加载动画：液态玻璃涟漪
  *
- * 三个阶段：
- *   A 汇聚 0–520ms    六滴玻璃从四周向中心汇聚，靠 goo 滤镜（blur + contrast）融成一团
- *   B 成镜 520–900ms  融合体淡出，同一位置浮现一块胶囊透镜 —— 挂主题的位移图滤镜，
- *                     真的折射出页面内容（不是模糊）
- *   C 展开 900–1250ms 透镜横向放大并淡出，露出页面
+ * 四阶段（时间点见 STAGES）：
+ *   curtain 0     暗色玻璃幕布淡入，把页面压成暗底
+ *   ball    420   一颗玻璃球在中心凝聚成形 —— 挂 feTurbulence + feDisplacementMap，
+ *                 对幕布后的页面做逐像素液态位移（真折射，不是模糊）
+ *   brand   1050  站点 Logo + 标题在玻璃球上浮现
+ *   melt    1700  玻璃球带液态湍流放大消散，幕布褪去露出页面
  *
- * 只在一次会话的首屏播放（sessionStorage 标记）；prefers-reduced-motion 直接跳过。
- * 纯展示层：pointer-events: none，不拦任何交互。
+ * 一次会话只播一次（sessionStorage）；prefers-reduced-motion 直接跳过；
+ * pointer-events: none 不拦交互；SSR 阶段就渲染，覆盖首屏白屏。
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { generateCapsuleLensMap } from './capsuleLensMap'
+import LazyImage from '@/components/LazyImage'
+import { useGlobal } from '@/lib/global'
+import { siteConfig } from '@/lib/config'
 
-const DURATION = 1400 // 总时长（ms）
-const LENS_W = 420 // 透镜尺寸（位移图按这个尺寸生成，动画只改 transform）
-const LENS_H = 88
-const FILTER_ID = 'glass-splash-lens'
+const STAGES = [
+  ['curtain', 0],
+  ['ball', 420],
+  ['brand', 1050],
+  ['melt', 1700]
+]
+const GONE_AT = 2260 // 四阶段跑完再卸载
 const SEEN_KEY = 'glass-splash-seen'
+const FILTER_ID = 'glass-splash-liquid'
 
 // SSR 阶段没有 window：useLayoutEffect 会告警，退回 useEffect
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
 export default function LoadingSplash() {
-  const [phase, setPhase] = useState('goo') // goo → lens → out → 卸载
+  const [stage, setStage] = useState('curtain')
   const [gone, setGone] = useState(false)
-  const [lensMap, setLensMap] = useState(null)
   const timers = useRef([])
+  const { siteInfo } = useGlobal()
 
   useIsoLayoutEffect(() => {
-    const reduce =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     if (reduce || sessionStorage.getItem(SEEN_KEY)) {
       setGone(true)
       return
     }
     sessionStorage.setItem(SEEN_KEY, '1')
-    // 位移图要用 canvas 生成，只能客户端做
-    setLensMap(generateCapsuleLensMap(LENS_W, LENS_H, 18, 14, 0, 0.5))
-    timers.current = [
-      setTimeout(() => setPhase('lens'), 640),
-      setTimeout(() => setPhase('out'), 1000),
-      setTimeout(() => setGone(true), DURATION + 300)
-    ]
-    return () => timers.current.forEach(clearTimeout)
+    // 先清掉可能残留的旧定时器（StrictMode 双调用 / 热重载）
+    timers.current.forEach(clearTimeout)
+    timers.current = STAGES.map(([name, at]) => setTimeout(() => setStage(name), at))
+    timers.current.push(setTimeout(() => setGone(true), GONE_AT))
+    return () => {
+      timers.current.forEach(clearTimeout)
+      timers.current = []
+    }
   }, [])
 
   if (gone) return null
 
+  const title = siteInfo?.title || siteConfig('TITLE')
+  const logo = siteInfo?.icon || siteConfig('AVATAR')
+
   return (
-    <div className='glass-splash' data-phase={phase} aria-hidden='true'>
-      {/* 汇聚用的 goo 滤镜：feGaussianBlur 模糊 → feColorMatrix 把 alpha 阈值化，
-          模糊开的两滴只要重叠就会被"焊"成一团。
-          不能用 CSS 的 blur()+contrast()：CSS contrast 只作用于 RGB，不动 alpha，
-          透明背景下水滴不会融合 */}
-      <svg aria-hidden='true' width='0' height='0' style={{ position: 'absolute' }}>
-        <filter id='glass-splash-goo' colorInterpolationFilters='sRGB'>
-          <feGaussianBlur in='SourceGraphic' stdDeviation={9} result='b' />
-          <feColorMatrix
-            in='b'
-            mode='matrix'
-            values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11'
+    <div className='glass-splash' data-stage={stage} aria-hidden='true'>
+      {/* 液态折射滤镜：feTurbulence 生成分形噪声 → feDisplacementMap 用它逐像素位移。
+          baseFrequency 用 SMIL 持续微动，玻璃始终"活着"而不是一块死板的白片 */}
+      <svg className='glass-splash-defs' aria-hidden='true' width='0' height='0'>
+        <filter
+          id={FILTER_ID}
+          x='-30%'
+          y='-30%'
+          width='160%'
+          height='160%'
+          colorInterpolationFilters='sRGB'>
+          <feTurbulence
+            type='fractalNoise'
+            baseFrequency='0.009 0.013'
+            numOctaves='3'
+            seed='11'
+            result='noise'>
+            <animate
+              attributeName='baseFrequency'
+              dur='7s'
+              repeatCount='indefinite'
+              values='0.009 0.013; 0.017 0.007; 0.009 0.013'
+            />
+          </feTurbulence>
+          <feDisplacementMap
+            in='SourceGraphic'
+            in2='noise'
+            scale='46'
+            xChannelSelector='R'
+            yChannelSelector='G'
           />
         </filter>
       </svg>
 
-      {/* 透镜的位移图滤镜：feImage 铺满 + feDisplacementMap 逐像素位移 + 轻微模糊/饱和 */}
-      {lensMap && (
-        <svg aria-hidden='true' width='0' height='0' style={{ position: 'absolute' }}>
-          <filter id={FILTER_ID} colorInterpolationFilters='sRGB'>
-            <feImage
-              href={lensMap}
-              x={0}
-              y={0}
-              width={LENS_W}
-              height={LENS_H}
-              result='map'
-              preserveAspectRatio='none'
-            />
-            <feDisplacementMap
-              in='SourceGraphic'
-              in2='map'
-              scale={14 * 2}
-              xChannelSelector='R'
-              yChannelSelector='G'
-            />
-            <feGaussianBlur stdDeviation={0.8} />
-            <feColorMatrix type='saturate' values={1.25} />
-          </filter>
-        </svg>
-      )}
+      {/* 1 暗色玻璃幕布 */}
+      <div className='glass-splash-curtain' />
 
-      {/* 汇聚：blur + contrast 做 goo，六滴融成一团 */}
-      <div className='glass-splash-goo'>
-        {[0, 1, 2, 3, 4, 5].map(i => (
-          <span key={i} className={`glass-drop d${i}`} />
-        ))}
+      {/* 2 玻璃球 */}
+      <div className='glass-splash-ball'>
+        <span className='glass-splash-sheen' />
       </div>
 
-      {/* 成镜：同一位置的胶囊透镜，真折射 */}
-      <div
-        className='glass-splash-lens'
-        style={{ width: LENS_W, height: LENS_H, borderRadius: LENS_H / 2 }}
-      />
+      {/* 3 站点标题 / Logo */}
+      <div className='glass-splash-brand'>
+        {logo ? (
+          <LazyImage
+            className='glass-splash-logo'
+            src={logo}
+            width={64}
+            height={64}
+            alt={siteConfig('AUTHOR') || title}
+          />
+        ) : null}
+        {title ? <span className='glass-splash-title'>{title}</span> : null}
+      </div>
     </div>
   )
 }

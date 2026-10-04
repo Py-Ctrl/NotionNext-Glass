@@ -1208,7 +1208,7 @@ const Style = () => {
       color: #a5b4fc;
     }
 
-    /* ========== 首屏加载动画：液态玻璃汇聚 ========== */
+    /* ========== 首屏加载动画：液态玻璃涟漪 ========== */
     #theme-glass .glass-splash {
       position: fixed;
       inset: 0;
@@ -1219,74 +1219,147 @@ const Style = () => {
       pointer-events: none;
     }
 
-    /* 汇聚：用 SVG goo 滤镜（feColorMatrix 阈值化 alpha）让六滴真正融合 */
-    #theme-glass .glass-splash-goo {
+    #theme-glass .glass-splash-defs {
       position: absolute;
-      width: 360px;
-      height: 360px;
-      filter: url(#glass-splash-goo);
-      transition: opacity 220ms ease;
+      width: 0;
+      height: 0;
     }
 
-    #theme-glass .glass-splash[data-phase='lens'] .glass-splash-goo,
-    #theme-glass .glass-splash[data-phase='out'] .glass-splash-goo {
+    /* 1 暗色玻璃幕布：把页面压成暗底。
+       blur 只给 7px —— 糊太狠就没东西可折射了，液态位移会看不出来 */
+    #theme-glass .glass-splash-curtain {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 10, 18, 0.58);
+      backdrop-filter: blur(7px) saturate(0.9);
       opacity: 0;
     }
 
-    #theme-glass .glass-splash-goo .glass-drop {
+    .dark #theme-glass .glass-splash-curtain {
+      background: rgba(4, 5, 10, 0.68);
+    }
+
+    #theme-glass .glass-splash[data-stage='curtain'] .glass-splash-curtain {
+      animation: glass-curtain-in 420ms ease both;
+    }
+
+    #theme-glass .glass-splash[data-stage='ball'] .glass-splash-curtain,
+    #theme-glass .glass-splash[data-stage='brand'] .glass-splash-curtain {
+      opacity: 1;
+    }
+
+    #theme-glass .glass-splash[data-stage='melt'] .glass-splash-curtain {
+      animation: glass-curtain-out 560ms ease 120ms both;
+    }
+
+    @keyframes glass-curtain-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes glass-curtain-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    /* 2 玻璃球：feTurbulence + feDisplacementMap 做真实液态折射 */
+    #theme-glass .glass-splash-ball {
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 58px;
-      height: 58px;
-      margin: -29px 0 0 -29px;
+      width: 300px;
+      height: 300px;
+      margin: -150px 0 0 -150px;
       border-radius: 50%;
-      /* 不能用浅色：goo 的 blur+contrast 会吃掉内部细节，只剩剪影，
-         浅色滴在白底上等于看不见。取中调蓝灰，保证浅色主题下能读出来 */
-      background: #a9b8cd;
-      /* ease-in-out 而不是 ease-out：ease-out 前段位移太快，看不出"从四周汇聚"，
-         到第一帧已经合完了 */
-      animation: glass-drop-in 640ms cubic-bezier(0.55, 0, 0.45, 1) both;
-    }
-
-    .dark #theme-glass .glass-splash-goo .glass-drop {
-      background: #dbe3f0;
-    }
-
-    /* 六滴起点：均匀分布在半径 128px 的圆上，依次延迟入场 */
-    #theme-glass .glass-splash-goo .d0 { --tx: 0; --ty: -128px; animation-delay: 0ms; }
-    #theme-glass .glass-splash-goo .d1 { --tx: 111px; --ty: -64px; animation-delay: 30ms; }
-    #theme-glass .glass-splash-goo .d2 { --tx: 111px; --ty: 64px; animation-delay: 60ms; }
-    #theme-glass .glass-splash-goo .d3 { --tx: 0; --ty: 128px; animation-delay: 90ms; }
-    #theme-glass .glass-splash-goo .d4 { --tx: -111px; --ty: 64px; animation-delay: 120ms; }
-    #theme-glass .glass-splash-goo .d5 { --tx: -111px; --ty: -64px; animation-delay: 150ms; }
-
-    @keyframes glass-drop-in {
-      from { transform: translate(var(--tx), var(--ty)) scale(0.55); }
-      to { transform: translate(0, 0) scale(1); }
-    }
-
-    /* 成镜：真折射。只写 backdrop-filter，不写 -webkit- 别名
-       （Chromium 里两者同一属性，-webkit 在后会把 url() 顶掉）。
-       filter 写在基础规则上而不是按 phase 挂 —— 否则 out 阶段（透镜放大淡出）
-       会丢掉折射，看起来像突然变成一块普通白片 */
-    #theme-glass .glass-splash-lens {
-      position: absolute;
+      backdrop-filter: url(#glass-splash-liquid);
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -26px 48px rgba(255, 255, 255, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.16),
+        0 30px 90px rgba(0, 0, 0, 0.45);
       opacity: 0;
-      transform: scale(0.16);
-      backdrop-filter: url(#glass-splash-lens);
-      transition: opacity 260ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 10px 44px rgba(0, 0, 0, 0.18);
+      transform: scale(0.2);
     }
 
-    #theme-glass .glass-splash[data-phase='lens'] .glass-splash-lens {
+    #theme-glass .glass-splash[data-stage='ball'] .glass-splash-ball {
+      animation: glass-ball-in 660ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    #theme-glass .glass-splash[data-stage='brand'] .glass-splash-ball {
       opacity: 1;
       transform: scale(1);
     }
 
-    #theme-glass .glass-splash[data-phase='out'] .glass-splash-lens {
+    #theme-glass .glass-splash[data-stage='melt'] .glass-splash-ball {
+      animation: glass-ball-melt 620ms cubic-bezier(0.36, 0, 0.66, -0.2) both;
+    }
+
+    @keyframes glass-ball-in {
+      from { opacity: 0; transform: scale(0.2); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes glass-ball-melt {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(3); }
+    }
+
+    /* 球内高光：给球一个玻璃体积感 */
+    #theme-glass .glass-splash-sheen {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at 32% 26%,
+        rgba(255, 255, 255, 0.5),
+        rgba(255, 255, 255, 0.06) 46%,
+        transparent 64%
+      );
+    }
+
+    /* 3 站点 Logo + 标题 */
+    #theme-glass .glass-splash-brand {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
       opacity: 0;
-      transform: scale(3.4);
+    }
+
+    #theme-glass .glass-splash[data-stage='brand'] .glass-splash-brand {
+      animation: glass-brand-in 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    #theme-glass .glass-splash[data-stage='melt'] .glass-splash-brand {
+      animation: glass-brand-out 380ms ease both;
+    }
+
+    @keyframes glass-brand-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes glass-brand-out {
+      from { opacity: 1; transform: none; }
+      to { opacity: 0; transform: translateY(-12px); }
+    }
+
+    #theme-glass .glass-splash-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28), 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    #theme-glass .glass-splash-title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
     }
 
     /* ========== 路由切换过渡 + 内容入场 ========== */
