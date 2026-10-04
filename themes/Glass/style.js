@@ -1289,6 +1289,70 @@ const Style = () => {
       transform: scale(3.4);
     }
 
+    /* ========== 路由切换过渡 + 内容入场 ========== */
+    /* 顶部进度光带：切换时扫过一道 accent 光 */
+    #theme-glass .glass-route-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      z-index: 60;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+
+    body[data-glass-route='leaving'] #theme-glass .glass-route-progress {
+      opacity: 1;
+    }
+
+    #theme-glass .glass-route-progress > span {
+      display: block;
+      height: 100%;
+      width: 32%;
+      background: linear-gradient(90deg, transparent, #0088ff, transparent);
+      animation: glass-progress 900ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    .dark #theme-glass .glass-route-progress > span {
+      background: linear-gradient(90deg, transparent, #0091ff, transparent);
+    }
+
+    @keyframes glass-progress {
+      from { transform: translateX(-110%); }
+      to { transform: translateX(420%); }
+    }
+
+    /* 离开：内容整体淡出。淡出 #wrapper 而不是 #container-inner —— 左右侧栏是
+       后者的兄弟节点，只淡出中间会显得割裂。
+       只动 opacity：这里加 transform 会成为 fixed 后代的包含块，把目录抽屉/悬浮按钮带偏 */
+    body[data-glass-route='leaving'] #theme-glass #wrapper {
+      opacity: 0.28;
+      transition: opacity 160ms ease;
+    }
+
+    /* 入场：卡片错落上浮（位移加在卡片这一级，安全） */
+    @keyframes glass-enter {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    body[data-glass-route='entering'] #theme-glass .glass-post-item,
+    body[data-glass-route='entering'] #theme-glass .glass-card {
+      animation: glass-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(2),
+    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(2) { animation-delay: 45ms; }
+    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(3),
+    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(3) { animation-delay: 90ms; }
+    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(4),
+    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(4) { animation-delay: 135ms; }
+    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(n + 5),
+    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(n + 5) { animation-delay: 180ms; }
+
     ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}
   `}</style>
 }

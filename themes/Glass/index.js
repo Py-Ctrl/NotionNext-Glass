@@ -33,6 +33,7 @@ import TocDrawer from './components/TocDrawer'
 import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
 import LoadingSplash from './components/LoadingSplash'
+import PageTransition from './components/PageTransition'
 import CONFIG from './config'
 import { Style } from './style'
 
@@ -185,6 +186,9 @@ const LayoutBase = props => {
 
         {/* 首屏加载动画：液态玻璃汇聚（一次会话只播一次） */}
         <LoadingSplash />
+
+        {/* 路由切换过渡 + 顶部进度光带 */}
+        <PageTransition />
 
         {/* 移动端顶部导航 */}
         <TopNav {...props} searchModal={searchModal} />
