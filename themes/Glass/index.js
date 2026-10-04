@@ -208,7 +208,12 @@ const LayoutBase = props => {
             id='container-inner'
             className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-20 lg:mt-0' : ''} w-full lg:max-w-2xl xl:max-w-3xl flex-grow min-h-screen relative z-10 px-1 sm:px-2`}
             ref={targetRef}>
-            {children}
+            {/* 页面组件（LayoutIndex / LayoutPostList…）定义在 LayoutBase 之外，
+                拿不到这里的 searchModal ref —— 注入进去，让 BlogListBar 的搜索入口
+                也能渲染成按钮（否则小屏会露出第二个输入框） */}
+            {React.Children.map(children, child =>
+              React.isValidElement(child) ? React.cloneElement(child, { searchModal }) : child
+            )}
           </section>
 
           {/* 右侧栏 */}
