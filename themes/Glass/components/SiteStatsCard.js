@@ -111,17 +111,18 @@ export function SiteStatsText ({ postCount, allPosts, categoryOptions, posts }) 
   ].filter(Boolean)
 
   return (
-    <div className='flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400'>
-      {/* 标题：光有一串数值没有上下文，参照 hexo 的 AnalyticsCard 给个"统计"抬头 */}
-      <span className='inline-flex items-center gap-1.5 font-medium text-gray-600 dark:text-gray-300'>
-        <i className='fas fa-chart-bar text-[10px] opacity-60' />
+    <div className='flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs'>
+      {/* 页脚是半透明玻璃铺在壁纸上，底色不可控 —— 文字必须给足对比度，
+          之前用 text-gray-500 + opacity-70 直接糊进背景里了 */}
+      <span className='inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-white'>
+        <i className='fas fa-chart-bar text-[10px]' />
         站点统计
       </span>
       {items.map(it => (
         <span key={it.label} className='inline-flex items-center gap-1.5 whitespace-nowrap'>
-          <i className={`fas ${it.icon} text-[10px] opacity-60`} />
-          <span className='opacity-70'>{it.label}</span>
-          <span className='font-semibold tabular-nums text-gray-700 dark:text-gray-200'>{it.value}</span>
+          <i className={`fas ${it.icon} text-[10px]`} />
+          <span className='font-medium text-gray-700 dark:text-gray-200'>{it.label}</span>
+          <span className='font-semibold tabular-nums text-gray-900 dark:text-white'>{it.value}</span>
         </span>
       ))}
     </div>
