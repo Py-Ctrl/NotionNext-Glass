@@ -64,6 +64,9 @@ const MusicPlayer = ({
   const progressRef = useRef(null)
   const [lyrics, setLyrics] = useState([])
   const [currentLyricIdx, setCurrentLyricIdx] = useState(-1)
+  // 字幕默认显示；按钮只在当前曲目确实有歌词时出现
+  const [showLyrics, setShowLyrics] = useState(true)
+  const hasLyrics = lyrics.length > 0
 
   // 解析歌词
   useEffect(() => {
@@ -146,7 +149,7 @@ const MusicPlayer = ({
           </div>
           {/* 字幕/歌词显示 */}
           <div className='mt-1.5 h-4 overflow-hidden'>
-            {lyrics.length > 0 && currentLyricIdx >= 0 ? (
+            {showLyrics && hasLyrics && currentLyricIdx >= 0 ? (
               <div className='text-xs text-gray-600 dark:text-gray-300 truncate animate-[fadeIn_0.3s_ease]'>
                 {lyrics[currentLyricIdx]?.text}
               </div>
@@ -246,12 +249,25 @@ const MusicPlayer = ({
             step='0.01'
             value={volume}
             onChange={(e) => onVolumeChange?.(parseFloat(e.target.value))}
-            className='flex-1 h-1 rounded-full appearance-none bg-gray-200/60 dark:bg-gray-700/60 cursor-pointer
+            className='music-volume flex-1 h-1 rounded-full appearance-none cursor-pointer
                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5
                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gray-600 dark:[&::-webkit-slider-thumb]:bg-gray-300
                        [&::-webkit-slider-thumb]:cursor-pointer'
+            style={{ '--vol': `${volume * 100}%` }}
           />
         </div>
+        {/* 字幕按钮：只有当前曲目带歌词时才出现 */}
+        {hasLyrics && (
+          <button
+            onClick={() => setShowLyrics(v => !v)}
+            className={`p-1.5 rounded-lg transition-all ${showLyrics ? 'text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-800' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+            title={showLyrics ? '隐藏歌词' : '显示歌词'}
+          >
+            <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
+              <path d='M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-5l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 4v2h10V8H7zm0 4v2h6v-2H7z' />
+            </svg>
+          </button>
+        )}
         {audioList?.length > 1 && (
           <button
             onClick={onTogglePlaylist}

@@ -1,8 +1,9 @@
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
 import { siteConfig } from '@/lib/config'
+import { SiteStatsCardInner } from './SiteStatsCard'
 
-const Footer = ({ title }) => {
+const Footer = ({ title, ...props }) => {
   const { locale } = useGlobal()
   const d = new Date()
   const currentYear = d.getFullYear()
@@ -30,6 +31,16 @@ const Footer = ({ title }) => {
             Powered by NotionNext v{version} & Glass
           </span>
         </div>
+      </div>
+
+      {/* 站点统计：文章数 / 建站天数 / 访问量 / 访客数 */}
+      <div className='max-w-6xl mx-auto mt-5'>
+        <SiteStatsCardInner
+          postCount={props.postCount}
+          allPosts={props.allPosts}
+          categoryOptions={props.categoryOptions}
+          posts={props.posts}
+        />
       </div>
     </footer>
   )

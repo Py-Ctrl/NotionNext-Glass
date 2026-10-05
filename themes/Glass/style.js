@@ -1252,25 +1252,50 @@ const Style = () => {
       transition: opacity 160ms ease;
     }
 
-    /* 入场：卡片错落上浮（位移加在卡片这一级，安全） */
+    /* 入场：卡片错落上浮（位移加在卡片这一级，安全）。
+       只作用于中栏 #container-inner —— 右侧栏卡片和悬浮 MusicPlayer 都在它之外，
+       页面切换时不该跟着抖 */
     @keyframes glass-enter {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: none; }
     }
 
-    body[data-glass-route='entering'] #theme-glass .glass-post-item,
-    body[data-glass-route='entering'] #theme-glass .glass-card {
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-post-item,
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-card {
       animation: glass-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
-    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(2),
-    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(2) { animation-delay: 45ms; }
-    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(3),
-    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(3) { animation-delay: 90ms; }
-    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(4),
-    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(4) { animation-delay: 135ms; }
-    body[data-glass-route='entering'] #theme-glass .glass-post-item:nth-child(n + 5),
-    body[data-glass-route='entering'] #theme-glass .glass-card:nth-child(n + 5) { animation-delay: 180ms; }
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-post-item:nth-child(2),
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-card:nth-child(2) { animation-delay: 45ms; }
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-post-item:nth-child(3),
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-card:nth-child(3) { animation-delay: 90ms; }
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-post-item:nth-child(4),
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-card:nth-child(4) { animation-delay: 135ms; }
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-post-item:nth-child(n + 5),
+    body[data-glass-route='entering'] #theme-glass #container-inner .glass-card:nth-child(n + 5) { animation-delay: 180ms; }
+
+    /* ========== MusicPlayer 音量条 ========== */
+    /* 点（thumb）前面的已填充段改成近黑。原生 range 没有"已填充段"，
+       用渐变按 --vol 切出前后两段 */
+    #theme-glass .music-volume {
+      background: linear-gradient(
+        to right,
+        #111827 0%,
+        #111827 var(--vol),
+        rgba(0, 0, 0, 0.12) var(--vol),
+        rgba(0, 0, 0, 0.12) 100%
+      );
+    }
+
+    .dark #theme-glass .music-volume {
+      background: linear-gradient(
+        to right,
+        #f3f4f6 0%,
+        #f3f4f6 var(--vol),
+        rgba(255, 255, 255, 0.16) var(--vol),
+        rgba(255, 255, 255, 0.16) 100%
+      );
+    }
 
     ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}
   `}</style>

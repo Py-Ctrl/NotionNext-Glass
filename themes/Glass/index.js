@@ -22,7 +22,6 @@ import BottomTabs from './components/BottomTabs'
 import FloatDarkModeButton from './components/FloatDarkModeButton'
 import Footer from './components/Footer'
 import FloatingMusicPlayer from './components/FloatingMusicPlayer'
-import GlassScrollContainer from './components/GlassScrollContainer'
 import JumpToBottomButton from './components/JumpToBottomButton'
 import JumpToTopButton from './components/JumpToTopButton'
 import SideAreaLeft from './components/SideAreaLeft'
@@ -261,35 +260,17 @@ const LayoutBase = props => {
         <FloatingMusicPlayer />
 
         {/* 页脚 */}
-        <Footer title={siteConfig('TITLE')} />
+        <Footer title={siteConfig('TITLE')} {...props} />
       </div>
     </ThemeGlassGlobal.Provider>
   )
 }
 
 const LayoutIndex = props => {
-  const { locale } = useGlobal()
-  const showScrollContainer =
-    siteConfig('LIQUID_SCROLL_CONTAINER', true, CONFIG) &&
-    (!props.page || props.page === 1)
-
   return (
     <>
       <BlogListBar {...props} />
-      {showScrollContainer && (
-        <GlassScrollContainer
-          title={locale.COMMON?.LATEST_POSTS || '最新发布'}
-          height={siteConfig('LIQUID_SCROLL_CONTAINER_HEIGHT', 360, CONFIG)}
-          className='mb-4 sm:mb-6'
-          items={(props.latestPosts || []).slice(0, 12).map(p => ({
-            key: p.id,
-            title: p.title,
-            subtitle: p.date?.start_date,
-            linkText: locale.COMMON?.ARTICLE_DETAIL || '阅读',
-            href: p.href
-          }))}
-        />
-      )}
+      {/* 「最新发布」已挪到右侧栏 SideAreaRight */}
       {siteConfig('POST_LIST_STYLE') !== 'page' ? (
         <BlogPostListScroll {...props} showSummary={true} />
       ) : (

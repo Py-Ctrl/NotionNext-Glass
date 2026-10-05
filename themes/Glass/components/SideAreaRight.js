@@ -7,7 +7,7 @@ import TagGroups from './TagGroups'
 import CategoryGroup from './CategoryGroup'
 import SmartLink from '@/components/SmartLink'
 import Announcement from './Announcement'
-import SiteStatsCard from './SiteStatsCard'
+import GlassScrollContainer from './GlassScrollContainer'
 import { useLensBackdrop } from './useLensBackdrop'
 
 const SideAreaRight = (props) => {
@@ -39,14 +39,22 @@ const SideAreaRight = (props) => {
           </div>
         )}
 
-        {/* 站点统计：最新发布、文章数、建站天数、访问量、访客数 */}
-        <SiteStatsCard
-          latestPosts={latestPosts}
-          allPosts={allPosts}
-          postCount={postCount}
-          categoryOptions={categoryOptions}
-          posts={posts}
-        />
+        {/* 最新发布（从文章上方挪过来的横向滚动容器；站点统计已挪到页脚） */}
+        {siteConfig('LIQUID_SCROLL_CONTAINER', true, CONFIG) && (
+          <div className='mb-5'>
+            <GlassScrollContainer
+              title={locale.COMMON?.LATEST_POSTS || '最新发布'}
+              height={240}
+              items={(latestPosts || []).slice(0, 12).map(p => ({
+                key: p.id,
+                title: p.title,
+                subtitle: p.date?.start_date,
+                linkText: locale.COMMON?.ARTICLE_DETAIL || '阅读',
+                href: p.href
+              }))}
+            />
+          </div>
+        )}
 
         {/* 自定义 slot */}
         {slot}
