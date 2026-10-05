@@ -112,6 +112,11 @@ export function SiteStatsText ({ postCount, allPosts, categoryOptions, posts }) 
 
   return (
     <div className='flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400'>
+      {/* 标题：光有一串数值没有上下文，参照 hexo 的 AnalyticsCard 给个"统计"抬头 */}
+      <span className='inline-flex items-center gap-1.5 font-medium text-gray-600 dark:text-gray-300'>
+        <i className='fas fa-chart-bar text-[10px] opacity-60' />
+        站点统计
+      </span>
       {items.map(it => (
         <span key={it.label} className='inline-flex items-center gap-1.5 whitespace-nowrap'>
           <i className={`fas ${it.icon} text-[10px] opacity-60`} />

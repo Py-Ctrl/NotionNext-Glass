@@ -201,7 +201,7 @@ const LayoutBase = props => {
           className={
             (JSON.parse(siteConfig('LAYOUT_SIDEBAR_REVERSE'))
               ? 'flex-row-reverse'
-              : '') + ' relative flex justify-center flex-1 pb-28 lg:pb-28 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
+              : '') + ' relative flex justify-center flex-1 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
           }>
           {/* 左侧栏 */}
           <SideAreaLeft targetRef={targetRef} {...props} />
