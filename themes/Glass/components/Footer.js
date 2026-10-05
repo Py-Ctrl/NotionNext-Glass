@@ -11,9 +11,9 @@ const Footer = ({ title, ...props }) => {
   const version = process.env.npm_package_version || '4.10.9'
 
   return (
-    // pb-28：给底部固定标签栏让位。main 上原来也有一份 pb-28，两段叠起来
-    // 会多出 224px 死空白，所以那份已移除，只保留页脚这一份
-    <footer className='glass-footer w-full pt-4 sm:pt-6 pb-28 px-4 mt-12'>
+    // 让位留白不放在这里 —— 放在页脚外面（index.js 里的透明占位块），
+    // 否则玻璃条本身会被撑成一大块灰带
+    <footer className='glass-footer w-full py-4 sm:py-6 px-4 mt-12'>
       <div className='max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 sm:gap-4 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300'>
         <div className='flex items-center gap-2'>
           <i className='fas fa-copyright text-xs' />

@@ -261,6 +261,10 @@ const LayoutBase = props => {
 
         {/* 页脚 */}
         <Footer title={siteConfig('TITLE')} {...props} />
+
+        {/* 给底部固定标签栏让位的透明占位块。
+            放在页脚外面，页脚的玻璃条才能保持紧凑；放里面会把玻璃撑成一大块灰带 */}
+        <div className='h-28' aria-hidden='true' />
       </div>
     </ThemeGlassGlobal.Provider>
   )
