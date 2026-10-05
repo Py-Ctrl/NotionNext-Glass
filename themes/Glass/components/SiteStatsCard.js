@@ -69,11 +69,10 @@ export function LatestPostsCard ({ latestPosts, allPosts }) {
 }
 
 /**
- * 站点统计卡片：文章数、建站天数、访问量、访客数
+ * 站点统计（文字版）：文章数、建站天数、访问量、访客数
+ * 纯文字一行，不做卡片方框，直接放在页脚
  */
-export function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, posts }) {
-  // 站点统计卡片：SVG 透镜折射
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+export function SiteStatsText ({ postCount, allPosts, categoryOptions, posts }) {
   const { NOTION_CONFIG } = useGlobal()
   // 不蒜子开关与数据（与 ExternalPlugins 里的判定保持一致）
   const busuanziEnabled = siteConfig('ANALYTICS_BUSUANZI_ENABLE', null, NOTION_CONFIG)
@@ -91,7 +90,6 @@ export function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, post
   // 2. 用 categoryOptions 中所有分类的文章数之和（一篇文章可能属于多个分类，可能偏大）
   // 3. 用首页的 posts 数组长度
   // 4. 用 allPosts 数组长度
-  // 5. 最后用 latestPosts 长度（不准确，只作为兜底）
   let count = postCount
   if (!count || count <= 1) {
     const categorySum = (categoryOptions || []).reduce((sum, c) => sum + (c.count || 0), 0)
@@ -105,75 +103,35 @@ export function SiteStatsCardInner ({ postCount, allPosts, categoryOptions, post
   }
   count = count || 0
 
+  const items = [
+    { icon: 'fa-file-alt', label: '文章数', value: count },
+    { icon: 'fa-calendar-day', label: '建站天数', value: siteDays },
+    busuanziEnabled && { icon: 'fa-eye', label: '访问量', value: busuanziData?.site_pv ?? '--' },
+    busuanziEnabled && { icon: 'fa-users', label: '访客数', value: busuanziData?.site_uv ?? '--' }
+  ].filter(Boolean)
+
   return (
-    <div ref={lens.elRef} className='glass-card p-4' style={lens.style || undefined}>
-      {lens.filterNode}
-      <h3 className='text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3'>
-        <i className='mr-1.5 fas fa-chart-bar' />
-        站点统计
-      </h3>
-      <div className='grid grid-cols-2 gap-2 text-xs'>
-        {/* 文章数 */}
-        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
-          <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
-            {count}
-          </div>
-          <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
-            <i className='fas fa-file-alt mr-1' />
-            文章数
-          </div>
-        </div>
-
-        {/* 建站天数 */}
-        <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
-          <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
-            {siteDays}
-          </div>
-          <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
-            <i className='fas fa-calendar-day mr-1' />
-            建站天数
-          </div>
-        </div>
-
-        {/* 访问量（不蒜子） */}
-        {busuanziEnabled && (
-          <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
-            <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
-              {busuanziData?.site_pv ?? '--'}
-            </div>
-            <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
-              <i className='fas fa-eye mr-1' />
-              访问量
-            </div>
-          </div>
-        )}
-
-        {/* 访客数（不蒜子） */}
-        {busuanziEnabled && (
-          <div className='bg-white/40 dark:bg-white/5 rounded-lg p-2.5 text-center'>
-            <div className='text-lg font-semibold text-indigo-500 dark:text-indigo-400'>
-              {busuanziData?.site_uv ?? '--'}
-            </div>
-            <div className='text-gray-500 dark:text-gray-400 mt-0.5'>
-              <i className='fas fa-users mr-1' />
-              访客数
-            </div>
-          </div>
-        )}
-      </div>
+    <div className='flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400'>
+      {items.map(it => (
+        <span key={it.label} className='inline-flex items-center gap-1.5 whitespace-nowrap'>
+          <i className={`fas ${it.icon} text-[10px] opacity-60`} />
+          <span className='opacity-70'>{it.label}</span>
+          <span className='font-semibold tabular-nums text-gray-700 dark:text-gray-200'>{it.value}</span>
+        </span>
+      ))}
     </div>
   )
 }
 
 /**
- * 站点统计：最新发布 + 统计数据（两个独立卡片）
+ * 兼容用的默认导出：最新发布卡片 + 文字版统计
  */
 export default function SiteStatsCard (props) {
   const { latestPosts, allPosts, postCount, categoryOptions, posts } = props
   return (
     <section className='mb-5'>
       <LatestPostsCard latestPosts={latestPosts} allPosts={allPosts} />
-      <SiteStatsCardInner
+      <SiteStatsText
         postCount={postCount}
         allPosts={allPosts}
         categoryOptions={categoryOptions}

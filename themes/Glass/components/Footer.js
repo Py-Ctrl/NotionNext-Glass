@@ -1,7 +1,7 @@
 import { useGlobal } from '@/lib/global'
 import SmartLink from '@/components/SmartLink'
 import { siteConfig } from '@/lib/config'
-import { SiteStatsCardInner } from './SiteStatsCard'
+import { SiteStatsText } from './SiteStatsCard'
 
 const Footer = ({ title, ...props }) => {
   const { locale } = useGlobal()
@@ -11,7 +11,8 @@ const Footer = ({ title, ...props }) => {
   const version = process.env.npm_package_version || '4.10.9'
 
   return (
-    <footer className='glass-footer w-full py-4 sm:py-6 px-4 mt-12'>
+    // pb-28：给底部固定标签栏让位，否则页脚（含站点统计）会被它压住看不见
+    <footer className='glass-footer w-full pt-4 sm:pt-6 pb-28 px-4 mt-12'>
       <div className='max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400'>
         <div className='flex items-center gap-2'>
           <i className='fas fa-copyright text-xs' />
@@ -33,9 +34,9 @@ const Footer = ({ title, ...props }) => {
         </div>
       </div>
 
-      {/* 站点统计：文章数 / 建站天数 / 访问量 / 访客数 */}
+      {/* 站点统计（文字版）：文章数 / 建站天数 / 访问量 / 访客数 */}
       <div className='max-w-6xl mx-auto mt-5'>
-        <SiteStatsCardInner
+        <SiteStatsText
           postCount={props.postCount}
           allPosts={props.allPosts}
           categoryOptions={props.categoryOptions}
