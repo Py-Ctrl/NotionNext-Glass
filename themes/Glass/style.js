@@ -15,6 +15,9 @@ const Style = () => {
       --glass-shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.3);
       --glass-blur: 16px;
       --glass-radius: 16px;
+      /* 苹果风格缓动：交互统一用 --ease-apple；需要更柔和的位移用 --ease-soft */
+      --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
       color-scheme: light;
       min-height: 100vh;
       background:
@@ -65,7 +68,11 @@ const Style = () => {
       border: 1px solid var(--glass-border);
       border-radius: var(--glass-radius);
       box-shadow: var(--glass-shadow);
-      transition: all 0.3s ease;
+      transition:
+        transform 0.3s var(--ease-apple),
+        opacity 0.3s var(--ease-apple),
+        box-shadow 0.3s var(--ease-apple),
+        border-color 0.3s var(--ease-apple);
     }
 
     /* ========== 卡片交互光晕（Win10 21H2 任务栏风格） ========== */
@@ -97,7 +104,7 @@ const Style = () => {
       pointer-events: none;
       z-index: 1;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s var(--ease-apple);
     }
 
     /* 内部聚光：跟随鼠标，卡片内部淡光 */
@@ -114,7 +121,7 @@ const Style = () => {
         transparent 40%
       );
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s var(--ease-apple);
       pointer-events: none;
       z-index: 0;
       border-radius: inherit;
@@ -212,7 +219,7 @@ const Style = () => {
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--glass-border);
-      transition: all 0.3s ease;
+      transition: all 0.3s var(--ease-apple);
     }
 
     .dark #theme-glass .glass-nav {
@@ -229,7 +236,7 @@ const Style = () => {
       border-radius: 12px;
       padding: 8px 16px;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.25s var(--ease-apple);
       font-size: 14px;
     }
 
@@ -258,7 +265,7 @@ const Style = () => {
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--glass-border);
       border-radius: 14px;
-      transition: all 0.3s ease;
+      transition: all 0.3s var(--ease-apple);
     }
 
     #theme-glass .glass-search:focus-within {
@@ -275,7 +282,7 @@ const Style = () => {
       border-radius: 8px;
       padding: 4px 10px;
       font-size: 12px;
-      transition: all 0.2s ease;
+      transition: all 0.2s var(--ease-apple);
       cursor: pointer;
     }
 
@@ -294,7 +301,7 @@ const Style = () => {
       border: 1px solid var(--glass-border);
       border-radius: var(--glass-radius);
       box-shadow: var(--glass-shadow);
-      transition: all 0.35s ease;
+      transition: all 0.35s var(--ease-apple);
       overflow: hidden;
     }
 
@@ -360,7 +367,7 @@ const Style = () => {
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s var(--ease-apple);
       box-shadow: var(--glass-shadow);
     }
 
@@ -378,7 +385,7 @@ const Style = () => {
     #theme-glass .glass-link {
       color: #6366f1;
       text-decoration: none;
-      transition: color 0.2s ease;
+      transition: color 0.2s var(--ease-apple);
     }
 
     #theme-glass .glass-link:hover {
@@ -475,7 +482,7 @@ const Style = () => {
 
     /* 关闭按钮 */
     #theme-glass #search-wrapper .fa-xmark {
-      transition: all 0.25s ease !important;
+      transition: transform 0.25s var(--ease-apple), color 0.25s var(--ease-apple) !important;
     }
 
     #theme-glass #search-wrapper .fa-xmark:hover {
@@ -489,7 +496,7 @@ const Style = () => {
       border: 1px solid rgba(255, 255, 255, 0.3) !important;
       border-radius: 12px !important;
       color: #1f2937 !important;
-      transition: all 0.3s ease !important;
+      transition: background 0.3s var(--ease-apple), border-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple), color 0.3s var(--ease-apple) !important;
     }
 
     #theme-glass #search-wrapper input[type='text']::placeholder {
@@ -526,7 +533,7 @@ const Style = () => {
       -webkit-backdrop-filter: blur(8px) !important;
       border: 1px solid rgba(255, 255, 255, 0.2) !important;
       border-radius: 10px !important;
-      transition: all 0.2s ease !important;
+      transition: background 0.2s var(--ease-apple), border-color 0.2s var(--ease-apple), color 0.2s var(--ease-apple) !important;
     }
 
     #theme-glass #search-wrapper #tags-group > a > div:hover {
@@ -552,7 +559,7 @@ const Style = () => {
     #theme-glass #search-wrapper ul li {
       background: transparent !important;
       border: 1px solid transparent !important;
-      transition: all 0.2s ease !important;
+      transition: background 0.2s var(--ease-apple), border-color 0.2s var(--ease-apple), transform 0.2s var(--ease-apple) !important;
     }
 
     #theme-glass #search-wrapper ul li:hover {
@@ -579,7 +586,7 @@ const Style = () => {
       backdrop-filter: blur(8px) !important;
       border: 1px solid rgba(255, 255, 255, 0.15) !important;
       border-radius: 8px !important;
-      transition: all 0.2s ease !important;
+      transition: background 0.2s var(--ease-apple), border-color 0.2s var(--ease-apple), color 0.2s var(--ease-apple), transform 0.2s var(--ease-apple) !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -1050,10 +1057,10 @@ const Style = () => {
     #theme-glass .glass-hover-grid .glass-post-item {
       position: relative;
       transition:
-        transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-        filter 0.35s ease,
-        opacity 0.35s ease,
-        box-shadow 0.35s ease;
+        transform 0.35s var(--ease-soft),
+        filter 0.35s var(--ease-apple),
+        opacity 0.35s var(--ease-apple),
+        box-shadow 0.35s var(--ease-apple);
     }
 
     #theme-glass .glass-hover-grid .glass-post-item:hover {
@@ -1150,7 +1157,7 @@ const Style = () => {
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.25);
       text-align: left;
       cursor: pointer;
-      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+      transition: transform 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple), border-color 0.3s var(--ease-apple);
     }
 
     #theme-glass .glass-scroll-card:hover {
@@ -1185,7 +1192,7 @@ const Style = () => {
 
     #theme-glass .glass-scroll-card-link i {
       font-size: 10px;
-      transition: transform 0.25s ease;
+      transition: transform 0.25s var(--ease-apple);
     }
 
     #theme-glass .glass-scroll-card:hover .glass-scroll-card-link i {
@@ -1222,7 +1229,7 @@ const Style = () => {
       overflow: hidden;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 200ms ease;
+      transition: opacity 200ms var(--ease-apple);
     }
 
     body[data-glass-route='leaving'] #theme-glass .glass-route-progress {
@@ -1234,7 +1241,7 @@ const Style = () => {
       height: 100%;
       width: 32%;
       background: linear-gradient(90deg, transparent, #0088ff, transparent);
-      animation: glass-progress 900ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      animation: glass-progress 900ms var(--ease-apple) infinite;
     }
 
     .dark #theme-glass .glass-route-progress > span {
@@ -1251,7 +1258,7 @@ const Style = () => {
        只动 opacity：这里加 transform 会成为 fixed 后代的包含块，把目录抽屉/悬浮按钮带偏 */
     body[data-glass-route='leaving'] #theme-glass #wrapper {
       opacity: 0.28;
-      transition: opacity 160ms ease;
+      transition: opacity 160ms var(--ease-apple);
     }
 
     /* 入场：卡片错落上浮（位移加在卡片这一级，安全）。
