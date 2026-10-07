@@ -33,7 +33,8 @@ export default function FlipCard(props) {
           transform-style: preserve-3d;
           -webkit-transform-style: preserve-3d;
           transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-          will-change: transform;
+          /* 这里不再常驻 will-change：卡片列表里每张卡都会常驻一个合成层。
+             改到下面的 :hover 规则里，只在真正要翻牌时提升 */
         }
 
         .flip-card-front,
@@ -66,6 +67,9 @@ export default function FlipCard(props) {
         .flip-card:hover .flip-card-inner {
           transform: rotateY(180deg);
           -webkit-transform: rotateY(180deg);
+          /* 只在 hover 期间提升合成层：hover 早于 transition 触发，
+             足够在动画开始前完成提升，又不会让每张卡常驻一层 */
+          will-change: transform;
         }
 
         .flip-card:hover .flip-card-front {

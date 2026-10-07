@@ -689,10 +689,43 @@ const Style = () => {
     }
 
     /* ========== 减少动画偏好 ========== */
+    /* 位移/缩放类动画的降级版本：只做淡入 */
+    @keyframes glass-reduced-fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      #theme-glass * {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
+      /* 为什么不用 animation-duration:0.01ms / transition-duration:0.01ms 一把梭：
+         那只是把动画压成"瞬移"到终态 —— 位移本身没消失，只是从"看得见的移动"变成
+         "瞬间跳变"，对前庭敏感用户反而更刺激；同时元素的状态变化失去可感知性
+         （内容像凭空出现，用户不知道发生了什么）。
+         正确做法：位移/缩放一律不做，只保留 opacity 淡变。
+         注意：本文件是 JS 模板字符串，注释里不能出现反引号，也不能出现美元符号加左花括号。 */
+      #theme-glass *,
+      #theme-glass *::before,
+      #theme-glass *::after {
+        animation-duration: 0.01ms !important; /* 兜底：默认压掉一切动画（无位移） */
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        transition-property: opacity !important; /* 过渡只留 opacity */
+        transition-duration: 0.6s !important;
+        transition-timing-function: linear !important;
+      }
+
+      /* 入场类动画显式降级为纯淡入 —— 关键帧里的 translateY 不再参与。
+         选择器比上面的通配规则更具体，所以这里的 animation 简写会覆盖兜底规则 */
+      #theme-glass #container-inner .glass-post-item,
+      #theme-glass #container-inner .glass-card,
+      #theme-glass .glass-scroll-card {
+        animation: glass-reduced-fade 0.6s linear both !important;
+      }
+
+      /* 装饰性无限动画（旋转封面、进度光带扫动）直接停掉，而不是加速它 */
+      #theme-glass .animate-spin-slow,
+      #theme-glass .animate-pulse,
+      #theme-glass .glass-route-progress > span {
+        animation: none !important;
       }
     }
 
