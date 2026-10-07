@@ -58,6 +58,37 @@ const Style = () => {
       background-attachment: fixed;
     }
 
+    /* ========== 高光跟随：把已有光晕变量注册成可插值类型 ========== */
+    /* 主题本来就有一套跟随鼠标的光晕（::before 边框光晕用 --glow-x/--glow-y，
+       ::after 内部聚光用 --mouse-x/--mouse-y），但这四个变量是无类型字符串 ——
+       浏览器无法在两次取值之间插值，指针一动光晕就是"跳"的。
+       注册成具体类型后，配合卡片上的 transition，光晕会平滑滑向指针。
+       这是透镜（折射）之外补上的"反射"层，也是 iOS 26 Liquid Glass 以
+       specular 而非折射为核心差异的那一层。 */
+    @property --glow-x {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: -1000px;
+    }
+
+    @property --glow-y {
+      syntax: '<length>';
+      inherits: true;
+      initial-value: -1000px;
+    }
+
+    @property --mouse-x {
+      syntax: '<percentage>';
+      inherits: true;
+      initial-value: 50%;
+    }
+
+    @property --mouse-y {
+      syntax: '<percentage>';
+      inherits: true;
+      initial-value: 50%;
+    }
+
     /* ========== 玻璃卡片 ========== */
     #theme-glass .glass-card {
       position: relative;
@@ -72,7 +103,11 @@ const Style = () => {
         transform 0.3s var(--ease-apple),
         opacity 0.3s var(--ease-apple),
         box-shadow 0.3s var(--ease-apple),
-        border-color 0.3s var(--ease-apple);
+        border-color 0.3s var(--ease-apple),
+        --glow-x 90ms linear,
+        --glow-y 90ms linear,
+        --mouse-x 120ms linear,
+        --mouse-y 120ms linear;
     }
 
     /* ========== 卡片交互光晕（Win10 21H2 任务栏风格） ========== */
@@ -80,6 +115,11 @@ const Style = () => {
     #theme-glass .algolia-glass-card {
       position: relative;
       overflow: hidden;
+      transition:
+        --glow-x 90ms linear,
+        --glow-y 90ms linear,
+        --mouse-x 120ms linear,
+        --mouse-y 120ms linear;
     }
 
     /* 边框光晕：跟随鼠标，只在边框区域显示 */
@@ -301,7 +341,13 @@ const Style = () => {
       border: 1px solid var(--glass-border);
       border-radius: var(--glass-radius);
       box-shadow: var(--glass-shadow);
-      transition: all 0.35s var(--ease-apple);
+      /* 注意：transition: all 不覆盖自定义属性，光晕变量必须显式列出来 */
+      transition:
+        all 0.35s var(--ease-apple),
+        --glow-x 90ms linear,
+        --glow-y 90ms linear,
+        --mouse-x 120ms linear,
+        --mouse-y 120ms linear;
       overflow: hidden;
     }
 
@@ -332,6 +378,12 @@ const Style = () => {
       border: 1px solid var(--glass-border);
       border-radius: var(--glass-radius);
       box-shadow: var(--glass-shadow);
+      /* 光晕变量的插值（本元素原本没有 transition，直接加不影响其他属性） */
+      transition:
+        --glow-x 90ms linear,
+        --glow-y 90ms linear,
+        --mouse-x 120ms linear,
+        --mouse-y 120ms linear;
     }
 
     .dark #theme-glass .glass-sidebar {
@@ -1337,6 +1389,31 @@ const Style = () => {
         rgba(255, 255, 255, 0.16) var(--vol),
         rgba(255, 255, 255, 0.16) 100%
       );
+    }
+
+    /* ========== 抽屉/列表丝滑展开：interpolate-size ========== */
+    /* interpolate-size 让 height 能在 0 与 auto 之间插值 —— 这是它的核心用途。
+       没有它时 height:auto 不可动画，展开只能靠 max-height 猜一个大值（时序会假）。
+       不支持的浏览器里高度直接跳变，属于纯增强、无副作用。 */
+    :root {
+      interpolate-size: allow-keywords;
+    }
+
+    #theme-glass .music-playlist-wrap {
+      height: 0;
+      overflow: hidden;
+      transition: height 0.32s var(--ease-apple);
+    }
+
+    #theme-glass .music-playlist-wrap.is-open {
+      height: auto;
+    }
+
+    /* ========== 消除布局跳动：scrollbar-gutter ========== */
+    /* 短页面 ↔ 长页面切换时滚动条出现/消失会让整页横向抖一下。
+       stable = 始终预留槽位（只留一侧，不用 both-edges） */
+    html {
+      scrollbar-gutter: stable;
     }
 
     ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}

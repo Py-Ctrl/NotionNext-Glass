@@ -281,9 +281,11 @@ const MusicPlayer = ({
         )}
       </div>
 
-      {/* 播放列表 */}
-      {showPlaylist && audioList?.length > 1 && (
-        <div className='mt-3 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 max-h-40 overflow-y-auto space-y-0.5'>
+      {/* 播放列表：用 height 0→auto 过渡（style.js 里开了 interpolate-size），
+          比原来"条件渲染直接弹出来"丝滑。列表常驻 DOM，只是高度收起 */}
+      {audioList?.length > 1 && (
+        <div className={`music-playlist-wrap ${showPlaylist ? 'is-open' : ''}`}>
+          <div className='mt-3 pt-3 border-t border-gray-200/30 dark:border-gray-700/30 max-h-40 overflow-y-auto space-y-0.5'>
           {audioList.map((track, idx) => (
             <button
               key={idx}
@@ -311,6 +313,7 @@ const MusicPlayer = ({
               )}
             </button>
           ))}
+          </div>
         </div>
       )}
     </div>
