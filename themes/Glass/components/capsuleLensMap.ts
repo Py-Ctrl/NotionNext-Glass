@@ -83,7 +83,14 @@ function rasterMap(W, H, sample) {
  * 位移场闭包。坐标一律用「元素 px」，与光栅分辨率无关（降采样只改采样网格）。
  * out = [ox, oy, I0]，I0 = (cx*cy)/(hx*hy) 即原版 dispersionIntensity（不含色散系数）。
  */
-function makeField(w, h, radius, refractionHeight, maxMag, floor) {
+function makeField(
+  w: number,
+  h: number,
+  radius: number,
+  refractionHeight: number,
+  maxMag: number,
+  floor: number
+): (x: number, y: number, out: number[]) => void {
   const hx = w / 2
   const hy = h / 2
   const r = Math.max(0, Math.min(radius, Math.min(hx, hy)))
@@ -166,11 +173,11 @@ function makeField(w, h, radius, refractionHeight, maxMag, floor) {
 }
 
 export function generateRoundedRectLensMap(
-  w,
-  h,
-  radius,
-  refractionHeight,
-  maxMag,
+  w: number,
+  h: number,
+  radius: number,
+  refractionHeight: number,
+  maxMag: number,
   floor = 0,
   rasterScale = 1
 ): string {
