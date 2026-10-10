@@ -1416,6 +1416,30 @@ const Style = () => {
       scrollbar-gutter: stable;
     }
 
+    /* ========== Firefox 折射适配层 ========== */
+    /* 只在 Firefox 里由 GlassFirefoxLens 注入（Chromium 走 backdrop-filter 那条路）。
+       宿主元素必须让出自己的背景色，否则 --glass-bg 会盖住注入的 SVG 折射层。 */
+    #theme-glass .glass-ff-lens {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    #theme-glass .glass-ff-lens-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      overflow: hidden;
+    }
+
+    #theme-glass .glass-ff-lens-layer > svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
     ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}
   `}</style>
 }

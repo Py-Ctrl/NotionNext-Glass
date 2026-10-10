@@ -32,6 +32,7 @@ import TocDrawer from './components/TocDrawer'
 import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
 import PageTransition from './components/PageTransition'
+import GlassFirefoxLens from './components/GlassFirefoxLens'
 import CONFIG from './config'
 import { Style } from './style'
 
@@ -184,6 +185,9 @@ const LayoutBase = props => {
 
         {/* 路由切换过渡 + 顶部进度光带 */}
         <PageTransition />
+
+        {/* Firefox 折射适配层：只在 Firefox 激活，给玻璃面补上 SVG 折射 */}
+        <GlassFirefoxLens />
 
         {/* 移动端顶部导航 */}
         <TopNav {...props} searchModal={searchModal} />
