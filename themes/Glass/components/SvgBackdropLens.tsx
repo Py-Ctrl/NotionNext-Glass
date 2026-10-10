@@ -61,6 +61,16 @@ function coverGeometry (iw: number, ih: number, vw: number, vh: number) {
   return { dw, dh, dx: (vw - dw) / 2, dy: (vh - dh) / 2 }
 }
 
+/** 从 rgba()/rgb() 字符串里取 alpha；取不到返回 fallback */
+function parseAlpha (value: string, fallback: number) {
+  const m = value.match(/rgba?\(([^)]+)\)/)
+  if (!m) return fallback
+  const parts = m[1].split(',').map(s => s.trim())
+  if (parts.length < 4) return 1
+  const a = parseFloat(parts[3])
+  return Number.isNaN(a) ? fallback : a
+}
+
 export default function SvgBackdropLens ({
   width,
   height,
@@ -80,6 +90,9 @@ export default function SvgBackdropLens ({
   const [src, setSrc] = useState<string | null>(imageUrl ?? null)
   const [veilValue, setVeilValue] = useState<number>(veil ?? 0.2)
   const [blurValue, setBlurValue] = useState<number>(blurRadius ?? 16)
+  // tint 必须解析成**具体色值**再给 SVG：var() 在 SVG 表现属性里不可靠，
+  // 实测直接写 var(--glass-bg) 没生效，导致只剩「暗壁纸 + 蒙版」→ 整体发灰
+  const [tintValue, setTintValue] = useState<string>(tint ?? 'rgba(255, 255, 255, 0.25)')
 
   // 壁纸与蒙版：优先用 props，否则读主题注入的 CSS 变量
   useEffect(() => {
@@ -91,14 +104,17 @@ export default function SvgBackdropLens ({
     const m = raw.match(/url\(["']?(.*?)["']?\)/)
     if (m) setSrc(m[1])
     if (veil === undefined) {
-      const v = parseFloat(cs.getPropertyValue('--glass-veil'))
-      if (!Number.isNaN(v)) setVeilValue(v)
+      setVeilValue(parseAlpha(cs.getPropertyValue('--glass-veil').trim(), 0.2))
     }
     if (blurRadius === undefined) {
       const bl = parseFloat(cs.getPropertyValue('--glass-blur'))
       if (!Number.isNaN(bl)) setBlurValue(bl)
     }
-  }, [imageUrl, veil, blurRadius])
+    if (tint === undefined) {
+      const t = cs.getPropertyValue('--glass-bg').trim()
+      if (t) setTintValue(t)
+    }
+  }, [imageUrl, veil, blurRadius, tint])
 
   // 位移图按元素实际尺寸生成 —— 与壁纸副本同尺寸，长宽比一致，
   // 从而绕开 Firefox 对 feImage 强制等比缩放的限制
@@ -140,7 +156,7 @@ export default function SvgBackdropLens ({
   if (!width || !height) return null
 
   const pad = MAX_MAG
-  const resolvedTint = tint || 'var(--glass-bg)'
+  const resolvedTint = tintValue
   // 原生路径是 backdrop-filter: blur(var(--glass-blur))，CSS 的 blur(r) 等价于
   // 高斯 stdDeviation = r/2。模糊是玻璃观感的一大半，缺了它副本会偏暗偏"实"。
   const blurStd = blurValue / 2

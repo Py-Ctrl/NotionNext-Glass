@@ -1423,12 +1423,18 @@ const Style = () => {
       background: transparent !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
+      /* 必须让宿主成为层叠上下文，下面的 z-index:-1 才会留在宿主内部：
+         既压在宿主背景之上（宿主背景已透明，所以折射层可见），
+         又落在宿主内容之下（不会盖住文字）。缺了它，z-index:-1 会掉到页面底下。 */
+      isolation: isolate;
     }
 
     #theme-glass .glass-ff-lens-layer {
       position: absolute;
       inset: 0;
-      z-index: 0;
+      /* 关键：必须是 -1。定位元素按 z-index:0 会绘制在普通流内容之上，
+         会把卡片里的文字整块盖住（实测"文字消失"就是这个原因）。 */
+      z-index: -1;
       pointer-events: none;
       border-radius: inherit;
       overflow: hidden;

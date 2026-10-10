@@ -20,15 +20,20 @@ import { useEffect } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import SvgBackdropLens from './SvgBackdropLens'
 
-/** 需要补折射的玻璃面 */
-const TARGET_SELECTOR = [
-  '.glass-card',
-  '.glass-post-item',
-  '.glass-sidebar',
-  '.glass-footer',
-  '.glass-nav',
-  '.algolia-glass-card'
-].join(',')
+/** 需要补折射的玻璃面。
+ *
+ *  **保守起见只选结构简单的两类**：
+ *  - `.glass-sidebar`：右栏 / 左栏，内部是常规流内容，注入层不会打乱它
+ *  - `.glass-card`：通用卡片
+ *
+ *  **刻意排除**：
+ *  - `.glass-nav`：底栏（BottomTabs）有自己独立的透镜实现，再套一层会打架
+ *  - `.glass-footer`：内含底栏让位占位块与多层定位，注入后出现视觉回归
+ *  - `.glass-post-item` / `.algolia-glass-card`：暂未逐一验证，先不铺开
+ *
+ *  要扩大范围时，务必先在这一档上跑真机 Firefox 复核（文字可见性 + 布局）。
+ */
+const TARGET_SELECTOR = ['.glass-sidebar', '.glass-card'].join(',')
 
 const HOST_CLASS = 'glass-ff-lens'
 
