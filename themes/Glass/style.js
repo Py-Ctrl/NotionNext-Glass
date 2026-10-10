@@ -1416,34 +1416,20 @@ const Style = () => {
       scrollbar-gutter: stable;
     }
 
-    /* ========== Firefox 折射适配层 ========== */
-    /* 只在 Firefox 里由 GlassFirefoxLens 注入（Chromium 走 backdrop-filter 那条路）。
-       宿主元素必须让出自己的背景色，否则 --glass-bg 会盖住注入的 SVG 折射层。 */
-    #theme-glass .glass-ff-lens {
-      background: transparent !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      /* 必须让宿主成为层叠上下文，下面的 z-index:-1 才会留在宿主内部：
-         既压在宿主背景之上（宿主背景已透明，所以折射层可见），
-         又落在宿主内容之下（不会盖住文字）。缺了它，z-index:-1 会掉到页面底下。 */
-      isolation: isolate;
-    }
-
-    #theme-glass .glass-ff-lens-layer {
-      position: absolute;
-      inset: 0;
-      /* 关键：必须是 -1。定位元素按 z-index:0 会绘制在普通流内容之上，
-         会把卡片里的文字整块盖住（实测"文字消失"就是这个原因）。 */
-      z-index: -1;
-      pointer-events: none;
-      border-radius: inherit;
-      overflow: hidden;
-    }
-
-    #theme-glass .glass-ff-lens-layer > svg {
-      display: block;
-      width: 100%;
-      height: 100%;
+    /* ========== Firefox 玻璃降级 ========== */
+    /* Firefox 不支持 backdrop-filter 的 url() 形式，而且会**把整条声明丢弃** ——
+       连模糊都没了，玻璃只剩一层很淡的底色，看起来是一片死灰。
+       Firefox 无法采样元素背后的内容，所以折射做不到；这里换成它支持的 blur()
+       降级，至少保住磨砂观感。
+       用 html.is-firefox 而不是 @supports：Firefox 对 url() 会误报支持。 */
+    html.is-firefox #theme-glass .glass-card,
+    html.is-firefox #theme-glass .glass-post-item,
+    html.is-firefox #theme-glass .glass-sidebar,
+    html.is-firefox #theme-glass .glass-footer,
+    html.is-firefox #theme-glass .algolia-glass-card,
+    html.is-firefox #theme-glass .glass-scroll-card {
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
     }
 
     ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}

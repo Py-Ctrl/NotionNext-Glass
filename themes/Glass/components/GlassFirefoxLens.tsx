@@ -1,106 +1,40 @@
 /**
- * Firefox 折射适配层
+ * Firefox 玻璃降级
  *
- * ## 作用
- * 主题的玻璃折射走 `backdrop-filter: url(#f)`，**Firefox 不支持** —— 所以在 Firefox 上
- * 所有玻璃面都没有折射。这个组件只在 Firefox 里激活，给主题的各个玻璃面挂上
- * `SvgBackdropLens`（把壁纸复制进 SVG 再 `feDisplacementMap`），补齐折射。
+ * ## 问题
+ * 主题的玻璃折射走 `backdrop-filter: url(#lens-xxx)`，这是 **Chromium 专属**。
+ * Firefox 不但不支持 `url()` 形式，还会把**整条声明丢弃** —— 所以连模糊都没了，
+ * 玻璃只剩一层很淡的底色，看起来是一片死灰。
  *
- * ## 为什么用「注入」而不是逐个改组件
- * 玻璃面散落在 `.glass-card` / `.glass-post-item` / `.glass-sidebar` / `.glass-footer` /
- * `.glass-nav` 等多个组件里，逐个改造要动很多文件、回归面很大。
- * 这里是**渐进增强**：只在 Firefox 里、只往这些元素里塞一层绝对定位的 SVG，
- * 其它浏览器完全不受影响，也不改变任何现有组件的结构。
+ * ## 为什么不做「折射」而是「降级」
+ * `backdrop-filter` 的本质是**采样元素背后的内容**再处理。Firefox 没有这个能力，
+ * SVG 滤镜也无法访问元素外部的内容 —— 所以**折射在 Firefox 上做不到**。
+ * （唯一例外是内容本身就在 SVG 里，见 `SvgLensForeignObject.tsx`，
+ *  那只适用于自包含的小部件，不能作用于任意页面内容。）
  *
- * ## 配套 CSS（见 style.js）
- * `.glass-ff-lens` 把宿主元素的 `background` 让出来（改透明），
- * 否则宿主自己的 `--glass-bg` 会盖住注入的 SVG。
+ * 所以这里退而求其次：给 Firefox 一个**它支持的 `blur()` 降级**，保住磨砂玻璃观感。
+ * 视觉上比 Chromium 少一层折射，但不再是死灰。
+ *
+ * ## 为什么用 UA 判定而不是 @supports
+ * Firefox 的 `CSS.supports('backdrop-filter', 'url(#x)')` 会**误报 true**
+ * （实测 Firefox 157 返回 true），`@supports` 同样靠不住。只能看 UA。
+ *
+ * ## 与 BottomTabs 的关系
+ * 底栏（BottomTabs）本来就有自己的模糊降级分支，不受这里影响。
  */
 import { useEffect } from 'react'
-import { createRoot, type Root } from 'react-dom/client'
-import SvgBackdropLens from './SvgBackdropLens'
 
-/** 需要补折射的玻璃面。
- *
- *  **保守起见只选结构简单的两类**：
- *  - `.glass-sidebar`：右栏 / 左栏，内部是常规流内容，注入层不会打乱它
- *  - `.glass-card`：通用卡片
- *
- *  **刻意排除**：
- *  - `.glass-nav`：底栏（BottomTabs）有自己独立的透镜实现，再套一层会打架
- *  - `.glass-footer`：内含底栏让位占位块与多层定位，注入后出现视觉回归
- *  - `.glass-post-item` / `.algolia-glass-card`：暂未逐一验证，先不铺开
- *
- *  要扩大范围时，务必先在这一档上跑真机 Firefox 复核（文字可见性 + 布局）。
- */
-const TARGET_SELECTOR = ['.glass-sidebar', '.glass-card'].join(',')
-
-const HOST_CLASS = 'glass-ff-lens'
+const UA_CLASS = 'is-firefox'
 
 export default function GlassFirefoxLens () {
   useEffect(() => {
     if (typeof window === 'undefined') return
-    // 只在 Firefox 里启用：Chromium 有自己的 backdrop-filter 路径
-    if (!/Firefox\//.test(navigator.userAgent)) return
-    // 尊重减少动画偏好：折射属于装饰性效果，直接不做
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-
-    const roots = new Map<Element, Root>()
-
-    const sync = () => {
-      const root = document.getElementById('theme-glass')
-      if (!root) return
-
-      // 新增：给还没有注入过的玻璃面挂上折射层
-      root.querySelectorAll(TARGET_SELECTOR).forEach(el => {
-        if (roots.has(el)) return
-        const r = el.getBoundingClientRect()
-        if (r.width < 24 || r.height < 24) return
-
-        el.classList.add(HOST_CLASS)
-        const holder = document.createElement('div')
-        holder.className = 'glass-ff-lens-layer'
-        el.insertBefore(holder, el.firstChild)
-
-        const reactRoot = createRoot(holder)
-        roots.set(el, reactRoot)
-        reactRoot.render(
-          <SvgBackdropLens
-            width={Math.round(r.width)}
-            height={Math.round(r.height)}
-            radius={16}
-          />
-        )
-      })
-
-      // 移除：已经不在文档里的（路由切换后卸载）
-      roots.forEach((reactRoot, el) => {
-        if (!document.contains(el)) {
-          reactRoot.unmount()
-          roots.delete(el)
-        }
-      })
-    }
-
-    sync()
-
-    // 路由切换 / 内容变化后补挂（主题是 SPA，DOM 会持续变化）
-    const mo = new MutationObserver(() => requestAnimationFrame(sync))
-    mo.observe(document.body, { childList: true, subtree: true })
-
-    let resizeTimer = 0
-    const onResize = () => {
-      window.clearTimeout(resizeTimer)
-      resizeTimer = window.setTimeout(sync, 200)
-    }
-    window.addEventListener('resize', onResize, { passive: true })
-
+    const isFirefox = /Firefox\//.test(navigator.userAgent)
+    if (!isFirefox) return
+    // 挂个标记类，具体样式在 style.js 里（html.is-firefox ...）
+    document.documentElement.classList.add(UA_CLASS)
     return () => {
-      mo.disconnect()
-      window.removeEventListener('resize', onResize)
-      window.clearTimeout(resizeTimer)
-      roots.forEach(reactRoot => reactRoot.unmount())
-      roots.clear()
+      document.documentElement.classList.remove(UA_CLASS)
     }
   }, [])
 
