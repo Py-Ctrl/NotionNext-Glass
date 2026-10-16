@@ -49,11 +49,11 @@ export function LatestPostsCard ({ latestPosts, allPosts }) {
             className='block group'
           >
             <div className='flex items-start gap-2 text-sm'>
-              <span className='text-indigo-400 dark:text-indigo-500 mt-0.5 text-xs flex-shrink-0'>
+              <span className='text-liquid-600 dark:text-liquid-400 mt-0.5 text-xs flex-shrink-0'>
                 <i className='fas fa-angle-right' />
               </span>
               <div className='flex-1 min-w-0'>
-                <div className='line-clamp-1 text-gray-700 dark:text-gray-300 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors'>
+                <div className='line-clamp-1 text-gray-700 dark:text-gray-300 group-hover:text-liquid-700 dark:group-hover:text-liquid-600 transition-colors'>
                   {post.title}
                 </div>
                 <div className='text-xs text-gray-400 dark:text-gray-500 mt-0.5'>

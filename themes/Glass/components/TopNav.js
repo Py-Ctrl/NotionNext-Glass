@@ -168,7 +168,7 @@ const TopNav = (props) => {
               {isDarkMode ? (
                 <i className='fas fa-sun text-yellow-400 text-base' />
               ) : (
-                <i className='fas fa-moon text-indigo-500 text-base' />
+                <i className='fas fa-moon text-liquid-700 text-base' />
               )}
             </button>
             <div className='w-8 h-8 flex items-center justify-center cursor-pointer'

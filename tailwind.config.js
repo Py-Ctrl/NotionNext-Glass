@@ -28,6 +28,22 @@ module.exports = {
     },
     extend: {
       colors: {
+        // Glass 主题专用色阶（暖中性琥珀）。
+        // 新开一套而不是重映射 indigo/purple/cyan：本配置是全项目共用的，
+        // content 覆盖了所有主题，改默认色阶会连带改掉其它主题的配色。
+        liquid: {
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+          950: '#451a03'
+        },
         day: {
           DEFAULT: BLOG.BACKGROUND_LIGHT || '#ffffff'
         },

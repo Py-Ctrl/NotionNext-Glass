@@ -10,7 +10,7 @@ const ArticleLock = ({ validPassword }) => {
   return (
     <div className='glass-card p-8 md:p-12 text-center max-w-md mx-auto mt-20'>
       <div className='text-5xl mb-4'>
-        <i className='fas fa-lock text-indigo-400' />
+        <i className='fas fa-lock text-liquid-600' />
       </div>
       <h2 className='text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4'>
         {locale.COMMON.PASSWORD || '此文章已加密'}
@@ -40,7 +40,7 @@ const ArticleLock = ({ validPassword }) => {
           width='100%'
           height='52px'
           className='rounded-2xl overflow-hidden'
-          fallbackClassName='text-indigo-500 dark:text-indigo-400'
+          fallbackClassName='text-liquid-700 dark:text-liquid-400'
         />
       </div>
     </div>

@@ -18,11 +18,13 @@ const JumpToTopButton = ({ percent }) => {
           strokeWidth='2'
           className='text-gray-300 dark:text-gray-600'
         />
+        {/* 进度环：stroke 必须走 style 而不是表现属性 —— SVG 表现属性不解析 var()，
+            写成 style 才能跟着 #theme-glass 上的 --glass-accent-rgb 换色 */}
         <circle
           cx='12'
           cy='12'
           r='10'
-          stroke='#6366f1'
+          style={{ stroke: 'rgb(var(--glass-accent-rgb))' }}
           strokeWidth='2'
           strokeLinecap='round'
           strokeDasharray={`${(percent || 0) * 0.628} 62.8`}

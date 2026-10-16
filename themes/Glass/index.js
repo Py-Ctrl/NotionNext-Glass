@@ -35,6 +35,7 @@ import PageTransition from './components/PageTransition'
 import GlassFirefoxLens from './components/GlassFirefoxLens'
 import CONFIG from './config'
 import { Style } from './style'
+import { resolveGlassAccent, deriveAccentVars, applyGlassAccent } from './lib/glassAccent'
 
 const GlassSearchModal = dynamic(
   () => import('./components/GlassSearchModal'),
@@ -175,6 +176,28 @@ const LayoutBase = props => {
       }
     : undefined
 
+  /* 强调色解析：config 固定值 > 壁纸取色 > 兜底色。
+     放在 effect 里而不是渲染期 —— 取色要读 canvas，SSR 阶段没有 document。
+     浅色系写在 #theme-glass 上，暗色系写在 <html> 上（.dark 就在 <html>，
+     靠继承落到 #theme-glass），两边不互相覆盖。 */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    let alive = true
+    resolveGlassAccent({
+      accent: CONFIG.LIQUID_GLASS_ACCENT,
+      auto: CONFIG.LIQUID_GLASS_ACCENT_AUTO,
+      fallback: CONFIG.LIQUID_GLASS_FALLBACK_ACCENT,
+      wallpaperUrl: bgImage
+    }).then(hex => {
+      if (!alive) return
+      const vars = deriveAccentVars(hex)
+      applyGlassAccent(document.getElementById('theme-glass'), vars)
+    })
+    return () => {
+      alive = false
+    }
+  }, [bgImage])
+
   return (
     <ThemeGlassGlobal.Provider value={{ searchModal }}>
       <div
@@ -197,7 +220,7 @@ const LayoutBase = props => {
         <>{headerSlot}</>
 
         {/* 顶部渐变装饰线 */}
-        <div className='h-0.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 hidden lg:block' />
+        <div className='h-0.5 w-full bg-gradient-to-r from-liquid-500 via-liquid-600 to-liquid-700 hidden lg:block' />
 
         {/* 主区 — 自适应三栏布局 */}
         <main
@@ -312,7 +335,7 @@ const LayoutSearch = props => {
         search: keyword,
         target: {
           element: 'span',
-          className: 'text-indigo-500 border-b border-dashed'
+          className: 'text-liquid-700 border-b border-dashed'
         }
       })
     }

@@ -15,16 +15,27 @@ const Style = () => {
       --glass-shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.3);
       --glass-blur: 16px;
       --glass-radius: 16px;
+      /* 强调色 —— 弃用蓝紫，改暖中性琥珀。
+         存成 "R G B" 空格通道，是为了让 rgba(var(--glass-accent-rgb), 0.15)
+         这类带透明度的写法能共用同一个色（hex 做不到）。
+         暖中性：蓝紫压在暖调照片上是冲突的，玻璃和壁纸同族才不脏。
+         包一层 var(--glass-accent-light-rgb, 默认值) 是为了让 lib/glassAccent.js
+         能把 config 指定色 / 壁纸取色结果写进 --glass-accent-light-rgb，
+         内联变量永远压过这里的样式表默认值，不涉及优先级之争。 */
+      --glass-accent-rgb: var(--glass-accent-light-rgb, 180 83 9);
+      --glass-accent-strong-rgb: var(--glass-accent-strong-light-rgb, 146 64 14);
+      --glass-accent-alt-rgb: var(--glass-accent-alt-light-rgb, 194 65 12);
+      --glass-accent-deep-rgb: var(--glass-accent-deep-light-rgb, 120 53 15);
       /* 苹果风格缓动：交互统一用 --ease-apple；需要更柔和的位移用 --ease-soft */
       --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
       color-scheme: light;
       min-height: 100vh;
       background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99, 102, 241, 0.15), transparent),
-        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(139, 92, 246, 0.12), transparent),
-        radial-gradient(ellipse 60% 40% at 50% 80%, rgba(6, 182, 212, 0.1), transparent),
-        linear-gradient(135deg, #eef2ff 0%, #faf5ff 30%, #ecfeff 70%, #f0fdf4 100%);
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(var(--glass-accent-rgb), 0.12), transparent),
+        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(var(--glass-accent-rgb), 0.08), transparent),
+        radial-gradient(ellipse 60% 40% at 50% 80%, rgba(var(--glass-accent-rgb), 0.06), transparent),
+        linear-gradient(135deg, #fafaf9 0%, #f5f5f4 45%, #fafaf9 100%);
       background-attachment: fixed;
     }
 
@@ -42,12 +53,19 @@ const Style = () => {
       --glass-bg: rgba(20, 20, 35, 0.55);
       --glass-border: rgba(255, 255, 255, 0.08);
       --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      /* 暗色下强调色提亮，否则深底上压不住。
+         暗色走 --glass-accent-dark-*，由 lib/glassAccent.js 写在 <html> 上
+         （.dark 就在 <html> 上，靠继承落到 #theme-glass）。 */
+      --glass-accent-rgb: var(--glass-accent-dark-rgb, 251 191 36);
+      --glass-accent-strong-rgb: var(--glass-accent-strong-dark-rgb, 252 211 77);
+      --glass-accent-alt-rgb: var(--glass-accent-alt-dark-rgb, 251 146 60);
+      --glass-accent-deep-rgb: var(--glass-accent-deep-dark-rgb, 245 158 11);
       color-scheme: dark;
       background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99, 102, 241, 0.12), transparent),
-        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(139, 92, 246, 0.1), transparent),
-        radial-gradient(ellipse 60% 40% at 50% 80%, rgba(6, 182, 212, 0.08), transparent),
-        linear-gradient(135deg, #0a0a1a 0%, #0f0f23 30%, #0a1a1f 70%, #0a0f0a 100%);
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(var(--glass-accent-rgb), 0.1), transparent),
+        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(var(--glass-accent-rgb), 0.07), transparent),
+        radial-gradient(ellipse 60% 40% at 50% 80%, rgba(var(--glass-accent-rgb), 0.05), transparent),
+        linear-gradient(135deg, #0c0a09 0%, #1c1917 45%, #0c0a09 100%);
       background-attachment: fixed;
     }
 
@@ -134,8 +152,8 @@ const Style = () => {
       border-radius: inherit;
       background: radial-gradient(
         200px circle at var(--glow-x, -1000px) var(--glow-y, -1000px),
-        rgba(99, 102, 241, 0.9),
-        rgba(139, 92, 246, 0.5),
+        rgba(var(--glass-accent-rgb), 0.9),
+        rgba(var(--glass-accent-alt-rgb), 0.5),
         transparent 60%
       );
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -157,7 +175,7 @@ const Style = () => {
       inset: 0;
       background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(99, 102, 241, 0.1),
+        rgba(var(--glass-accent-rgb), 0.1),
         transparent 40%
       );
       opacity: 0;
@@ -205,8 +223,8 @@ const Style = () => {
     .dark #theme-glass .algolia-glass-card::before {
       background: radial-gradient(
         200px circle at var(--glow-x, -1000px) var(--glow-y, -1000px),
-        rgba(129, 140, 248, 0.9),
-        rgba(167, 139, 250, 0.5),
+        rgba(var(--glass-accent-rgb), 0.9),
+        rgba(var(--glass-accent-alt-rgb), 0.5),
         transparent 60%
       );
     }
@@ -217,7 +235,7 @@ const Style = () => {
     .dark #theme-glass .algolia-glass-card::after {
       background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(129, 140, 248, 0.12),
+        rgba(var(--glass-accent-rgb), 0.12),
         transparent 40%
       );
     }
@@ -309,8 +327,8 @@ const Style = () => {
     }
 
     #theme-glass .glass-search:focus-within {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      border-color: rgb(var(--glass-accent-rgb));
+      box-shadow: 0 0 0 3px rgba(var(--glass-accent-rgb), 0.15);
     }
 
     /* ========== 玻璃标签 ========== */
@@ -327,9 +345,9 @@ const Style = () => {
     }
 
     #theme-glass .glass-tag:hover {
-      background: rgba(99, 102, 241, 0.15);
-      border-color: rgba(99, 102, 241, 0.3);
-      color: #6366f1;
+      background: rgba(var(--glass-accent-rgb), 0.15);
+      border-color: rgba(var(--glass-accent-rgb), 0.3);
+      color: rgb(var(--glass-accent-rgb));
     }
 
     /* ========== 文章列表项玻璃效果 ========== */
@@ -435,21 +453,21 @@ const Style = () => {
 
     /* ========== 链接样式 ========== */
     #theme-glass .glass-link {
-      color: #6366f1;
+      color: rgb(var(--glass-accent-rgb));
       text-decoration: none;
       transition: color 0.2s var(--ease-apple);
     }
 
     #theme-glass .glass-link:hover {
-      color: #4f46e5;
+      color: rgb(var(--glass-accent-strong-rgb));
     }
 
     .dark #theme-glass .glass-link {
-      color: #818cf8;
+      color: rgb(var(--glass-accent-rgb));
     }
 
     .dark #theme-glass .glass-link:hover {
-      color: #a5b4fc;
+      color: rgb(var(--glass-accent-alt-rgb));
     }
 
     /* ========== 滚动条 ========== */
@@ -462,17 +480,17 @@ const Style = () => {
     }
 
     #theme-glass ::-webkit-scrollbar-thumb {
-      background: rgba(99, 102, 241, 0.2);
+      background: rgba(var(--glass-accent-rgb), 0.2);
       border-radius: 3px;
     }
 
     #theme-glass ::-webkit-scrollbar-thumb:hover {
-      background: rgba(99, 102, 241, 0.4);
+      background: rgba(var(--glass-accent-rgb), 0.4);
     }
 
     /* ========== 选中文字 ========== */
     #theme-glass ::selection {
-      background: rgba(99, 102, 241, 0.2);
+      background: rgba(var(--glass-accent-rgb), 0.2);
       color: inherit;
     }
 
@@ -526,7 +544,7 @@ const Style = () => {
 
     /* 标题渐变 */
     #theme-glass #search-wrapper .text-2xl {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) !important;
+      background: linear-gradient(135deg, rgb(var(--glass-accent-rgb)), rgb(var(--glass-accent-alt-rgb)), rgb(var(--glass-accent-deep-rgb))) !important;
       -webkit-background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
       background-clip: text !important;
@@ -539,7 +557,7 @@ const Style = () => {
 
     #theme-glass #search-wrapper .fa-xmark:hover {
       transform: rotate(90deg) scale(1.15) !important;
-      color: #6366f1 !important;
+      color: rgb(var(--glass-accent-rgb)) !important;
     }
 
     /* 搜索输入框 */
@@ -556,8 +574,8 @@ const Style = () => {
     }
 
     #theme-glass #search-wrapper input[type='text']:focus {
-      border-color: #6366f1 !important;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+      border-color: rgb(var(--glass-accent-rgb)) !important;
+      box-shadow: 0 0 0 3px rgba(var(--glass-accent-rgb), 0.15) !important;
       background: rgba(255, 255, 255, 0.7) !important;
       outline: none !important;
     }
@@ -573,8 +591,8 @@ const Style = () => {
     }
 
     .dark #theme-glass #search-wrapper input[type='text']:focus {
-      border-color: #818cf8 !important;
-      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15) !important;
+      border-color: rgb(var(--glass-accent-rgb)) !important;
+      box-shadow: 0 0 0 3px rgba(var(--glass-accent-rgb), 0.15) !important;
       background: rgba(255, 255, 255, 0.1) !important;
     }
 
@@ -589,9 +607,9 @@ const Style = () => {
     }
 
     #theme-glass #search-wrapper #tags-group > a > div:hover {
-      background: rgba(99, 102, 241, 0.18) !important;
-      border-color: rgba(99, 102, 241, 0.4) !important;
-      color: #6366f1 !important;
+      background: rgba(var(--glass-accent-rgb), 0.18) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.4) !important;
+      color: rgb(var(--glass-accent-rgb)) !important;
       transform: scale(1.08) !important;
     }
 
@@ -602,9 +620,9 @@ const Style = () => {
     }
 
     .dark #theme-glass #search-wrapper #tags-group > a > div:hover {
-      background: rgba(129, 140, 248, 0.15) !important;
-      border-color: rgba(129, 140, 248, 0.3) !important;
-      color: #a5b4fc !important;
+      background: rgba(var(--glass-accent-rgb), 0.15) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.3) !important;
+      color: rgb(var(--glass-accent-alt-rgb)) !important;
     }
 
     /* 搜索结果项 */
@@ -615,21 +633,21 @@ const Style = () => {
     }
 
     #theme-glass #search-wrapper ul li:hover {
-      background: rgba(99, 102, 241, 0.08) !important;
-      border-color: rgba(99, 102, 241, 0.2) !important;
+      background: rgba(var(--glass-accent-rgb), 0.08) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.2) !important;
       transform: translateX(4px) !important;
     }
 
     #theme-glass #search-wrapper ul li.bg-blue-600,
     .dark #theme-glass #search-wrapper ul li.bg-blue-600 {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.92), rgba(139, 92, 246, 0.92)) !important;
-      border-color: rgba(99, 102, 241, 0.5) !important;
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
+      background: linear-gradient(135deg, rgba(var(--glass-accent-rgb), 0.92), rgba(var(--glass-accent-alt-rgb), 0.92)) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.5) !important;
+      box-shadow: 0 4px 16px rgba(var(--glass-accent-rgb), 0.3) !important;
     }
 
     .dark #theme-glass #search-wrapper ul li:hover {
-      background: rgba(129, 140, 248, 0.1) !important;
-      border-color: rgba(129, 140, 248, 0.2) !important;
+      background: rgba(var(--glass-accent-rgb), 0.1) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.2) !important;
     }
 
     /* 分页按钮 */
@@ -645,15 +663,15 @@ const Style = () => {
     }
 
     #theme-glass #search-wrapper .cursor-pointer.w-6:hover {
-      background: rgba(99, 102, 241, 0.15) !important;
-      border-color: rgba(99, 102, 241, 0.3) !important;
+      background: rgba(var(--glass-accent-rgb), 0.15) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.3) !important;
     }
 
     #theme-glass #search-wrapper .cursor-pointer.w-6.font-bold {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-      border-color: rgba(99, 102, 241, 0.5) !important;
+      background: linear-gradient(135deg, rgb(var(--glass-accent-rgb)), rgb(var(--glass-accent-alt-rgb))) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.5) !important;
       color: white !important;
-      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+      box-shadow: 0 2px 8px rgba(var(--glass-accent-rgb), 0.3) !important;
     }
 
     .dark #theme-glass #search-wrapper .cursor-pointer.w-6 {
@@ -663,7 +681,7 @@ const Style = () => {
     }
 
     .dark #theme-glass #search-wrapper .cursor-pointer.w-6.font-bold {
-      background: linear-gradient(135deg, #818cf8, #a78bfa) !important;
+      background: linear-gradient(135deg, rgb(var(--glass-accent-rgb)), rgb(var(--glass-accent-alt-rgb))) !important;
       color: white !important;
     }
 
@@ -678,11 +696,11 @@ const Style = () => {
 
     /* 底部信息栏 */
     #theme-glass #search-wrapper .fa-algolia {
-      color: #6366f1 !important;
+      color: rgb(var(--glass-accent-rgb)) !important;
     }
 
     .dark #theme-glass #search-wrapper .fa-algolia {
-      color: #818cf8 !important;
+      color: rgb(var(--glass-accent-rgb)) !important;
     }
 
     /* ========== 移动端响应式 ========== */
@@ -811,10 +829,10 @@ const Style = () => {
     #theme-glass .liquid-glass-toggle:hover {
       transform: scale(1.08);
       box-shadow:
-        0 8px 24px rgba(99, 102, 241, 0.15),
+        0 8px 24px rgba(var(--glass-accent-rgb), 0.15),
         inset 0 1px 1px rgba(255, 255, 255, 0.4),
         inset 0 -1px 1px rgba(0, 0, 0, 0.08);
-      border-color: rgba(99, 102, 241, 0.3);
+      border-color: rgba(var(--glass-accent-rgb), 0.3);
     }
 
     #theme-glass .liquid-glass-toggle:active {
@@ -846,10 +864,10 @@ const Style = () => {
 
     .dark #theme-glass .liquid-glass-toggle:hover {
       box-shadow:
-        0 8px 24px rgba(129, 140, 248, 0.2),
+        0 8px 24px rgba(var(--glass-accent-rgb), 0.2),
         inset 0 1px 1px rgba(255, 255, 255, 0.12),
         inset 0 -1px 1px rgba(0, 0, 0, 0.25);
-      border-color: rgba(129, 140, 248, 0.25);
+      border-color: rgba(var(--glass-accent-rgb), 0.25);
     }
 
     /* ========== Liquid Glass 卡片按钮（文章导航等） ========== */
@@ -883,9 +901,9 @@ const Style = () => {
     #theme-glass .liquid-glass-card:hover {
       transform: translateY(-2px);
       box-shadow:
-        0 12px 32px rgba(99, 102, 241, 0.12),
+        0 12px 32px rgba(var(--glass-accent-rgb), 0.12),
         inset 0 1px 1px rgba(255, 255, 255, 0.35);
-      border-color: rgba(99, 102, 241, 0.25);
+      border-color: rgba(var(--glass-accent-rgb), 0.25);
     }
 
     .dark #theme-glass .liquid-glass-card {
@@ -902,9 +920,9 @@ const Style = () => {
 
     .dark #theme-glass .liquid-glass-card:hover {
       box-shadow:
-        0 12px 32px rgba(129, 140, 248, 0.15),
+        0 12px 32px rgba(var(--glass-accent-rgb), 0.15),
         inset 0 1px 1px rgba(255, 255, 255, 0.08);
-      border-color: rgba(129, 140, 248, 0.2);
+      border-color: rgba(var(--glass-accent-rgb), 0.2);
     }
 
     /* ========== Liquid Glass 按钮（阅读更多等） ========== */
@@ -955,7 +973,7 @@ const Style = () => {
 
     #theme-glass .liquid-glass-btn-surface:hover {
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-      border-color: rgba(99, 102, 241, 0.25);
+      border-color: rgba(var(--glass-accent-rgb), 0.25);
     }
 
     #theme-glass .liquid-glass-btn-blue:hover {
@@ -1042,14 +1060,14 @@ const Style = () => {
       transform: scale(1.12);
       background: rgba(255, 255, 255, 0.2) !important;
       box-shadow:
-        0 4px 18px rgba(99, 102, 241, 0.12),
+        0 4px 18px rgba(var(--glass-accent-rgb), 0.12),
         inset 0 1px 1px rgba(255, 255, 255, 0.45),
         inset 0 -1px 1px rgba(0, 0, 0, 0.06);
-      border-color: rgba(99, 102, 241, 0.28) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.28) !important;
     }
 
     #theme-glass .liquid-glass-share button:hover i {
-      color: #4f46e5 !important;
+      color: rgb(var(--glass-accent-strong-rgb)) !important;
     }
 
     #theme-glass .liquid-glass-share button:active {
@@ -1076,14 +1094,14 @@ const Style = () => {
     .dark #theme-glass .liquid-glass-share button:hover {
       background: rgba(50, 50, 80, 0.5) !important;
       box-shadow:
-        0 4px 18px rgba(129, 140, 248, 0.18),
+        0 4px 18px rgba(var(--glass-accent-rgb), 0.18),
         inset 0 1px 1px rgba(255, 255, 255, 0.1),
         inset 0 -1px 1px rgba(0, 0, 0, 0.22);
-      border-color: rgba(129, 140, 248, 0.22) !important;
+      border-color: rgba(var(--glass-accent-rgb), 0.22) !important;
     }
 
     .dark #theme-glass .liquid-glass-share button:hover i {
-      color: #a5b4fc !important;
+      color: rgb(var(--glass-accent-alt-rgb)) !important;
     }
 
     /* ========== 列表排列切换按钮 ========== */
@@ -1119,8 +1137,8 @@ const Style = () => {
     }
 
     #theme-glass .glass-layout-btn:hover {
-      color: #4f46e5;
-      background: rgba(99, 102, 241, 0.08);
+      color: rgb(var(--glass-accent-strong-rgb));
+      background: rgba(var(--glass-accent-rgb), 0.08);
     }
 
     #theme-glass .glass-layout-btn.active {
@@ -1151,8 +1169,8 @@ const Style = () => {
     #theme-glass .glass-hover-grid .glass-post-item:hover {
       transform: translateY(-6px) scale(1.05);
       z-index: 10;
-      box-shadow: 0 24px 48px -12px rgba(99, 102, 241, 0.32);
-      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 24px 48px -12px rgba(var(--glass-accent-rgb), 0.32);
+      border-color: rgba(var(--glass-accent-rgb), 0.4);
     }
 
     #theme-glass .glass-hover-grid:has(.glass-post-item:hover) .glass-post-item:not(:hover) {
@@ -1178,7 +1196,7 @@ const Style = () => {
       border-radius: 28px;
       border: 1px solid var(--glass-border);
       background:
-        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(99, 102, 241, 0.08), transparent),
+        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(var(--glass-accent-rgb), 0.08), transparent),
         var(--glass-bg);
       box-shadow: var(--glass-shadow);
     }
@@ -1186,7 +1204,7 @@ const Style = () => {
     .dark #theme-glass .glass-scroll-container {
       border-color: var(--glass-border-dark);
       background:
-        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(99, 102, 241, 0.1), transparent),
+        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(var(--glass-accent-rgb), 0.1), transparent),
         var(--glass-bg-dark);
     }
 
@@ -1203,7 +1221,7 @@ const Style = () => {
     }
 
     #theme-glass .glass-scroll-head i {
-      color: #6366f1;
+      color: rgb(var(--glass-accent-rgb));
       font-size: 12px;
     }
 
@@ -1247,8 +1265,8 @@ const Style = () => {
 
     #theme-glass .glass-scroll-card:hover {
       transform: scale(1.015);
-      border-color: rgba(99, 102, 241, 0.35);
-      box-shadow: 0 8px 22px rgba(99, 102, 241, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      border-color: rgba(var(--glass-accent-rgb), 0.35);
+      box-shadow: 0 8px 22px rgba(var(--glass-accent-rgb), 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.3);
     }
 
     #theme-glass .glass-scroll-card-title {
@@ -1272,7 +1290,7 @@ const Style = () => {
       gap: 6px;
       margin-top: 2px;
       font-size: 12px;
-      color: #4f46e5;
+      color: rgb(var(--glass-accent-strong-rgb));
     }
 
     #theme-glass .glass-scroll-card-link i {
@@ -1299,7 +1317,7 @@ const Style = () => {
     }
 
     .dark #theme-glass .glass-scroll-card-link {
-      color: #a5b4fc;
+      color: rgb(var(--glass-accent-alt-rgb));
     }
 
     /* ========== 路由切换过渡 + 内容入场 ========== */

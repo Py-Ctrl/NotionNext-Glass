@@ -22,7 +22,7 @@ const DarkModeButton = () => {
         {isDarkMode ? (
           <i className='fas fa-sun text-yellow-400 text-sm' />
         ) : (
-          <i className='fas fa-moon text-indigo-500 text-sm' />
+          <i className='fas fa-moon text-liquid-700 text-sm' />
         )}
       </span>
     </button>

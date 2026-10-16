@@ -75,7 +75,7 @@ const TocDrawer = ({ post, cRef, targetRef }) => {
       <div className='glass-card w-full sm:max-w-md max-h-[70vh] overflow-y-auto rounded-b-none sm:rounded-2xl p-4 sm:p-6'>
         <div className='flex items-center justify-between mb-4'>
           <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-            <i className='fas fa-list mr-2 text-indigo-400' />
+            <i className='fas fa-list mr-2 text-liquid-600' />
             目录
           </h3>
           <i
@@ -93,7 +93,7 @@ const TocDrawer = ({ post, cRef, targetRef }) => {
               <div
                 key={idx}
                 onClick={() => scrollToHeading(item.id)}
-                className='text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 cursor-pointer transition-colors py-1.5 px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                className='text-sm text-gray-600 dark:text-gray-400 hover:text-liquid-700 dark:hover:text-liquid-400 cursor-pointer transition-colors py-1.5 px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50'
                 style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}>
                 {item.text}
               </div>

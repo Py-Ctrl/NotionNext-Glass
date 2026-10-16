@@ -14,7 +14,7 @@ const BlogAround = ({ prev, next }) => {
             <i className='fas fa-chevron-left mr-1' />
             {locale.COMMON.PREV_POST || '上一篇'}
           </div>
-          <div className='text-sm text-gray-700 dark:text-gray-300 group-hover:text-indigo-500 transition-colors truncate'>
+          <div className='text-sm text-gray-700 dark:text-gray-300 group-hover:text-liquid-700 transition-colors truncate'>
             {prev.title}
           </div>
         </SmartLink>
@@ -25,7 +25,7 @@ const BlogAround = ({ prev, next }) => {
             {locale.COMMON.NEXT_POST || '下一篇'}
             <i className='fas fa-chevron-right ml-1' />
           </div>
-          <div className='text-sm text-gray-700 dark:text-gray-300 group-hover:text-indigo-500 transition-colors truncate'>
+          <div className='text-sm text-gray-700 dark:text-gray-300 group-hover:text-liquid-700 transition-colors truncate'>
             {next.title}
           </div>
         </SmartLink>

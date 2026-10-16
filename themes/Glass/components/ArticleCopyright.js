@@ -9,7 +9,7 @@ const ArticleCopyright = ({ post }) => {
   return (
     <div className='glass-card p-4 mt-6 text-sm text-gray-500 dark:text-gray-400'>
       <div className='flex items-center gap-2 mb-2'>
-        <i className='fas fa-copyright text-indigo-400' />
+        <i className='fas fa-copyright text-liquid-600' />
         <span className='font-medium text-gray-700 dark:text-gray-300'>
           {locale.COMMON.COPYRIGHT || '版权声明'}
         </span>

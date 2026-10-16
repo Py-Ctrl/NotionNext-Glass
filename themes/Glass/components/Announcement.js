@@ -8,7 +8,7 @@ const Announcement = ({ post }) => {
   return (
     <div className='glass-card p-4 mb-4'>
       <div className='text-sm pb-1 px-2 flex items-center gap-2'>
-        <i className='fas fa-bullhorn text-indigo-400' />
+        <i className='fas fa-bullhorn text-liquid-600' />
         <span className='font-medium text-gray-700 dark:text-gray-300'>
           {locale.COMMON.ANNOUNCEMENT}
         </span>

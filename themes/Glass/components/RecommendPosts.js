@@ -7,7 +7,7 @@ const RecommendPosts = ({ recommendPosts }) => {
   return (
     <div className='mt-8'>
       <h3 className='text-sm font-medium text-gray-500 dark:text-gray-400 mb-4'>
-        <i className='fas fa-thumbs-up mr-2 text-indigo-400' />
+        <i className='fas fa-thumbs-up mr-2 text-liquid-600' />
         推荐阅读
       </h3>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>

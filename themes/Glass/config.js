@@ -6,10 +6,17 @@
  */
 const CONFIG = {
 
-  // 玻璃主题色
-  LIQUID_GLASS_PRIMARY: '#6366f1',
-  LIQUID_GLASS_SECONDARY: '#8b5cf6',
-  LIQUID_GLASS_ACCENT: '#06b6d4',
+  // 玻璃主题色（暖中性琥珀，蓝紫已弃用）
+  //
+  // LIQUID_GLASS_ACCENT 填色值则固定使用；留空 '' 表示自动取壁纸主色
+  //   —— 从 Notion 封面 / LIQUID_BG_IMAGE 里提取主色，玻璃与照片同族，
+  //      不会再出现「蓝紫压在夕阳照片上」的脏感。取色失败时用下面的兜底色。
+  // LIQUID_GLASS_ACCENT_AUTO 关掉则永远用固定色，不做取色请求。
+  // PRIMARY / SECONDARY 已废弃：主色/辅色现在都由 ACCENT 一个值推导
+  //   （--glass-accent-rgb / -strong / -alt / -deep），见 themes/Glass/style.js。
+  LIQUID_GLASS_ACCENT: process.env.NEXT_PUBLIC_THEME_LIQUID_GLASS_ACCENT || '',
+  LIQUID_GLASS_ACCENT_AUTO: true,
+  LIQUID_GLASS_FALLBACK_ACCENT: '#b45309',
 
   // 菜单配置
   LIQUID_MENU_CATEGORY: true,

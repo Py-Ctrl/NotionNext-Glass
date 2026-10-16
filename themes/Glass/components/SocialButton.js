@@ -29,7 +29,7 @@ const SocialButton = () => {
 
   if (!hasAnyLink) return null
 
-  const linkClass = 'glass-float-btn !w-9 !h-9 !rounded-full text-gray-600 dark:text-gray-300 hover:!text-indigo-500 dark:hover:!text-indigo-400'
+  const linkClass = 'glass-float-btn !w-9 !h-9 !rounded-full text-gray-600 dark:text-gray-300 hover:!text-liquid-700 dark:hover:!text-liquid-400'
 
   return (
     <div className='w-full flex justify-center'>

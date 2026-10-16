@@ -23,9 +23,8 @@ export const THEME_SWITCH_MANIFEST = {
       { key: 'LIQUID_ARTICLE_RECOMMEND_POSTS', label: '文章推荐', type: 'boolean', defaultValue: true }
     ],
     palette: [
-      { key: 'LIQUID_GLASS_PRIMARY', cssVar: '--glass-primary', label: '主玻璃色', defaultValue: '#6366f1' },
-      { key: 'LIQUID_GLASS_SECONDARY', cssVar: '--glass-secondary', label: '辅玻璃色', defaultValue: '#8b5cf6' },
-      { key: 'LIQUID_GLASS_ACCENT', cssVar: '--glass-accent', label: '强调色', defaultValue: '#06b6d4' }
+      { key: 'LIQUID_GLASS_ACCENT', cssVar: '--glass-accent', label: '强调色（留空 = 自动取壁纸主色）', defaultValue: '' },
+      { key: 'LIQUID_GLASS_FALLBACK_ACCENT', cssVar: '--glass-fallback-accent', label: '取色失败时的兜底强调色', defaultValue: '#b45309' }
     ]
   },
   endspace: {

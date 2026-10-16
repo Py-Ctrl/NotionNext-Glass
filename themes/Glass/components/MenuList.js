@@ -15,7 +15,7 @@ const MenuList = (props) => {
       <SmartLink href='/'
         className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors ${
           router.asPath === '/'
-            ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+            ? 'bg-liquid-50 dark:bg-liquid-900/30 text-liquid-700 dark:text-liquid-400'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
         }`}>
         <i className='fas fa-home w-5 text-center' />
@@ -27,7 +27,7 @@ const MenuList = (props) => {
         <SmartLink href='/category'
           className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors ${
             router.asPath.startsWith('/category')
-              ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+              ? 'bg-liquid-50 dark:bg-liquid-900/30 text-liquid-700 dark:text-liquid-400'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
           }`}>
           <i className='fas fa-th-list w-5 text-center' />
@@ -40,7 +40,7 @@ const MenuList = (props) => {
         <SmartLink href='/tag'
           className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors ${
             router.asPath.startsWith('/tag')
-              ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+              ? 'bg-liquid-50 dark:bg-liquid-900/30 text-liquid-700 dark:text-liquid-400'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
           }`}>
           <i className='fas fa-tag w-5 text-center' />
@@ -53,7 +53,7 @@ const MenuList = (props) => {
         <SmartLink href='/archive'
           className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors ${
             router.asPath.startsWith('/archive')
-              ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+              ? 'bg-liquid-50 dark:bg-liquid-900/30 text-liquid-700 dark:text-liquid-400'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
           }`}>
           <i className='fas fa-archive w-5 text-center' />
@@ -66,7 +66,7 @@ const MenuList = (props) => {
         <SmartLink href='/search'
           className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors ${
             router.asPath.startsWith('/search')
-              ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+              ? 'bg-liquid-50 dark:bg-liquid-900/30 text-liquid-700 dark:text-liquid-400'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
           }`}>
           <i className='fas fa-search w-5 text-center' />

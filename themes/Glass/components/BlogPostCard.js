@@ -43,7 +43,7 @@ const BlogPostCard = ({ post, index, showSummary, disableAos }) => {
           {/* 标题 */}
           <SmartLink
             href={post?.href}
-            className={`cursor-pointer text-xl sm:text-2xl font-semibold ${showPreview ? 'text-center' : ''} text-gray-800 dark:text-gray-100 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors`}>
+            className={`cursor-pointer text-xl sm:text-2xl font-semibold ${showPreview ? 'text-center' : ''} text-gray-800 dark:text-gray-100 hover:text-liquid-700 dark:hover:text-liquid-400 transition-colors`}>
             {siteConfig('POST_TITLE_ICON') && (
               <NotionIcon icon={post.pageIcon} />
             )}{' '}
