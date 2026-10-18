@@ -7,7 +7,7 @@
  * LIQUID_GLASS_ACCENT，主色 / hover / 渐变中段 / 渐变末段全部由它推导。
  *
  * ## 为什么强调色存成 "R G B" 空格通道
- * 样式里大量出现 rgba(var(--glass-accent-rgb), 0.15) 这种带透明度写法，
+ * 样式里大量出现 rgb(var(--glass-accent-rgb) / 0.15) 这种带透明度写法，
  * hex 塞不进 rgba() 的通道位；只有空格分隔的三元组可以。
  *
  * ## 壁纸取色的坑（三级回退）
