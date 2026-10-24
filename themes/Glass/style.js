@@ -26,14 +26,6 @@ const Style = () => {
       --glass-accent-strong-rgb: var(--glass-accent-strong-light-rgb, 146 64 14);
       --glass-accent-alt-rgb: var(--glass-accent-alt-light-rgb, 194 65 12);
       --glass-accent-deep-rgb: var(--glass-accent-deep-light-rgb, 120 53 15);
-      /* 卡片五层质感：模糊 / 增色 / 叠白 / 亮边 / 折射（折射见 useLensBackdrop） */
-      --glass-blur-card: 28px;
-      --glass-sat: 170%;
-      --glass-veil-top: rgba(255, 255, 255, 0.36);
-      --glass-veil-bottom: rgba(255, 255, 255, 0.12);
-      --glass-edge: rgba(255, 255, 255, 0.55);
-      --glass-edge-strong: rgba(255, 255, 255, 0.75);
-      --glass-edge-hi: rgba(255, 255, 255, 0.45);
       /* 苹果风格缓动：交互统一用 --ease-apple；需要更柔和的位移用 --ease-soft */
       --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -68,12 +60,6 @@ const Style = () => {
       --glass-accent-strong-rgb: var(--glass-accent-strong-dark-rgb, 252 211 77);
       --glass-accent-alt-rgb: var(--glass-accent-alt-dark-rgb, 251 146 60);
       --glass-accent-deep-rgb: var(--glass-accent-deep-dark-rgb, 245 158 11);
-      /* 暗色：白纱换成深纱，亮边压到很淡，否则深底上会"发灰发油" */
-      --glass-veil-top: rgba(26, 26, 38, 0.62);
-      --glass-veil-bottom: rgba(12, 12, 20, 0.46);
-      --glass-edge: rgba(255, 255, 255, 0.16);
-      --glass-edge-strong: rgba(255, 255, 255, 0.28);
-      --glass-edge-hi: rgba(255, 255, 255, 0.12);
       color-scheme: dark;
       background:
         radial-gradient(ellipse 80% 60% at 20% 10%, rgb(var(--glass-accent-rgb) / 0.1), transparent),
@@ -722,8 +708,6 @@ const Style = () => {
       #theme-glass {
         --glass-blur: 10px;
         --glass-radius: 12px;
-        /* 小屏降模糊：28px 在手机上既费 GPU 又看不清内容 */
-        --glass-blur-card: 18px;
       }
 
       #theme-glass .glass-card {
@@ -1464,41 +1448,6 @@ const Style = () => {
     html.is-firefox #theme-glass .glass-scroll-card {
       backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
-    }
-
-    /* ========== 玻璃卡片五层质感 ==========
-       1 模糊 blur(28px) + 2 增色 saturate(170%) —— 都在 backdrop-filter 里。
-       3 叠白：顶部亮、底部沉的白纱渐变，让玻璃"有厚度"，不是一片平涂。
-       4 亮边：1px 亮边框 + 上缘一条发丝高光。只给一条，不做多向斜面 ——
-         多向明暗会显"油腻"（上一版就栽在这），单条高光读起来才是抛光玻璃。
-       5 折射：由 useLensBackdrop 挂 backdrop-filter: ... url(#lens)。
-         Chromium 实测 blur()/saturate() 与 url() 可以共存，滤镜从左到右叠加，
-         所以模糊在折射之前生效 —— 正是"先糊背景再弯边缘"的顺序。 */
-    #theme-glass .glass-card,
-    #theme-glass .glass-post-item,
-    #theme-glass .glass-sidebar,
-    #theme-glass .glass-scroll-card {
-      background: linear-gradient(180deg, var(--glass-veil-top), var(--glass-veil-bottom));
-      backdrop-filter: blur(var(--glass-blur-card)) saturate(var(--glass-sat));
-      -webkit-backdrop-filter: blur(var(--glass-blur-card)) saturate(var(--glass-sat));
-      border-color: var(--glass-edge);
-      box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-edge-hi);
-    }
-
-    /* 暗色只换纱色和阴影强度，叠白/亮边结构保持一致 */
-    .dark #theme-glass .glass-card,
-    .dark #theme-glass .glass-post-item,
-    .dark #theme-glass .glass-sidebar,
-    .dark #theme-glass .glass-scroll-card {
-      background: linear-gradient(180deg, var(--glass-veil-top), var(--glass-veil-bottom));
-      border-color: var(--glass-edge);
-      box-shadow: var(--glass-shadow-dark), inset 0 1px 0 var(--glass-edge-hi);
-    }
-
-    /* 悬停：亮边更亮。旧规则是 0.3 白 —— 比常态还暗，会显得"灭掉" */
-    #theme-glass .glass-card:hover,
-    #theme-glass .glass-post-item:hover {
-      border-color: var(--glass-edge-strong);
     }
 
     ${themeConsoleStyle('Glass', CONFIG, { rootId: 'theme-glass' })}

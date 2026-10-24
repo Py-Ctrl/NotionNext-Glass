@@ -50,8 +50,8 @@ const FloatingMusicPlayer = () => {
 
   // 卡片折射透镜：展开面板 = 普通卡片参数；折叠胶囊 = 底栏同款（band 18 / mag 14），
   // 尺寸小、位移小，避免 32px 位移把 56px 高的胶囊整块扯变形
-  const expandedLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
-  const compactLens = useLensBackdrop({ refractionHeight: 18, maxMag: 14 })
+  const expandedLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+  const compactLens = useLensBackdrop({ refractionHeight: 18, maxMag: 14, blur: 0, saturate: 1.35 })
 
   // 延迟显示
   useEffect(() => {

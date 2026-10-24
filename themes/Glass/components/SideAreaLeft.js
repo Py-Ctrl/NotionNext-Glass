@@ -16,7 +16,7 @@ const SideAreaLeft = (props) => {
   const { siteInfo } = props
   const router = useRouter()
   // 左侧栏卡片：SVG 透镜折射（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
 
   return (
     <aside className='hidden lg:block w-56 xl:w-60 shrink-0 mr-1 xl:mr-2'>
