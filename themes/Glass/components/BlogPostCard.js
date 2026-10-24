@@ -17,7 +17,7 @@ const BlogPostCard = ({ post, index, showSummary, disableAos }) => {
   const router = useRouter()
   // 原版 Scroll Container 卡片参数（build-scroll-container.ts）：
   // refractionHeight 16 / refractionAmount -32 / 无模糊 / 饱和 1.5 —— 静止即满强度边缘折射
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
   const showPreview =
     siteConfig('LIQUID_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
 

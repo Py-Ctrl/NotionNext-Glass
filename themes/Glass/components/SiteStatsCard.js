@@ -29,7 +29,7 @@ function parseSinceDate (since) {
 export function LatestPostsCard ({ latestPosts, allPosts }) {
   const { locale } = useGlobal()
   // "最新发布"卡片：SVG 透镜折射（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
   const recentPosts = (latestPosts || allPosts || []).slice(0, 5)
 
   if (recentPosts.length === 0) return null

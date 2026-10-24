@@ -15,7 +15,7 @@ const SideAreaRight = (props) => {
   const { locale } = useGlobal()
   const router = useRouter()
   // 右侧栏卡片：SVG 透镜折射（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
 
   return (
     <aside className='hidden xl:block w-72 shrink-0 ml-4 xl:ml-8'>

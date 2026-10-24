@@ -25,8 +25,10 @@ let uidCounter = 0
 export function useLensBackdrop({
   refractionHeight = 16,
   maxMag = 32,
-  blur = 0,
-  saturate = 1.5,
+  // 模糊 / 增色不再塞进 SVG 滤镜，改为拼在 backdrop-filter 里与 url() 共存。
+  // 默认引用主题变量 —— 响应式改 --glass-blur-card 时会自动跟随。
+  blur = 'var(--glass-blur-card, 28px)',
+  saturate = 'var(--glass-sat, 170%)',
   // 内部位移下限，不传则读 LIQUID_LENS_FLOOR。0 = 原版（只有边缘折射）
   floor,
 } = {}) {
@@ -55,6 +57,10 @@ export function useLensBackdrop({
   const [size, setSize] = useState(null)
   const [radius, setRadius] = useState(16)
   const [filterId] = useState(() => `lens-card-${++uidCounter}`)
+  // 只写 url() 会把 .glass-card 的 CSS 模糊整个顶掉（backdrop-filter 是整条覆盖），
+  // 所以必须自己把模糊/增色拼回去。Chromium 实测 blur()/saturate() 与 url() 共存，
+  // 滤镜按从左到右叠加：先糊背景，再由 feDisplacementMap 弯边缘。
+  const lensFilterValue = `blur(${blur}) saturate(${saturate}) url(#${filterId})`
   // 可见性门控：进视口才挂 url()，离视口置 none（首页同时存活的透镜 ~11 → 2-4）
   const [visible, setVisible] = useState(false)
 
@@ -127,7 +133,7 @@ export function useLensBackdrop({
   // 切 'none'→url()，避免样式系统只认到 .glass-card 的 -webkit blur 覆盖位移
   useEffect(() => {
     if (!mapUrl || !el) return
-    const url = `url(#${filterId})`
+    const url = lensFilterValue
     let cancelled = false
     let t1 = 0
     let t2 = 0
@@ -153,7 +159,7 @@ export function useLensBackdrop({
       clearTimeout(t1)
       clearTimeout(t2)
     }
-  }, [mapUrl, filterId, el])
+  }, [mapUrl, lensFilterValue, el])
 
   const filterNode = useMemo(() => {
     if (!mapUrl || !size) return null
@@ -180,23 +186,21 @@ export function useLensBackdrop({
             xChannelSelector='R'
             yChannelSelector='G'
           />
-          {blur > 0 && <feGaussianBlur stdDeviation={blur} />}
-          {saturate !== 1 && <feColorMatrix type='saturate' values={String(saturate)} />}
         </filter>
       </svg>
     )
-  }, [mapUrl, size, filterId, maxMag, blur, saturate])
+  }, [mapUrl, size, filterId, maxMag])
 
   const style = useMemo(
     () =>
       mapUrl
         ? {
-            backdropFilter: `url(#${filterId})`,
-            // 与标准属性同值一起写，覆盖 .glass-card 等类的 -webkit blur，确保位移生效
-            WebkitBackdropFilter: `url(#${filterId})`
+            backdropFilter: lensFilterValue,
+            // 与标准属性同值一起写，覆盖 .glass-card 等类的 -webkit 模糊
+            WebkitBackdropFilter: lensFilterValue
           }
         : null,
-    [mapUrl, filterId]
+    [mapUrl, lensFilterValue]
   )
 
   return { elRef, style, filterNode }

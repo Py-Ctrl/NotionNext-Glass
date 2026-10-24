@@ -15,9 +15,9 @@ const ArticleDetail = (props) => {
 
   // 玻璃卡片 SVG 透镜折射：标题卡/内容卡/Comment 卡各自一个透镜，
   // 参数对应原版 Scroll Container（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
-  const titleLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
-  const contentLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
-  const commentLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
+  const titleLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
+  const contentLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
+  const commentLens = useLensBackdrop({ refractionHeight: 16, maxMag: 32 })
 
   return (
     <div className={`px-2 ${fullWidth ? '' : 'xl:max-w-4xl 2xl:max-w-6xl'}`}>
