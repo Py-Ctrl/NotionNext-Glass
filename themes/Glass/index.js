@@ -20,7 +20,6 @@ import BlogPostListPage from './components/BlogPostListPage'
 import BlogPostListScroll from './components/BlogPostListScroll'
 import BottomTabs from './components/BottomTabs'
 import FloatDarkModeButton from './components/FloatDarkModeButton'
-import Footer from './components/Footer'
 import FloatingMusicPlayer from './components/FloatingMusicPlayer'
 import JumpToBottomButton from './components/JumpToBottomButton'
 import JumpToTopButton from './components/JumpToTopButton'
@@ -159,14 +158,15 @@ const LayoutBase = props => {
     let raf = 0
     const apply = () => {
       raf = 0
-      // 1440 及以下为 1（基准），向上线性放大到 1.3 封顶（约 1870px 起）
-      const u = Math.min(1.3, Math.max(1, window.innerWidth / 1440))
+      // 1440 及以下为 1（基准），向上线性放大到 1.2 封顶（约 1730px 起）。
+      // 上限别调高：之前到 1.3 时中间栏在 1920 下撑到 1144，整页显得又宽又空
+      const u = Math.min(1.2, Math.max(1, window.innerWidth / 1440))
       const html = document.documentElement
       // 写到 <html> 上供 CSS 继承：写 #theme-glass 会被 React 的 style prop 覆盖
       html.style.setProperty('--glass-u', u.toFixed(3))
-      // 根字号跟着放大：按钮、图标容器、间距、字号在 Tailwind 里都是 rem，
-      // 只调 --glass-u 管不到它们 —— 大屏上会出现"框变大了、字还是那么小"
-      html.style.fontSize = `${(16 * Math.min(1.2, u)).toFixed(2)}px`
+      // 根字号也跟着放大，但幅度要小：rem 会同时放大按钮、间距、字号、侧栏宽度，
+      // 跟 --glass-u 叠加后容易整体"发胖"（上限 1.06 ≈ 17px 封顶）
+      html.style.fontSize = `${(16 * Math.min(1.06, u)).toFixed(2)}px`
     }
     const onResize = () => {
       if (raf) return
@@ -324,11 +324,7 @@ const LayoutBase = props => {
         {/* 全局悬浮音乐播放器 */}
         <FloatingMusicPlayer />
 
-        {/* 页脚 */}
-        <Footer />
-
-        {/* 给底部固定标签栏让位的透明占位块。
-            放在页脚外面，页脚的玻璃条才能保持紧凑；放里面会把玻璃撑成一大块灰带 */}
+        {/* 给底部固定标签栏让位的透明占位块 */}
         <div className='h-28' aria-hidden='true' />
       </div>
     </ThemeGlassGlobal.Provider>

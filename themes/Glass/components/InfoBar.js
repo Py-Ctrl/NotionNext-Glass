@@ -23,8 +23,9 @@ const InfoBar = ({ title, searchModal, ...props }) => {
         left: '50%',
         transform: 'translateX(-50%)',
         borderRadius: 9999,
-        // 宽度跟着视口放大；高度 / 内边距 / 字号走 rem，随根字号自动缩放
-        width: 'min(calc(1120px * var(--glass-u, 1)), calc(100% - 3rem))'
+        // 宽度跟着视口放大；高度 / 内边距 / 字号走 rem，随根字号自动缩放。
+        // 基准 800 ≈ 与主内容栏同宽，再宽内容撑不满，条会显得又长又空
+        width: 'min(calc(800px * var(--glass-u, 1)), calc(100% - 3rem))'
       }}
       className='glass-card hidden lg:flex items-center gap-6 top-3 z-40 h-12 px-5'>
       {/* 版权 */}

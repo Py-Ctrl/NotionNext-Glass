@@ -117,7 +117,8 @@ const Style = () => {
 
     /* ========== 主内容栏宽度 ========== */
     /* 跟着视口连续放大：1024 以下铺满，之上从 768px 起乘 --glass-u，
-       超宽屏再放开一档。固定 max-w-3xl 会让 2K/4K 下正文窄成一条。 */
+       超宽屏换 800px 基准。固定 max-w-3xl 会让 2K/4K 下正文窄成一条；
+       基准再调大会让 1920 下正文行宽失控（实测 880 就偏胖了）。 */
     #theme-glass .glass-content-col {
       width: 100%;
     }
@@ -128,7 +129,7 @@ const Style = () => {
     }
     @media (min-width: 1920px) {
       #theme-glass .glass-content-col {
-        max-width: calc(880px * var(--glass-u));
+        max-width: calc(800px * var(--glass-u));
       }
     }
 
@@ -432,21 +433,6 @@ const Style = () => {
     .dark #theme-glass .glass-sidebar {
       background: var(--glass-bg-dark);
       border-color: var(--glass-border-dark);
-    }
-
-    /* ========== 底部栏玻璃 ========== */
-    #theme-glass .glass-footer {
-      /* 页脚直接压在壁纸上，用全局的 --glass-bg（仅 25% 白）会随壁纸明暗变化 ——
-         壁纸暗时深色文字就读不出来。页脚单独加厚到 55%，保证任何壁纸下都可读 */
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--glass-border);
-    }
-
-    .dark #theme-glass .glass-footer {
-      background: rgba(15, 15, 25, 0.6);
-      border-top-color: rgba(255, 255, 255, 0.06);
     }
 
     /* ========== 悬浮按钮玻璃 ========== */
@@ -1468,7 +1454,6 @@ const Style = () => {
     html.is-firefox #theme-glass .glass-card,
     html.is-firefox #theme-glass .glass-post-item,
     html.is-firefox #theme-glass .glass-sidebar,
-    html.is-firefox #theme-glass .glass-footer,
     html.is-firefox #theme-glass .algolia-glass-card,
     html.is-firefox #theme-glass .glass-scroll-card {
       backdrop-filter: blur(var(--glass-blur)) saturate(1.35);
