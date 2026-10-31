@@ -5,6 +5,14 @@ import CONFIG from './config'
 const Style = () => {
   return <style jsx global>{`
 
+    /* UI 缩放系数（1 ~ 1.3）：index.js 按视口宽度写到 <html> 上，窗口越宽值越大。
+       需要随窗口放大的尺寸写成 calc(基准px * var(--glass-u))，
+       别再写死两档 —— 那是"窗口最大化后整页像缩水"的根源。
+       必须挂在 :root：#theme-glass 上的 style 由 React 接管，会被重渲染覆盖掉。 */
+    :root {
+      --glass-u: 1;
+    }
+
     /* ========== 全局背景 — 玻璃效果可见的关键 ========== */
     #theme-glass {
       --glass-bg: rgba(255, 255, 255, 0.25);
@@ -105,6 +113,23 @@ const Style = () => {
       syntax: '<percentage>';
       inherits: true;
       initial-value: 50%;
+    }
+
+    /* ========== 主内容栏宽度 ========== */
+    /* 跟着视口连续放大：1024 以下铺满，之上从 768px 起乘 --glass-u，
+       超宽屏再放开一档。固定 max-w-3xl 会让 2K/4K 下正文窄成一条。 */
+    #theme-glass .glass-content-col {
+      width: 100%;
+    }
+    @media (min-width: 1024px) {
+      #theme-glass .glass-content-col {
+        max-width: calc(768px * var(--glass-u));
+      }
+    }
+    @media (min-width: 1920px) {
+      #theme-glass .glass-content-col {
+        max-width: calc(880px * var(--glass-u));
+      }
     }
 
     /* ========== 玻璃卡片 ========== */

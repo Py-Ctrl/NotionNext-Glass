@@ -181,7 +181,7 @@ const MusicPlayer = ({
             style={{ left: `calc(${progress}% - 6px)` }}
           />
         </div>
-        <div className='flex justify-between mt-1.5 text-[10px] text-gray-400 dark:text-gray-500 tabular-nums font-medium'>
+        <div className='flex justify-between mt-1.5 text-[0.625rem] text-gray-400 dark:text-gray-500 tabular-nums font-medium'>
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
@@ -309,7 +309,7 @@ const MusicPlayer = ({
               </span>
               <span className='truncate flex-1'>{track.name}</span>
               {track.artist && (
-                <span className='text-[10px] text-gray-400 truncate max-w-[60px]'>{track.artist}</span>
+                <span className='text-[0.625rem] text-gray-400 truncate max-w-[3.75rem]'>{track.artist}</span>
               )}
             </button>
           ))}

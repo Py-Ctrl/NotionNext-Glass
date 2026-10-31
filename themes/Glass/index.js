@@ -33,6 +33,7 @@ import TocDrawerButton from './components/TocDrawerButton'
 import TopNav from './components/TopNav'
 import PageTransition from './components/PageTransition'
 import GlassFirefoxLens from './components/GlassFirefoxLens'
+import InfoBar from './components/InfoBar'
 import CONFIG from './config'
 import { Style } from './style'
 import { resolveGlassAccent, deriveAccentVars, applyGlassAccent } from './lib/glassAccent'
@@ -149,6 +150,37 @@ const LayoutBase = props => {
     }
   }, [])
 
+  // UI 缩放系数：按视口宽度算一个连续因子（1 ~ 1.3）写进 --glass-u，
+  // style.js 里的尺寸用 calc(基准px * var(--glass-u)) 引用。
+  // 之前尺寸是写死的两档（桌面 76 / 移动 64），窗口一最大化整页就像缩水，
+  // 这里改成跟着窗口连续变化。
+  useEffect(() => {
+    if (!isBrowser) return
+    let raf = 0
+    const apply = () => {
+      raf = 0
+      // 1440 及以下为 1（基准），向上线性放大到 1.3 封顶（约 1870px 起）
+      const u = Math.min(1.3, Math.max(1, window.innerWidth / 1440))
+      const html = document.documentElement
+      // 写到 <html> 上供 CSS 继承：写 #theme-glass 会被 React 的 style prop 覆盖
+      html.style.setProperty('--glass-u', u.toFixed(3))
+      // 根字号跟着放大：按钮、图标容器、间距、字号在 Tailwind 里都是 rem，
+      // 只调 --glass-u 管不到它们 —— 大屏上会出现"框变大了、字还是那么小"
+      html.style.fontSize = `${(16 * Math.min(1.2, u)).toFixed(2)}px`
+    }
+    const onResize = () => {
+      if (raf) return
+      raf = requestAnimationFrame(apply)
+    }
+    apply()
+    window.addEventListener('resize', onResize, { passive: true })
+    return () => {
+      window.removeEventListener('resize', onResize)
+      if (raf) cancelAnimationFrame(raf)
+      document.documentElement.style.fontSize = ''
+    }
+  }, [])
+
   const drawerRight = useRef(null)
   const floatSlot = (
     <div className='block lg:hidden'>
@@ -215,6 +247,9 @@ const LayoutBase = props => {
         {/* 移动端顶部导航 */}
         <TopNav {...props} searchModal={searchModal} />
 
+        {/* 桌面端顶部悬浮信息栏：版权 + 站点统计 + 搜索（仅 lg 以上） */}
+        <InfoBar title={siteConfig('TITLE')} searchModal={searchModal} {...props} />
+
         <GlassSearchModal cRef={searchModal} {...props} />
 
         <>{headerSlot}</>
@@ -228,7 +263,10 @@ const LayoutBase = props => {
           className={
             (JSON.parse(siteConfig('LAYOUT_SIDEBAR_REVERSE'))
               ? 'flex-row-reverse'
-              : '') + ' relative flex justify-center flex-1 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6'
+              : '') +
+            // lg:pt-[4.25rem] 给顶部悬浮信息栏让位（top-3 + h-12 + 间隙）。
+            // 用 rem 而不是 px —— 根字号会随视口放大，px 会让避让量在大屏上偏小
+            ' relative flex justify-center flex-1 pl-1 pr-2 sm:pl-2 sm:pr-4 lg:pl-3 lg:pr-6 lg:pt-[4.25rem]'
           }>
           {/* 左侧栏 */}
           <SideAreaLeft targetRef={targetRef} {...props} />
@@ -236,7 +274,7 @@ const LayoutBase = props => {
           {/* 中央内容 */}
           <section
             id='container-inner'
-            className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-20 lg:mt-0' : ''} w-full lg:max-w-2xl xl:max-w-3xl flex-grow min-h-screen relative z-10 px-1 sm:px-2`}
+            className={`${siteConfig('LIQUID_NAV_TYPE', null, CONFIG) !== 'normal' ? 'mt-20 lg:mt-0' : ''} glass-content-col w-full flex-grow min-h-screen relative z-10 px-1 sm:px-2`}
             ref={targetRef}>
             {/* 页面组件（LayoutIndex / LayoutPostList…）定义在 LayoutBase 之外，
                 拿不到这里的 searchModal ref —— 注入进去，让 BlogListBar 的搜索入口
@@ -287,7 +325,7 @@ const LayoutBase = props => {
         <FloatingMusicPlayer />
 
         {/* 页脚 */}
-        <Footer title={siteConfig('TITLE')} {...props} />
+        <Footer />
 
         {/* 给底部固定标签栏让位的透明占位块。
             放在页脚外面，页脚的玻璃条才能保持紧凑；放里面会把玻璃撑成一大块灰带 */}

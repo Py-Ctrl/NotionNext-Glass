@@ -207,14 +207,34 @@ const BottomTabs = (props) => {
     setIsDesktop(!isMobile)
   }, [])
 
-  // 响应式尺寸：桌面端更大
-  const CONTAINER_H = isDesktop ? 76 : 64
-  const GLASS_H = isDesktop ? 68 : 56
+  // 响应式尺寸：按视口宽度连续缩放，不再是"桌面 76 / 移动 64"两档死值。
+  // 换尺寸会重建透镜位移图，所以和 canvasW 一样走 120ms 防抖，避免拖窗口时
+  // 每帧重新光栅。
+  const [uiScale, setUiScale] = React.useState(1)
+  React.useEffect(() => {
+    let timer = 0
+    const compute = () =>
+      isDesktop
+        ? Math.min(1.3, Math.max(1, window.innerWidth / 1440))
+        : Math.min(1.15, Math.max(0.9, window.innerWidth / 390))
+    const update = () => {
+      if (timer) clearTimeout(timer)
+      timer = window.setTimeout(() => setUiScale(compute()), 120)
+    }
+    setUiScale(compute())
+    window.addEventListener('resize', update, { passive: true })
+    return () => {
+      window.removeEventListener('resize', update)
+      if (timer) clearTimeout(timer)
+    }
+  }, [isDesktop])
+
+  const CONTAINER_H = Math.round((isDesktop ? 76 : 64) * uiScale)
+  const GLASS_H = Math.round((isDesktop ? 68 : 56) * uiScale)
   const GLASS_PAD = (CONTAINER_H - GLASS_H) / 2
-  const TAB_WIDTH = isDesktop ? 96 : 76
-  const ICON_SIZE = isDesktop ? 24 : 20
-  const ICON_LAYOUT_SIZE = isDesktop ? 28 : 24
-  const FONT_SIZE = isDesktop ? 13 : 11
+  const TAB_WIDTH = Math.round((isDesktop ? 96 : 76) * uiScale)
+  const ICON_SIZE = Math.round((isDesktop ? 24 : 20) * uiScale)
+  const FONT_SIZE = Math.round((isDesktop ? 13 : 11) * uiScale)
 
   React.useEffect(() => { routerRef.current = router }, [router])
   React.useEffect(() => { subMenuOpenRef.current = subMenuOpen }, [subMenuOpen])
@@ -259,8 +279,7 @@ const BottomTabs = (props) => {
       icon: getIconPath(item.icon),
       label: typeof item.name === 'string' ? item.name : (typeof item.title === 'string' ? item.title : (item.label || '')),
       href: item.href || item.url || item.slug || '/',
-      subMenus: cleanSubMenus,
-      viewport: 24
+      subMenus: cleanSubMenus
     }
   }), [menuItems])
   tabsRef.current = tabs

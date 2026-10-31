@@ -1,9 +1,7 @@
 import { siteConfig } from '@/lib/config'
 import { useGlobal } from '@/lib/global'
-import SmartLink from '@/components/SmartLink'
 import busuanzi from '@/lib/plugins/busuanzi'
 import { useEffect, useState } from 'react'
-import { useLensBackdrop } from './useLensBackdrop'
 
 /**
  * 解析建站时间：支持年份数字（2021）或日期字符串
@@ -24,55 +22,13 @@ function parseSinceDate (since) {
 }
 
 /**
- * 最新发布卡片
- */
-export function LatestPostsCard ({ latestPosts, allPosts }) {
-  const { locale } = useGlobal()
-  // "最新发布"卡片：SVG 透镜折射（refractionHeight 16 / mag 32 / 无模糊 / saturate 1.5）
-  const lens = useLensBackdrop({ refractionHeight: 16, maxMag: 32, blur: 0, saturate: 1.5 })
-  const recentPosts = (latestPosts || allPosts || []).slice(0, 5)
-
-  if (recentPosts.length === 0) return null
-
-  return (
-    <div ref={lens.elRef} className='glass-card p-4 mb-4' style={lens.style || undefined}>
-      {lens.filterNode}
-      <h3 className='text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3'>
-        <i className='mr-1.5 fas fa-history' />
-        {locale.COMMON.LATEST_POSTS || '最新发布'}
-      </h3>
-      <div className='space-y-2'>
-        {recentPosts.map(post => (
-          <SmartLink
-            key={post.id}
-            href={post?.href}
-            className='block group'
-          >
-            <div className='flex items-start gap-2 text-sm'>
-              <span className='text-liquid-600 dark:text-liquid-400 mt-0.5 text-xs flex-shrink-0'>
-                <i className='fas fa-angle-right' />
-              </span>
-              <div className='flex-1 min-w-0'>
-                <div className='line-clamp-1 text-gray-700 dark:text-gray-300 group-hover:text-liquid-700 dark:group-hover:text-liquid-600 transition-colors'>
-                  {post.title}
-                </div>
-                <div className='text-xs text-gray-400 dark:text-gray-500 mt-0.5'>
-                  {post.lastEditedDay || post.date?.start_date || ''}
-                </div>
-              </div>
-            </div>
-          </SmartLink>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/**
  * 站点统计（文字版）：文章数、建站天数、访问量、访客数
- * 纯文字一行，不做卡片方框，直接放在页脚
+ * 纯文字一行，不做卡片方框，直接放在顶部悬浮栏
+ *
+ * compact：去掉「站点统计」标题、整体缩小一级字号，
+ * 给顶部悬浮栏这种横向空间紧张的容器用（页脚那种宽松排版不用开）
  */
-export function SiteStatsText ({ postCount, allPosts, categoryOptions, posts }) {
+export function SiteStatsText ({ postCount, allPosts, categoryOptions, posts, compact = false }) {
   const { NOTION_CONFIG } = useGlobal()
   // 不蒜子开关与数据（与 ExternalPlugins 里的判定保持一致）
   const busuanziEnabled = siteConfig('ANALYTICS_BUSUANZI_ENABLE', null, NOTION_CONFIG)
@@ -111,38 +67,23 @@ export function SiteStatsText ({ postCount, allPosts, categoryOptions, posts }) 
   ].filter(Boolean)
 
   return (
-    <div className='flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs'>
-      {/* 页脚是半透明玻璃铺在壁纸上，底色不可控 —— 文字必须给足对比度，
+    <div
+      className={`flex flex-wrap items-center justify-center ${compact ? 'gap-x-4 gap-y-1 text-[0.6875rem]' : 'gap-x-5 gap-y-1.5 text-xs'}`}>
+      {/* 玻璃面铺在壁纸上，底色不可控 —— 文字必须给足对比度，
           之前用 text-gray-500 + opacity-70 直接糊进背景里了 */}
-      <span className='inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-white'>
-        <i className='fas fa-chart-bar text-[10px]' />
-        站点统计
-      </span>
+      {!compact && (
+        <span className='inline-flex items-center gap-1.5 font-semibold text-gray-900 dark:text-white'>
+          <i className='fas fa-chart-bar text-[0.625rem]' />
+          站点统计
+        </span>
+      )}
       {items.map(it => (
         <span key={it.label} className='inline-flex items-center gap-1.5 whitespace-nowrap'>
-          <i className={`fas ${it.icon} text-[10px]`} />
+          <i className={`fas ${it.icon} text-[0.625rem]`} />
           <span className='font-medium text-gray-700 dark:text-gray-200'>{it.label}</span>
           <span className='font-semibold tabular-nums text-gray-900 dark:text-white'>{it.value}</span>
         </span>
       ))}
     </div>
-  )
-}
-
-/**
- * 兼容用的默认导出：最新发布卡片 + 文字版统计
- */
-export default function SiteStatsCard (props) {
-  const { latestPosts, allPosts, postCount, categoryOptions, posts } = props
-  return (
-    <section className='mb-5'>
-      <LatestPostsCard latestPosts={latestPosts} allPosts={allPosts} />
-      <SiteStatsText
-        postCount={postCount}
-        allPosts={allPosts}
-        categoryOptions={categoryOptions}
-        posts={posts}
-      />
-    </section>
   )
 }

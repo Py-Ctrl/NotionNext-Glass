@@ -39,7 +39,7 @@ const SideAreaRight = (props) => {
           </div>
         )}
 
-        {/* 最新发布（从文章上方挪过来的横向滚动容器；站点统计已挪到页脚） */}
+        {/* 最新发布（从文章上方挪过来的横向滚动容器；站点统计在顶部悬浮栏） */}
         {siteConfig('LIQUID_SCROLL_CONTAINER', true, CONFIG) && (
           <div className='mb-5'>
             <GlassScrollContainer

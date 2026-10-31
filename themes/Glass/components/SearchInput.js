@@ -26,7 +26,7 @@ const SearchInput = ({ currentTag, keyword, onSearch, compact = false, searchMod
         <span className='flex-1 truncate px-3 py-2.5 text-sm text-gray-400 dark:text-gray-500'>
           {placeholder}
         </span>
-        <kbd className='mr-4 rounded border border-gray-300/60 px-1.5 py-0.5 text-[10px] leading-none text-gray-400 dark:border-gray-600/60 dark:text-gray-500'>
+        <kbd className='mr-4 rounded border border-gray-300/60 px-1.5 py-0.5 text-[0.625rem] leading-none text-gray-400 dark:border-gray-600/60 dark:text-gray-500'>
           Ctrl K
         </kbd>
       </button>

@@ -17,7 +17,7 @@ const Logo = (props) => {
           alt={siteConfig('AUTHOR')}
         />
       </div>
-      <span className='text-base font-semibold text-gray-800 dark:text-gray-200 hidden sm:block truncate max-w-[140px]'>
+      <span className='text-base font-semibold text-gray-800 dark:text-gray-200 hidden sm:block truncate max-w-[8.75rem]'>
         {siteInfo?.title || siteConfig('TITLE')}
       </span>
     </SmartLink>

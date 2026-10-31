@@ -154,7 +154,7 @@ const TopNav = (props) => {
                 alt={siteConfig('AUTHOR')}
               />
             </div>
-            <span className='text-sm font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[120px]'>
+            <span className='text-sm font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[7.5rem]'>
               {siteInfo?.title || siteConfig('TITLE')}
             </span>
           </div>
